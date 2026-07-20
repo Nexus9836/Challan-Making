@@ -1,0 +1,2512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challan Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        /* Forces the browser to strictly use light mode and removes forced black backgrounds */
+        :root { color-scheme: light !important; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background-color: white; font-size: 12px; }
+            .challan-container { border: none; box-shadow: none; padding: 0; }
+        }
+        /* Forces the text display to be uppercase instantly */
+        input[type="text"] { text-transform: uppercase; }
+    </style>
+</head>
+<body class="bg-gray-100 p-2 sm:p-6">
+
+    <div class="max-w-6xl mx-auto bg-white p-4 sm:p-8 rounded-lg shadow-md challan-container">
+        
+        <!-- Top Small Action Buttons -->
+        <div class="flex flex-wrap justify-end gap-2 no-print mb-4 border-b border-gray-100 pb-2">
+            <button onclick="exportData()" class="bg-purple-500 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-purple-600 shadow-sm transition">Export</button>
+            <button onclick="triggerImport()" class="bg-amber-500 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-amber-600 shadow-sm transition">Import</button>
+            <input type="file" id="importFile" class="hidden" accept=".txt" onchange="importData(event)">
+            <button onclick="resetAllData()" class="bg-red-500 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-red-600 shadow-sm transition">Reset All</button>
+        </div>
+
+        <!-- Header -->
+        <div class="flex justify-center items-center border-b border-gray-200 pb-4 mb-6">
+            <!-- Dynamic Cutting Quality, Consumption & GSM Option Centered -->
+            <div class="mt-2 flex flex-col items-center justify-center gap-3 text-sm text-gray-600 w-full">
+                <!-- Headline on Top -->
+                <span class="font-bold text-gray-700 no-print text-lg tracking-wide">CUTTING QUALITY</span> 
+                
+                <!-- Box and Buttons Below -->
+                <div class="flex items-center gap-1">
+                    <select id="globalQuality" onchange="loadConsumption()" class="border border-gray-300 focus:outline-none p-1 rounded no-print bg-white min-w-[200px] text-center font-semibold">
+                        <option value="MICRO MODAL BRIEF 101">MICRO MODAL BRIEF 101</option>
+                        <option value="MICRO MODAL BOXER 102">MICRO MODAL BOXER 102</option>
+                        <option value="TEXTILE">TEXTILE</option>
+                    </select>
+                    
+                    <button onclick="addQuality()" class="no-print bg-blue-500 hover:bg-blue-600 text-white font-bold w-7 h-7 flex items-center justify-center rounded transition">+</button>
+                    
+                    <button onclick="deleteQuality()" class="no-print bg-red-500 hover:bg-red-600 text-white w-7 h-7 flex items-center justify-center rounded transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Quality Remarks Input Row -->
+                <div id="qualityRemarksRow" class="flex flex-nowrap justify-center items-end gap-3 no-print mt-1 w-full max-w-md mx-auto">
+                    <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                        <span class="font-bold text-gray-700 text-[10px] sm:text-[11px] tracking-wide text-center block">QUALITY REMARKS</span>
+                        <input type="text" id="qualityRemarksInput" placeholder="ENTER IMPORTANT REMARKS HERE" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="updateQualityRemarks(this.value)">
+                    </div>
+                </div>
+
+                <!-- Strict Single Line Metrics Input Row -->
+                <div id="standardMetricsRow" class="flex flex-nowrap justify-center items-end gap-3 no-print mt-2 w-full max-w-md mx-auto">
+                    <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                        <span class="font-bold text-gray-700 text-[10px] sm:text-[11px] tracking-wide text-center block h-8 flex items-center justify-center">STANDARD CONSUMPTION</span>
+                        <input type="text" id="consumptionInput" placeholder="VALUE" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full max-w-[96px] text-center font-semibold text-gray-800" oninput="this.value = this.value.toUpperCase(); updateConsumption(this.value)" onblur="if(this.value!='' && !isNaN(this.value)) { this.value=parseFloat(this.value).toFixed(3); updateConsumption(this.value); }">
+                        <div class="text-[10px] font-bold text-blue-600 mt-1 whitespace-nowrap">CALC: <span id="headerCalculatedCons">0.000</span></div>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                        <span class="font-bold text-gray-700 text-[10px] sm:text-[11px] tracking-wide text-center block h-8 flex items-center justify-center">STANDARD GSM</span>
+                        <input type="text" id="gsmInput" placeholder="GSM" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full max-w-[96px] text-center font-semibold text-gray-800" oninput="this.value = this.value.toUpperCase(); updateGsm(this.value)" onblur="if(this.value!='' && !isNaN(this.value)) { this.value=parseFloat(this.value); updateGsm(this.value); }">
+                    </div>
+
+                    <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                        <span class="font-bold text-blue-600 text-[10px] sm:text-[11px] tracking-wide text-center block h-8 flex items-center justify-center">FABRIC GSM</span>
+                        <input type="text" id="fabricGsmInput" placeholder="GSM" class="border-2 border-blue-400 focus:outline-none p-1 rounded bg-white w-full max-w-[96px] text-center font-bold text-blue-900 shadow-sm" oninput="this.value = this.value.toUpperCase(); calculateTotals()" onblur="if(this.value!='' && !isNaN(this.value)) { this.value=parseFloat(this.value); calculateTotals(); }">
+                    </div>
+                </div>
+
+                <!-- Strict Single Line Textile Metrics Input Row -->
+                <div id="textileMetricsRow" class="flex flex-nowrap justify-center items-end gap-3 no-print mt-2 w-full max-w-md mx-auto hidden">
+                    <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                        <span class="font-bold text-gray-700 text-[10px] sm:text-[11px] tracking-wide text-center block h-8 flex items-center justify-center">STD METERS CONS</span>
+                        <input type="number" step="0.001" id="textileStdConsInput" placeholder="VALUE" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full max-w-[96px] text-center font-semibold text-gray-800" oninput="calculateTotals()">
+                    </div>
+                    <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                        <span class="font-bold text-gray-700 text-[10px] sm:text-[11px] tracking-wide text-center block h-8 flex items-center justify-center">TOTAL METERS</span>
+                        <input type="number" step="0.001" id="textileTotalMetersInput" placeholder="METERS" class="border-2 border-blue-400 focus:outline-none p-1 rounded bg-white w-full max-w-[96px] text-center font-bold text-blue-900 shadow-sm" oninput="calculateTotals()">
+                    </div>
+                    <div class="flex flex-col items-center justify-center gap-1 flex-1 min-w-[110px] h-14">
+                        <label class="flex items-center gap-1.5 text-xs font-bold text-blue-700 cursor-pointer select-none">
+                            <input type="checkbox" id="textileCheckMode" onchange="calculateTotals()" class="w-4 h-4 accent-blue-600"> CHECK
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Custom Dynamic Folding Settings Optional Row -->
+                <div id="foldingOptionsRow" class="flex flex-nowrap justify-center items-end gap-3 no-print mt-1 w-full max-w-md mx-auto border-t border-gray-100 pt-2">
+                    <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                        <span class="font-bold text-gray-600 text-[10px] tracking-wide text-center block h-6 flex items-center justify-center">FOLDING NAME (RIB/PIPING)</span>
+                        <input type="text" id="foldingNameInput" placeholder="NONE / RIB" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full max-w-[120px] text-center font-semibold text-gray-800 text-xs" oninput="this.value = this.value.toUpperCase(); updateFoldingName(this.value)">
+                    </div>
+                    <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                        <span class="font-bold text-gray-600 text-[10px] tracking-wide text-center block h-6 flex items-center justify-center">FOLDING GM / PC</span>
+                        <input type="text" id="foldingGmInput" placeholder="GRAMS" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full max-w-[96px] text-center font-semibold text-gray-800 text-xs" oninput="updateFoldingGm(this.value)" onblur="if(this.value!='' && !isNaN(this.value)) { this.value=parseFloat(this.value).toFixed(3); updateFoldingGm(this.value); }">
+                    </div>
+                </div>
+
+                <!-- Global Wastage, Mukpat, By-Plaket & Rib Wastage Settings Row -->
+                <div class="flex flex-nowrap justify-center items-end gap-3 no-print mt-1 w-full max-w-xl mx-auto border-t border-gray-100 pt-2">
+                    <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                        <span class="font-bold text-gray-600 text-[10px] tracking-wide text-center block h-6 flex items-center justify-center">WASTAGE WT</span>
+                        <input type="number" step="0.001" min="0" id="globalWastageInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();">
+                    </div>
+                    <div id="globalMukpatDiv" class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                        <span class="font-bold text-gray-600 text-[10px] tracking-wide text-center block h-6 flex items-center justify-center">MUKPAT WT</span>
+                        <input type="number" step="0.001" min="0" id="globalMukpatInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();">
+                    </div>
+                    <div id="globalByPlaketWastageDiv" class="flex flex-col items-center gap-1 flex-1 min-w-0" style="display: none;">
+                        <span class="font-bold text-gray-600 text-[10px] tracking-wide text-center block h-6 flex items-center justify-center">BY-PLKT WASTAGE</span>
+                        <input type="number" step="0.001" min="0" id="poloTotalByPlaketWastageInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();">
+                    </div>
+                    <div id="globalRibWastageDiv" class="flex flex-col items-center gap-1 flex-1 min-w-0" style="display: none;">
+                        <span class="font-bold text-gray-600 text-[10px] tracking-wide text-center block h-6 flex items-center justify-center">RIB WASTAGE</span>
+                        <input type="number" step="0.001" min="0" id="globalRibWastageInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();">
+                    </div>
+                    <div id="globalTotalRibDiv" class="flex flex-col items-center gap-1 flex-1 min-w-0" style="display: none;">
+                        <span class="font-bold text-gray-600 text-[10px] tracking-wide text-center block h-6 flex items-center justify-center">RIB WT</span>
+                        <input type="number" step="0.001" min="0" id="globalTotalRibInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();">
+                    </div>
+                </div>
+
+                <!-- Weight Adjustment Settings Row -->
+                <div id="weightAdjustmentRow" class="flex flex-nowrap justify-center items-end gap-3 no-print mt-1 w-full max-w-xl mx-auto border-t border-gray-100 pt-2">
+                    <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                        <span class="font-bold text-gray-600 text-[10px] tracking-wide text-center block h-6 flex items-center justify-center">ADJUST WEIGHT (KG)</span>
+                        <input type="number" step="0.001" min="0" id="adjWeightInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()">
+                    </div>
+                    <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                        <span class="font-bold text-gray-600 text-[10px] tracking-wide text-center block h-6 flex items-center justify-center">ADJUST ACTION</span>
+                        <select id="adjActionSelect" onchange="calculateTotals()" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs">
+                            <option value="ADD">ADD (+)</option>
+                            <option value="SUB">SUBTRACT (-)</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col items-center justify-center gap-1 flex-1 min-w-0 h-12">
+                        <button onclick="openAdjModal()" class="bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 font-bold py-1 px-2 rounded text-xs transition flex items-center gap-1 shadow-xs cursor-pointer select-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Settings
+                        </button>
+                    </div>
+                </div>
+
+                <!-- POLO Configuration Toggles and Global Weights Row -->
+                <div id="poloOptionsRow" class="flex flex-col items-center gap-3 no-print mt-1 w-full max-w-xl mx-auto border-t border-gray-100 pt-2 hidden">
+                    <div class="flex justify-center gap-6 w-full">
+                        <label class="flex items-center gap-1.5 text-[11px] font-bold text-gray-700 cursor-pointer select-none">
+                            <input type="checkbox" id="poloHasPocket" onchange="updatePoloPocket(this.checked)" checked class="w-3.5 h-3.5 accent-blue-600"> POCKET
+                        </label>
+                        <label class="flex items-center gap-1.5 text-[11px] font-bold text-gray-700 cursor-pointer select-none">
+                            <input type="checkbox" id="poloHasByPlaket" onchange="updatePoloByPlaket(this.checked)" checked class="w-3.5 h-3.5 accent-blue-600"> BY-PLAKET
+                        </label>
+                    </div>
+                    <div class="flex flex-nowrap justify-center items-end gap-2 w-full">
+                        <div id="globalPocketDiv" class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                            <span class="font-bold text-gray-600 text-[9px] tracking-wide text-center block h-6 flex items-center justify-center">POCKET WT</span>
+                            <input type="number" step="0.001" min="0" id="poloTotalPocketInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();">
+                        </div>
+                        <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                            <span class="font-bold text-gray-600 text-[9px] tracking-wide text-center block h-6 flex items-center justify-center">PLAKET WT</span>
+                            <input type="number" step="0.001" min="0" id="poloTotalPlaketInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();">
+                        </div>
+                        <div id="globalByPlaketDiv" class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                            <span class="font-bold text-gray-600 text-[9px] tracking-wide text-center block h-6 flex items-center justify-center">BY-PLAKET WT</span>
+                            <input type="number" step="0.001" min="0" id="poloTotalByPlaketInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();">
+                        </div>
+                        <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                            <span class="font-bold text-gray-600 text-[9px] tracking-wide text-center block h-6 flex items-center justify-center">COLLAR CUFF</span>
+                            <input type="number" step="0.001" min="0" id="poloTotalCollarCuffInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PANT Configuration Toggles and Global Weights Row -->
+                <div id="pantOptionsRow" class="flex flex-col items-center gap-3 no-print mt-1 w-full max-w-xl mx-auto border-t border-gray-100 pt-2 hidden">
+                    <div class="flex justify-center gap-6 w-full">
+                        <label class="flex items-center gap-1.5 text-[11px] font-bold text-gray-700 cursor-pointer select-none">
+                            <input type="checkbox" id="pantHasSidePocket" onchange="updatePantSidePocket(this.checked)" checked class="w-3.5 h-3.5 accent-blue-600"> SIDE POCKET
+                        </label>
+                        <label class="flex items-center gap-1.5 text-[11px] font-bold text-gray-700 cursor-pointer select-none">
+                            <input type="checkbox" id="pantHasBackPocket" onchange="updatePantBackPocket(this.checked)" checked class="w-3.5 h-3.5 accent-blue-600"> BACK POCKET
+                        </label>
+                    </div>
+                    <div class="flex flex-nowrap justify-center items-end gap-2 w-full">
+                        <div id="globalSidePocketDiv" class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                            <span class="font-bold text-gray-600 text-[9px] tracking-wide text-center block h-6 flex items-center justify-center">SIDE PKT WT</span>
+                            <input type="number" step="0.001" min="0" id="pantTotalSidePocketInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();">
+                        </div>
+                        <div id="globalBackPocketDiv" class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                            <span class="font-bold text-gray-600 text-[9px] tracking-wide text-center block h-6 flex items-center justify-center">BACK PKT WT</span>
+                            <input type="number" step="0.001" min="0" id="pantTotalBackPocketInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Print View Labels Stacked Vertically -->
+                <div class="hidden print:block text-center">
+                    <span class="font-bold text-gray-700 text-lg block">CUTTING QUALITY</span>
+                    <span id="printQuality" class="font-semibold text-gray-800 block text-base mt-1"></span>
+                    <span class="font-bold text-gray-700 text-md block mt-3" id="printRemarksLabel">QUALITY REMARKS</span>
+                    <span id="printRemarks" class="font-semibold text-gray-800 block text-base mt-1"></span>
+                    <span id="printConsumptionHeader" class="font-bold text-gray-700 text-md block mt-3">STANDARD CONSUMPTION</span>
+                    <span id="printConsumption" class="font-semibold text-gray-800 block text-base mt-1"></span>
+                    <span id="printGsmHeader" class="font-bold text-gray-700 text-md block mt-3">STANDARD GSM</span>
+                    <span id="printGsm" class="font-semibold text-gray-800 block text-base mt-1"></span>
+                    <span id="printFabricGsmHeader" class="font-bold text-gray-700 text-md block mt-3">FABRIC GSM</span>
+                    <span id="printFabricGsm" class="font-semibold text-gray-800 block text-base mt-1"></span>
+                    <span class="font-bold text-gray-700 text-md block mt-3 hidden" id="printFoldingLabel">FOLDING</span>
+                    <span class="font-semibold text-gray-800 block text-base mt-1 hidden" id="printFoldingVal"></span>
+                    <span class="font-bold text-gray-700 text-md block mt-3 hidden" id="printTextileStdConsLabel">STD METERS CONS</span>
+                    <span class="font-semibold text-gray-800 block text-base mt-1 hidden" id="printTextileStdConsVal"></span>
+                    <span class="font-bold text-gray-700 text-md block mt-3 hidden" id="printTotalMetersLabel">TOTAL METERS</span>
+                    <span class="font-semibold text-gray-800 block text-base mt-1 hidden" id="printTotalMetersVal"></span>
+                    <span class="font-bold text-gray-700 text-md block mt-3 hidden" id="printTextileCheckLabel">METERS MODE (CHECK)</span>
+                    <span class="font-semibold text-gray-800 block text-base mt-1 hidden" id="printTextileCheckVal"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items Table Container for Horizontal Scroll on Mobile -->
+        <div class="overflow-x-auto w-full border border-gray-200 rounded-md mb-6">
+            <table class="w-full text-left border-collapse min-w-[950px]">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="p-3 border border-gray-300 text-center w-20">Size</th>
+                        <th class="p-3 border border-gray-300 text-center w-24">Pics</th>
+                        <th id="bodyWtHeaderTh" class="p-3 border border-gray-300 text-center w-28">Body Wt</th>
+                        <th id="ribHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Rib Wt</th>
+                        <th id="pocketHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Pocket Wt</th>
+                        <th id="foldingHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Folding</th>
+                        <th id="sidePocketHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Side Pkt Wt</th>
+                        <th id="backPocketHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Back Pkt Wt</th>
+                        <th id="collarCuffHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Collar Cuff</th>
+                        <th id="wastageHeaderTh" class="p-3 border border-gray-300 text-center w-28">Wastage</th>
+                        <th id="totalHeaderTh" class="p-3 border border-gray-300 text-center w-28">Total</th>
+                        <th id="bConsHeaderTh" class="p-3 border border-gray-300 text-center w-36 bg-blue-50 text-blue-900">B.cons</th>
+                        <th id="tConsHeaderTh" class="p-3 border border-gray-300 text-center w-36 bg-purple-50 text-purple-900">T.cons</th>
+                        <th class="p-3 border border-gray-300 text-center w-16 no-print">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="itemRows">
+                    <tr>
+                        <td class="p-2 border border-gray-300"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" oninput="this.value = this.value.toUpperCase()"></td>
+                        <td class="p-2 border border-gray-300"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                        <td class="p-2 border border-gray-300"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
+                        <td class="p-2 border border-gray-300 hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 hidden row-backpocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50 row-bcons">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center font-bold text-purple-600 bg-purple-50/50 row-tcons">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center no-print">
+                            <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-700 font-bold">X</button>
+                        </td>
+                    </tr>
+                </tbody>
+                <!-- Integrated Table Footer row for unified display space savings -->
+                <tfoot class="bg-gray-100 font-bold border-t-2 border-gray-300">
+                    <tr>
+                        <td class="p-2 border border-gray-300 text-center text-xs text-gray-700">TOTAL:</td>
+                        <td id="totalPicsDisplay" class="p-2 border border-gray-300 text-center text-gray-800">0</td>
+                        <td id="totalBodyWtDisplay" class="p-2 border border-gray-300 text-center text-gray-800">0.000</td>
+                        <td id="totalRibWtDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
+                        <td id="totalPocketDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
+                        <td id="totalFoldingDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
+                        <td id="totalSidePocketDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
+                        <td id="totalBackPocketDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
+                        <td id="totalCollarCuffDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
+                        <td id="totalWastageDisplay" class="p-2 border border-gray-300 text-center text-gray-800">0.000</td>
+                        <td id="totalWeightDisplay" class="p-2 border border-gray-300 text-center text-gray-800">0.000</td>
+                        <td id="totalBCons" class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center font-bold text-purple-600 bg-purple-50/50">
+                            <div class="flex flex-col items-center justify-center">
+                                <span id="totalTCons">0.000</span>
+                                <span id="consVariance" class="block"></span>
+                            </div>
+                        </td>
+                        <td class="p-2 border border-gray-300 no-print"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Add Item -->
+        <div class="mb-6 no-print">
+            <button onclick="addRow()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">+ Add Item</button>
+        </div>
+
+        <!-- Action Buttons Bar -->
+        <div class="mt-8 flex justify-end gap-3 no-print">
+            <button id="clearBtn" onclick="resetCurrentItems()" class="bg-amber-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-amber-600 shadow transition">Clear</button>
+            <button id="submitBtn" onclick="submitToHistory()" class="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 shadow transition">Submit</button>
+        </div>
+
+        <!-- History Section -->
+        <div class="mt-8 border-t border-gray-200 pt-6 no-print">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-4">
+                <h3 class="text-md font-bold text-gray-700 tracking-wide">CHALLAN HISTORY</h3>
+                <input type="text" id="historySearchInput" placeholder="SEARCH HISTORY..." oninput="renderHistory()" class="border border-gray-300 focus:outline-none p-1.5 rounded bg-white text-xs font-bold max-w-xs w-full">
+            </div>
+            <div id="historyList" class="space-y-3">
+                <!-- History logs will append here dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Pop up Modal for Adjustment Targets -->
+    <div id="adjModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 hidden no-print">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
+            <h4 class="font-bold text-sm text-gray-800 mb-3 border-b border-gray-100 pb-2">Adjustment Components</h4>
+            <div class="space-y-2 text-xs font-semibold text-gray-700">
+                <label class="flex items-center gap-2 cursor-pointer py-1">
+                    <input type="checkbox" id="adjTargetBodyWt" checked onchange="calculateTotals()" class="w-4 h-4 accent-blue-600"> Body Wt
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer py-1">
+                    <input type="checkbox" id="adjTargetWastage" checked onchange="calculateTotals()" class="w-4 h-4 accent-blue-600"> Wastage Wt
+                </label>
+                <label id="adjTargetMukpatLabel" class="flex items-center gap-2 cursor-pointer py-1">
+                    <input type="checkbox" id="adjTargetMukpat" onchange="calculateTotals()" class="w-4 h-4 accent-blue-600"> Mukpat Wt
+                </label>
+                <label id="adjTargetRibLabel" class="flex items-center gap-2 cursor-pointer py-1">
+                    <input type="checkbox" id="adjTargetRib" onchange="calculateTotals()" class="w-4 h-4 accent-blue-600"> Rib Wt
+                </label>
+                <label id="adjTargetPocketLabel" class="flex items-center gap-2 cursor-pointer py-1">
+                    <input type="checkbox" id="adjTargetPocket" onchange="calculateTotals()" class="w-4 h-4 accent-blue-600"> Pocket/Plaket Wt
+                </label>
+                <label id="adjTargetSidePocketLabel" class="flex items-center gap-2 cursor-pointer py-1">
+                    <input type="checkbox" id="adjTargetSidePocket" onchange="calculateTotals()" class="w-4 h-4 accent-blue-600"> Side Pkt Wt
+                </label>
+                <label id="adjTargetBackPocketLabel" class="flex items-center gap-2 cursor-pointer py-1">
+                    <input type="checkbox" id="adjTargetBackPocket" onchange="calculateTotals()" class="w-4 h-4 accent-blue-600"> Back Pkt Wt
+                </label>
+                <label id="adjTargetCollarLabel" class="flex items-center gap-2 cursor-pointer py-1">
+                    <input type="checkbox" id="adjTargetCollar" onchange="calculateTotals()" class="w-4 h-4 accent-blue-600"> Collar Cuff Wt
+                </label>
+            </div>
+            <div class="mt-5 flex justify-end">
+                <button onclick="closeAdjModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-1.5 rounded text-xs transition">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global object to store consumption mapping for each quality
+        const qualityData = {
+            "MICRO MODAL BRIEF 101": "0",
+            "MICRO MODAL BOXER 102": "0",
+            "TEXTILE": "0"
+        };
+
+        // Parallel tracking object for GSM
+        const qualityGsmData = {
+            "MICRO MODAL BRIEF 101": "0",
+            "MICRO MODAL BOXER 102": "0",
+            "TEXTILE": "0"
+        };
+
+        // Custom config mapping trackers for Dynamic Folding Component Values
+        const qualityFoldingNameData = {
+            "MICRO MODAL BRIEF 101": "RIB",
+            "MICRO MODAL BOXER 102": "",
+            "TEXTILE": ""
+        };
+
+        const qualityFoldingGmData = {
+            "MICRO MODAL BRIEF 101": "0.010",
+            "MICRO MODAL BOXER 102": "0.000",
+            "TEXTILE": "0.000"
+        };
+
+        // Parallel tracking object for Remarks mapping
+        const qualityRemarksData = {
+            "MICRO MODAL BRIEF 101": "",
+            "MICRO MODAL BOXER 102": "",
+            "TEXTILE": ""
+        };
+
+        // Parallel tracking objects for Textile specific fields to prevent overwriting
+        const qualityTextileStdConsData = {
+            "MICRO MODAL BRIEF 101": "",
+            "MICRO MODAL BOXER 102": "",
+            "TEXTILE": ""
+        };
+
+        const qualityTextileTotalMetersData = {
+            "MICRO MODAL BRIEF 101": "",
+            "MICRO MODAL BOXER 102": "",
+            "TEXTILE": ""
+        };
+
+        // Parallel configuration trackers for Polo specific optional fields
+        const qualityPoloPocketData = {};
+        const qualityPoloByPlaketData = {};
+
+        // Parallel configuration trackers for Pant specific optional fields
+        const qualityPantSidePocketData = {};
+        const qualityPantBackPocketData = {};
+
+        // Parallel array for History data
+        let historyData = [];
+        
+        // Track the index of the history entry currently being edited (-1 means no active edit)
+        let editIndex = -1;
+
+        // Initialize fields on first load
+        window.onload = function() {
+            if (localStorage.getItem('challan_qualityData')) {
+                const storedQD = JSON.parse(localStorage.getItem('challan_qualityData'));
+                for (let key in qualityData) delete qualityData[key];
+                Object.assign(qualityData, storedQD);
+            }
+            if (localStorage.getItem('challan_qualityGsmData')) {
+                const storedQGD = JSON.parse(localStorage.getItem('challan_qualityGsmData'));
+                for (let key in qualityGsmData) delete qualityGsmData[key];
+                Object.assign(qualityGsmData, storedQGD);
+            }
+            if (localStorage.getItem('challan_qualityFoldingNameData')) {
+                const storedQFND = JSON.parse(localStorage.getItem('challan_qualityFoldingNameData'));
+                for (let key in qualityFoldingNameData) delete qualityFoldingNameData[key];
+                Object.assign(qualityFoldingNameData, storedQFND);
+            }
+            if (localStorage.getItem('challan_qualityFoldingGmData')) {
+                const storedQFGD = JSON.parse(localStorage.getItem('challan_qualityFoldingGmData'));
+                for (let key in qualityFoldingGmData) delete qualityFoldingGmData[key];
+                Object.assign(qualityFoldingGmData, storedQFGD);
+            }
+            if (localStorage.getItem('challan_qualityRemarksData')) {
+                const storedQRD = JSON.parse(localStorage.getItem('challan_qualityRemarksData'));
+                for (let key in qualityRemarksData) delete qualityRemarksData[key];
+                Object.assign(qualityRemarksData, storedQRD);
+            }
+            if (localStorage.getItem('challan_qualityTextileStdConsData')) {
+                const storedQTSCD = JSON.parse(localStorage.getItem('challan_qualityTextileStdConsData'));
+                for (let key in qualityTextileStdConsData) delete qualityTextileStdConsData[key];
+                Object.assign(qualityTextileStdConsData, storedQTSCD);
+            }
+            if (localStorage.getItem('challan_qualityTextileTotalMetersData')) {
+                const storedQTTMD = JSON.parse(localStorage.getItem('challan_qualityTextileTotalMetersData'));
+                for (let key in qualityTextileTotalMetersData) delete qualityTextileTotalMetersData[key];
+                Object.assign(qualityTextileTotalMetersData, storedQTTMD);
+            }
+            if (localStorage.getItem('challan_qualityPoloPocketData')) {
+                Object.assign(qualityPoloPocketData, JSON.parse(localStorage.getItem('challan_qualityPoloPocketData')));
+            }
+            if (localStorage.getItem('challan_qualityPoloByPlaketData')) {
+                Object.assign(qualityPoloByPlaketData, JSON.parse(localStorage.getItem('challan_qualityPoloByPlaketData')));
+            }
+            if (localStorage.getItem('challan_qualityPantSidePocketData')) {
+                Object.assign(qualityPantSidePocketData, JSON.parse(localStorage.getItem('challan_qualityPantSidePocketData')));
+            }
+            if (localStorage.getItem('challan_qualityPantBackPocketData')) {
+                Object.assign(qualityPantBackPocketData, JSON.parse(localStorage.getItem('challan_qualityPantBackPocketData')));
+            }
+            if (localStorage.getItem('challan_poloTotalPocket')) document.getElementById('poloTotalPocketInput').value = localStorage.getItem('challan_poloTotalPocket');
+            if (localStorage.getItem('challan_poloTotalPlaket')) document.getElementById('poloTotalPlaketInput').value = localStorage.getItem('challan_poloTotalPlaket');
+            if (localStorage.getItem('challan_poloTotalByPlaket')) document.getElementById('poloTotalByPlaketInput').value = localStorage.getItem('challan_poloTotalByPlaket');
+            if (localStorage.getItem('challan_poloTotalByPlaketWastage')) document.getElementById('poloTotalByPlaketWastageInput').value = localStorage.getItem('challan_poloTotalByPlaketWastage');
+            if (localStorage.getItem('challan_poloTotalCollarCuff')) document.getElementById('poloTotalCollarCuffInput').value = localStorage.getItem('challan_poloTotalCollarCuff');
+            if (localStorage.getItem('challan_pantTotalSidePocket')) document.getElementById('pantTotalSidePocketInput').value = localStorage.getItem('pantTotalSidePocket');
+            if (localStorage.getItem('challan_pantTotalBackPocket')) document.getElementById('pantTotalBackPocketInput').value = localStorage.getItem('pantTotalBackPocket');
+            if (localStorage.getItem('challan_globalWastage')) document.getElementById('globalWastageInput').value = localStorage.getItem('challan_globalWastage');
+            if (localStorage.getItem('challan_globalMukpat')) document.getElementById('globalMukpatInput').value = localStorage.getItem('challan_globalMukpat');
+            if (localStorage.getItem('challan_globalRibWastage')) document.getElementById('globalRibWastageInput').value = localStorage.getItem('challan_globalRibWastage');
+            if (localStorage.getItem('challan_globalRibTotal')) document.getElementById('globalTotalRibInput').value = localStorage.getItem('challan_globalTotalRibInput');
+            if (localStorage.getItem('challan_textileStdCons')) document.getElementById('textileStdConsInput').value = localStorage.getItem('challan_textileStdCons');
+            if (localStorage.getItem('challan_textileTotalMeters')) document.getElementById('textileTotalMetersInput').value = localStorage.getItem('challan_textileTotalMeters');
+            if (localStorage.getItem('challan_textileCheckMode')) document.getElementById('textileCheckMode').checked = localStorage.getItem('challan_textileCheckMode') === 'true';
+
+            if (localStorage.getItem('challan_adjWeight')) document.getElementById('adjWeightInput').value = localStorage.getItem('challan_adjWeight');
+            if (localStorage.getItem('challan_adjAction')) document.getElementById('adjActionSelect').value = localStorage.getItem('challan_adjAction');
+            if (localStorage.getItem('challan_adjTargetBodyWt')) document.getElementById('adjTargetBodyWt').checked = localStorage.getItem('challan_adjTargetBodyWt') === 'true';
+            if (localStorage.getItem('challan_adjTargetWastage')) document.getElementById('adjTargetWastage').checked = localStorage.getItem('challan_adjTargetWastage') === 'true';
+            if (localStorage.getItem('challan_adjTargetMukpat')) document.getElementById('adjTargetMukpat').checked = localStorage.getItem('challan_adjTargetMukpat') === 'true';
+            if (localStorage.getItem('challan_adjTargetRib')) document.getElementById('adjTargetRib').checked = localStorage.getItem('challan_adjTargetRib') === 'true';
+            if (localStorage.getItem('challan_adjTargetPocket')) document.getElementById('adjTargetPocket').checked = localStorage.getItem('challan_adjTargetPocket') === 'true';
+            if (localStorage.getItem('challan_adjTargetSidePocket')) document.getElementById('adjTargetSidePocket').checked = localStorage.getItem('challan_adjTargetSidePocket') === 'true';
+            if (localStorage.getItem('challan_adjTargetBackPocket')) document.getElementById('adjTargetBackPocket').checked = localStorage.getItem('challan_adjTargetBackPocket') === 'true';
+            if (localStorage.getItem('challan_adjTargetCollar')) document.getElementById('adjTargetCollar').checked = localStorage.getItem('challan_adjTargetCollar') === 'true';
+
+            const select = document.getElementById('globalQuality');
+            if (select) {
+                select.innerHTML = "";
+                Object.keys(qualityData).forEach(q => {
+                    const option = document.createElement('option');
+                    option.value = q;
+                    option.text = q;
+                    select.add(option);
+                });
+            }
+            if (localStorage.getItem('challan_selectedQuality')) {
+                select.value = localStorage.getItem('challan_selectedQuality');
+            }
+            if (localStorage.getItem('fabricGsmInput')) {
+                document.getElementById('fabricGsmInput').value = localStorage.getItem('fabricGsmInput');
+            }
+            if (localStorage.getItem('challan_items')) {
+                const items = JSON.parse(localStorage.getItem('challan_items'));
+                const tbody = document.getElementById('itemRows');
+                if (items && items.length > 0) {
+                    tbody.innerHTML = "";
+                    items.forEach(item => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="p-2 border border-gray-300"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" value="${item.size || ''}" oninput="this.value = this.value.toUpperCase()"></td>
+                            <td class="p-2 border border-gray-300"><input type="number" value="${item.pics || ''}" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                            <td class="p-2 border border-gray-300"><input type="number" value="${item.bodywt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                            <td class="p-2 border border-gray-300 hidden row-ribwt-td"><input type="number" value="${item.ribwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                            <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
+                            <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
+                            <td class="p-2 border border-gray-300 hidden row-sidepocket-td"><input type="number" value="${item.sidepocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                            <td class="p-2 border border-gray-300 hidden row-backpocket-td"><input type="number" value="${rowItem.backpocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                            <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
+                            <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
+                            <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
+                            <td class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50 row-bcons">0.000</td>
+                            <td class="p-2 border border-gray-300 text-center font-bold text-purple-600 bg-purple-50/50 row-tcons">0.000</td>
+                            <td class="p-2 border border-gray-300 text-center no-print">
+                                <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-700 font-bold">X</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            }
+            if (localStorage.getItem('challan_history')) {
+                historyData = JSON.parse(localStorage.getItem('challan_history'));
+            }
+            loadConsumption();
+            renderHistory();
+        };
+
+        function saveState() {
+            localStorage.setItem('challan_qualityData', JSON.stringify(qualityData));
+            localStorage.setItem('challan_qualityGsmData', JSON.stringify(qualityGsmData));
+            localStorage.setItem('challan_qualityFoldingNameData', JSON.stringify(qualityFoldingNameData));
+            localStorage.setItem('challan_qualityFoldingGmData', JSON.stringify(qualityFoldingGmData));
+            localStorage.setItem('challan_qualityRemarksData', JSON.stringify(qualityRemarksData));
+            localStorage.setItem('challan_qualityTextileStdConsData', JSON.stringify(qualityTextileStdConsData));
+            localStorage.setItem('challan_qualityTextileTotalMetersData', JSON.stringify(qualityTextileTotalMetersData));
+            localStorage.setItem('challan_qualityPoloPocketData', JSON.stringify(qualityPoloPocketData));
+            localStorage.setItem('challan_qualityPoloByPlaketData', JSON.stringify(qualityPoloByPlaketData));
+            localStorage.setItem('challan_qualityPantSidePocketData', JSON.stringify(qualityPantSidePocketData));
+            localStorage.setItem('challan_qualityPantBackPocketData', JSON.stringify(qualityPantBackPocketData));
+            localStorage.setItem('challan_selectedQuality', document.getElementById('globalQuality').value);
+            localStorage.setItem('fabricGsmInput', document.getElementById('fabricGsmInput').value);
+            
+            const getGlobalVal = (id) => {
+                const el = document.getElementById(id);
+                return el && el.dataset.origValue !== undefined ? el.dataset.origValue : (el ? el.value : "");
+            };
+
+            localStorage.setItem('challan_poloTotalPocket', getGlobalVal('poloTotalPocketInput'));
+            localStorage.setItem('challan_poloTotalPlaket', getGlobalVal('poloTotalPlaketInput'));
+            localStorage.setItem('challan_poloTotalByPlaket', getGlobalVal('poloTotalByPlaketInput'));
+            localStorage.setItem('challan_poloTotalByPlaketWastage', getGlobalVal('poloTotalByPlaketWastageInput'));
+            localStorage.setItem('challan_poloTotalCollarCuff', getGlobalVal('poloTotalCollarCuffInput'));
+            localStorage.setItem('challan_pantTotalSidePocket', getGlobalVal('pantTotalSidePocketInput'));
+            localStorage.setItem('challan_pantTotalBackPocket', getGlobalVal('pantTotalBackPocketInput'));
+            localStorage.setItem('challan_globalWastage', getGlobalVal('globalWastageInput'));
+            localStorage.setItem('challan_globalMukpat', getGlobalVal('globalMukpatInput'));
+            localStorage.setItem('challan_globalRibWastage', getGlobalVal('globalRibWastageInput'));
+            localStorage.setItem('challan_globalRibTotal', getGlobalVal('globalTotalRibInput'));
+            localStorage.setItem('challan_textileStdCons', document.getElementById('textileStdConsInput').value);
+            localStorage.setItem('challan_textileTotalMeters', document.getElementById('textileTotalMetersInput').value);
+            localStorage.setItem('challan_textileCheckMode', document.getElementById('textileCheckMode').checked);
+            localStorage.setItem('challan_adjWeight', document.getElementById('adjWeightInput').value);
+            localStorage.setItem('challan_adjAction', document.getElementById('adjActionSelect').value);
+            localStorage.setItem('challan_adjTargetBodyWt', document.getElementById('adjTargetBodyWt').checked);
+            localStorage.setItem('challan_adjTargetWastage', document.getElementById('adjTargetWastage').checked);
+            localStorage.setItem('challan_adjTargetMukpat', document.getElementById('adjTargetMukpat').checked);
+            localStorage.setItem('challan_adjTargetRib', document.getElementById('adjTargetRib').checked);
+            localStorage.setItem('challan_adjTargetPocket', document.getElementById('adjTargetPocket').checked);
+            localStorage.setItem('challan_adjTargetSidePocket', document.getElementById('adjTargetSidePocket').checked);
+            localStorage.setItem('challan_adjTargetBackPocket', document.getElementById('adjTargetBackPocket').checked);
+            localStorage.setItem('challan_adjTargetCollar', document.getElementById('adjTargetCollar').checked);
+            
+            const rows = document.querySelectorAll('#itemRows tr');
+            const items = [];
+            rows.forEach(row => {
+                const bodyWtInput = row.querySelector('.row-bodywt');
+                items.push({
+                    size: row.querySelector('.row-size').value,
+                    pics: row.querySelector('.row-pics').value,
+                    bodywt: bodyWtInput.dataset.origBodyWt !== undefined ? bodyWtInput.dataset.origBodyWt : (bodyWtInput.dataset.weight !== undefined ? bodyWtInput.dataset.weight : bodyWtInput.value),
+                    ribwt: row.querySelector('.row-ribwt') ? row.querySelector('.row-ribwt').value : '',
+                    sidepocket: row.querySelector('.row-sidepocket') ? row.querySelector('.row-sidepocket').value : '',
+                    backpocket: row.querySelector('.row-backpocket') ? row.querySelector('.row-backpocket').value : ''
+                });
+            });
+            localStorage.setItem('challan_items', JSON.stringify(items));
+        }
+
+        /* Keep existing logic unaltered */
+        function openAdjModal() {
+            const selectEl = document.getElementById('globalQuality');
+            const currentQuality = selectEl ? selectEl.value : "";
+            const isGrsActive = currentQuality.toUpperCase().includes('GRS');
+            const isPoloActive = currentQuality.toUpperCase().includes('POLO');
+            const isPantActive = currentQuality.toUpperCase().includes('PANT');
+
+            document.getElementById('adjTargetMukpatLabel').style.display = currentQuality.toUpperCase().includes('TEXTILE') ? 'none' : 'flex';
+            document.getElementById('adjTargetRibLabel').style.display = isGrsActive ? 'flex' : 'none';
+            document.getElementById('adjTargetPocketLabel').style.display = isPoloActive ? 'flex' : 'none';
+            document.getElementById('adjTargetSidePocketLabel').style.display = (isPantActive && qualityPantSidePocketData[currentQuality] !== false) ? 'flex' : 'none';
+            document.getElementById('adjTargetBackPocketLabel').style.display = (isPantActive && qualityPantBackPocketData[currentQuality] !== false) ? 'flex' : 'none';
+            document.getElementById('adjTargetCollarLabel').style.display = isPoloActive ? 'flex' : 'none';
+
+            document.getElementById('adjModal').classList.remove('hidden');
+        }
+
+        function closeAdjModal() {
+            document.getElementById('adjModal').classList.add('hidden');
+        }
+
+        function loadConsumption() {
+            const select = document.getElementById('globalQuality');
+            const currentQuality = select.value;
+            document.getElementById('consumptionInput').value = qualityData[currentQuality] || "0";
+            document.getElementById('gsmInput').value = qualityGsmData[currentQuality] || "0";
+            document.getElementById('foldingNameInput').value = qualityFoldingNameData[currentQuality] || "";
+            document.getElementById('foldingGmInput').value = qualityFoldingGmData[currentQuality] || "0.000";
+            document.getElementById('qualityRemarksInput').value = qualityRemarksData[currentQuality] || "";
+            document.getElementById('textileStdConsInput').value = qualityTextileStdConsData[currentQuality] || "";
+            document.getElementById('textileTotalMetersInput').value = qualityTextileTotalMetersData[currentQuality] || "";
+            
+            document.getElementById('poloHasPocket').checked = qualityPoloPocketData[currentQuality] !== false;
+            document.getElementById('poloHasByPlaket').checked = qualityPoloByPlaketData[currentQuality] !== false;
+            document.getElementById('pantHasSidePocket').checked = qualityPantSidePocketData[currentQuality] !== false;
+            document.getElementById('pantHasBackPocket').checked = qualityPantBackPocketData[currentQuality] !== false;
+            
+            calculateTotals();
+            saveState();
+        }
+
+        function updateConsumption(value) {
+            const select = document.getElementById('globalQuality');
+            const currentQuality = select.value;
+            qualityData[currentQuality] = value;
+            calculateTotals();
+            saveState();
+        }
+
+        function updateGsm(value) {
+            const select = document.getElementById('globalQuality');
+            const currentQuality = select.value;
+            qualityGsmData[currentQuality] = value;
+            calculateTotals();
+            saveState();
+        }
+
+        function updateFoldingName(value) {
+            const select = document.getElementById('globalQuality');
+            const currentQuality = select.value;
+            qualityFoldingNameData[currentQuality] = value;
+            calculateTotals();
+            saveState();
+        }
+
+        function updateFoldingGm(value) {
+            const select = document.getElementById('globalQuality');
+            const currentQuality = select.value;
+            qualityFoldingGmData[currentQuality] = value;
+            calculateTotals();
+            saveState();
+        }
+
+        function updateQualityRemarks(value) {
+            const select = document.getElementById('globalQuality');
+            const currentQuality = select.value;
+            qualityRemarksData[currentQuality] = value;
+            saveState();
+        }
+
+        function updatePoloPocket(checked) {
+            const currentQuality = document.getElementById('globalQuality').value;
+            qualityPoloPocketData[currentQuality] = checked;
+            calculateTotals();
+            saveState();
+        }
+
+        function updatePoloByPlaket(checked) {
+            const currentQuality = document.getElementById('globalQuality').value;
+            qualityPoloByPlaketData[currentQuality] = checked;
+            calculateTotals();
+            saveState();
+        }
+
+        function updatePantSidePocket(checked) {
+            const currentQuality = document.getElementById('globalQuality').value;
+            qualityPantSidePocketData[currentQuality] = checked;
+            calculateTotals();
+            saveState();
+        }
+
+        function updatePantBackPocket(checked) {
+            const currentQuality = document.getElementById('globalQuality').value;
+            qualityPantBackPocketData[currentQuality] = checked;
+            calculateTotals();
+            saveState();
+        }
+
+        function addQuality() {
+            const newQuality = prompt("Enter new quality name:");
+            if (newQuality && newQuality.trim() !== "") {
+                const upperQuality = newQuality.trim().toUpperCase();
+                const select = document.getElementById('globalQuality');
+                
+                if (!qualityData[upperQuality]) {
+                    const option = document.createElement('option');
+                    option.value = upperQuality;
+                    option.text = upperQuality;
+                    select.add(option);
+                    qualityData[upperQuality] = "0"; 
+                    qualityGsmData[upperQuality] = "0"; 
+                    qualityFoldingNameData[upperQuality] = "";
+                    qualityFoldingGmData[upperQuality] = "0.000";
+                    qualityRemarksData[upperQuality] = "";
+                    qualityTextileStdConsData[upperQuality] = "";
+                    qualityTextileTotalMetersData[upperQuality] = "";
+                    qualityPoloPocketData[upperQuality] = true;
+                    qualityPoloByPlaketData[upperQuality] = true;
+                    qualityPantSidePocketData[upperQuality] = true;
+                    qualityPantBackPocketData[upperQuality] = true;
+                }
+                
+                select.value = upperQuality;
+                loadConsumption();
+                saveState();
+            }
+        }
+
+        function deleteQuality() {
+            const select = document.getElementById('globalQuality');
+            if (select.selectedIndex !== -1) {
+                const targetValue = select.value;
+                if (confirm(`Delete "${targetValue}"?`)) {
+                    delete qualityData[targetValue];
+                    delete qualityGsmData[targetValue];
+                    delete qualityFoldingNameData[targetValue];
+                    delete qualityFoldingGmData[targetValue];
+                    delete qualityRemarksData[targetValue];
+                    delete qualityTextileStdConsData[targetValue];
+                    delete qualityTextileTotalMetersData[targetValue];
+                    delete qualityPoloPocketData[targetValue];
+                    delete qualityPoloByPlaketData[targetValue];
+                    delete qualityPantSidePocketData[targetValue];
+                    delete qualityPantBackPocketData[targetValue];
+                    select.remove(select.selectedIndex);
+                    loadConsumption();
+                    saveState();
+                }
+            }
+        }
+
+        function calculateTotals() {
+            const rows = document.querySelectorAll('#itemRows tr');
+            
+            // Instantly restore clean original user body weights prior to running new scaling logic passes
+            rows.forEach(row => {
+                const bodyWtInput = row.querySelector('.row-bodywt');
+                if (bodyWtInput && bodyWtInput.dataset.origBodyWt !== undefined) {
+                    bodyWtInput.value = bodyWtInput.dataset.origBodyWt;
+                    bodyWtInput.removeAttribute('data-origBodyWt');
+                }
+            });
+
+            const globalInputIds = [
+                'globalWastageInput', 'globalMukpatInput', 'poloTotalByPlaketWastageInput', 
+                'globalRibWastageInput', 'globalTotalRibInput', 'poloTotalPocketInput', 
+                'poloTotalPlaketInput', 'poloTotalByPlaketInput', 'poloTotalCollarCuffInput', 
+                'pantTotalSidePocketInput', 'pantTotalBackPocketInput'
+            ];
+            globalInputIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.dataset.origValue !== undefined) {
+                    el.value = el.dataset.origValue;
+                    el.removeAttribute('data-origValue');
+                }
+            });
+
+            let totalWeightSum = 0;
+            let totalBodyWtSum = 0;
+            let totalWastageSum = 0;
+            let totalPicsSum = 0;
+            let totalFoldingSum = 0;
+            let totalRibWtSum = 0;
+            let totalPocketSum = 0;
+            let totalSidePocketSum = 0;
+            let totalBackPocketSum = 0;
+            let totalCollarCuffSum = 0;
+            let totalMainFabricSum = 0;
+
+            // Fetch metrics globally from the top inputs
+            const stdCons = parseFloat(document.getElementById('consumptionInput').value) || 0;
+            const stdGsm = parseFloat(document.getElementById('gsmInput').value) || 0;
+            const fabricGsm = parseFloat(document.getElementById('fabricGsmInput').value) || 0;
+
+            const selectEl = document.getElementById('globalQuality');
+            const currentQuality = selectEl ? selectEl.value : "";
+            
+            // Map the current textile inputs to the isolated active custom quality parameters safely
+            if (currentQuality) {
+                qualityTextileStdConsData[currentQuality] = document.getElementById('textileStdConsInput').value;
+                qualityTextileTotalMetersData[currentQuality] = document.getElementById('textileTotalMetersInput').value;
+            }
+
+            const isFoldingActive = (qualityFoldingNameData[currentQuality] || "").trim() !== "" && parseFloat(qualityFoldingGmData[currentQuality]) > 0;
+            const isGrsActive = currentQuality.toUpperCase().includes('GRS');
+            const isPoloActive = currentQuality.toUpperCase().includes('POLO');
+            const isPantActive = currentQuality.toUpperCase().includes('PANT');
+            const isTextileActive = currentQuality.toUpperCase().includes('TEXTILE');
+            
+            const standardMetricsRow = document.getElementById('standardMetricsRow');
+            const textileMetricsRow = document.getElementById('textileMetricsRow');
+            const isCheckActive = isTextileActive && document.getElementById('textileCheckMode').checked;
+            
+            if (standardMetricsRow && textileMetricsRow) {
+                if (isTextileActive) {
+                    standardMetricsRow.classList.add('hidden');
+                    textileMetricsRow.classList.remove('hidden');
+                    if (isCheckActive) {
+                        if (document.getElementById('bodyWtHeaderTh')) document.getElementById('bodyWtHeaderTh').innerText = "Body Mtr";
+                        if (document.getElementById('wastageHeaderTh')) document.getElementById('wastageHeaderTh').innerText = "Wastage Mtr";
+                        if (document.getElementById('totalHeaderTh')) document.getElementById('totalHeaderTh').innerText = "Total Mtr";
+                        if (document.getElementById('bConsHeaderTh')) document.getElementById('bConsHeaderTh').innerText = "Body Mtr/Pc";
+                        if (document.getElementById('tConsHeaderTh')) document.getElementById('tConsHeaderTh').innerText = "Total Mtr/Pc";
+                    } else {
+                        if (document.getElementById('bodyWtHeaderTh')) document.getElementById('bodyWtHeaderTh').innerText = "Body Wt";
+                        if (document.getElementById('wastageHeaderTh')) document.getElementById('wastageHeaderTh').innerText = "Wastage";
+                        if (document.getElementById('totalHeaderTh')) document.getElementById('totalHeaderTh').innerText = "Total";
+                        if (document.getElementById('bConsHeaderTh')) document.getElementById('bConsHeaderTh').innerText = "B.cons";
+                        if (document.getElementById('tConsHeaderTh')) document.getElementById('tConsHeaderTh').innerText = "T.cons";
+                    }
+                } else {
+                    standardMetricsRow.classList.remove('hidden');
+                    textileMetricsRow.classList.add('hidden');
+                    if (document.getElementById('bodyWtHeaderTh')) document.getElementById('bodyWtHeaderTh').innerText = "Body Wt";
+                    if (document.getElementById('wastageHeaderTh')) document.getElementById('wastageHeaderTh').innerText = "Wastage";
+                    if (document.getElementById('totalHeaderTh')) document.getElementById('totalHeaderTh').innerText = "Total";
+                    if (document.getElementById('bConsHeaderTh')) document.getElementById('bConsHeaderTh').innerText = "B.cons";
+                    if (document.getElementById('tConsHeaderTh')) document.getElementById('tConsHeaderTh').innerText = "T.cons";
+                }
+            }
+            
+            const foldingOptionsRow = document.getElementById('foldingOptionsRow');
+            if (foldingOptionsRow) {
+                foldingOptionsRow.style.display = isTextileActive ? 'none' : 'flex';
+            }
+
+            const globalMukpatDiv = document.getElementById('globalMukpatDiv');
+            if (globalMukpatDiv) {
+                globalMukpatDiv.style.display = isTextileActive ? 'none' : 'flex';
+            }
+
+            const weightAdjustmentRow = document.getElementById('weightAdjustmentRow');
+            if (weightAdjustmentRow) {
+                weightAdjustmentRow.style.display = isTextileActive ? 'none' : 'flex';
+            }
+            
+            const poloHasPocket = qualityPoloPocketData[currentQuality] !== false;
+            const poloHasByPlaket = qualityPoloByPlaketData[currentQuality] !== false;
+            const pantHasSidePocket = qualityPantSidePocketData[currentQuality] !== false;
+            const pantHasBackPocket = qualityPantBackPocketData[currentQuality] !== false;
+
+            // Manage Polo config row visibility panel
+            const poloOptionsRow = document.getElementById('poloOptionsRow');
+            if (poloOptionsRow) {
+                if (!isTextileActive && isPoloActive) {
+                    poloOptionsRow.classList.remove('hidden');
+                    document.getElementById('globalPocketDiv').style.display = poloHasPocket ? 'flex' : 'none';
+                    document.getElementById('globalByPlaketDiv').style.display = poloHasByPlaket ? 'flex' : 'none';
+                } else {
+                    poloOptionsRow.classList.add('hidden');
+                }
+            }
+
+            // Manage Pant config row visibility panel
+            const pantOptionsRow = document.getElementById('pantOptionsRow');
+            if (pantOptionsRow) {
+                if (!isTextileActive && isPantActive) {
+                    pantOptionsRow.classList.remove('hidden');
+                    document.getElementById('globalSidePocketDiv').style.display = pantHasSidePocket ? 'flex' : 'none';
+                    document.getElementById('globalBackPocketDiv').style.display = pantHasBackPocket ? 'flex' : 'none';
+                } else {
+                    pantOptionsRow.classList.add('hidden');
+                }
+            }
+
+            const globalByPlaketWastageDiv = document.getElementById('globalByPlaketWastageDiv');
+            if (globalByPlaketWastageDiv) {
+                globalByPlaketWastageDiv.style.display = (!isTextileActive && isPoloActive && poloHasByPlaket) ? 'flex' : 'none';
+            }
+
+            const globalRibWastageDiv = document.getElementById('globalRibWastageDiv');
+            if (globalRibWastageDiv) {
+                globalRibWastageDiv.style.display = (!isTextileActive && isGrsActive) ? 'flex' : 'none';
+            }
+
+            const globalTotalRibDiv = document.getElementById('globalTotalRibDiv');
+            if (globalTotalRibDiv) {
+                globalTotalRibDiv.style.display = (!isTextileActive && isGrsActive) ? 'flex' : 'none';
+            }
+
+            // Dynamically manage standard headers labels visibility bounds
+            const th = document.getElementById('foldingHeaderTh');
+            if (th) {
+                const fName = qualityFoldingNameData[currentQuality] || "";
+                if (!isTextileActive && isPoloActive && poloHasByPlaket) {
+                    if (isFoldingActive) {
+                        th.innerText = (fName.trim() !== "" ? fName : "Folding") + " + By-Plkt";
+                    } else {
+                        th.innerText = "By-Plaket Wt";
+                    }
+                    th.classList.remove('hidden');
+                } else if (!isTextileActive && isFoldingActive) {
+                    th.innerText = fName;
+                    th.classList.remove('hidden');
+                } else {
+                    th.classList.add('hidden');
+                }
+            }
+
+            const ribTh = document.getElementById('ribHeaderTh');
+            if (ribTh) {
+                if (!isTextileActive && isGrsActive) {
+                    ribTh.classList.remove('hidden');
+                } else {
+                    ribTh.classList.add('hidden');
+                }
+            }
+
+            const pocketTh = document.getElementById('pocketHeaderTh');
+            const sidePocketTh = document.getElementById('sidePocketHeaderTh');
+            const backPocketTh = document.getElementById('backPocketHeaderTh');
+            const collarCuffTh = document.getElementById('collarCuffHeaderTh');
+
+            if (pocketTh) {
+                if (!isTextileActive && isPoloActive) {
+                    pocketTh.innerText = poloHasPocket ? "Pkt + Plkt Wt" : "Plaket Wt";
+                    pocketTh.classList.remove('hidden');
+                } else {
+                    pocketTh.classList.add('hidden');
+                }
+            }
+            if (sidePocketTh) (!isTextileActive && isPantActive && pantHasSidePocket) ? sidePocketTh.classList.remove('hidden') : sidePocketTh.classList.add('hidden');
+            if (backPocketTh) (!isTextileActive && isPantActive && pantHasBackPocket) ? backPocketTh.classList.remove('hidden') : backPocketTh.classList.add('hidden');
+            if (collarCuffTh) (!isTextileActive && isPoloActive) ? collarCuffTh.classList.remove('hidden') : collarCuffTh.classList.add('hidden');
+
+            const tfootTd = document.getElementById('totalFoldingDisplay');
+            if (tfootTd) {
+                if (!isTextileActive && (isFoldingActive || (isPoloActive && poloHasByPlaket))) {
+                    tfootTd.classList.remove('hidden');
+                } else {
+                    tfootTd.classList.add('hidden');
+                }
+            }
+
+            const ribTfootTd = document.getElementById('totalRibWtDisplay');
+            if (ribTfootTd) {
+                if (!isTextileActive && isGrsActive) {
+                    ribTfootTd.classList.remove('hidden');
+                } else {
+                    ribTfootTd.classList.add('hidden');
+                }
+            }
+
+            const pocketTfootTd = document.getElementById('totalPocketDisplay');
+            const sidePocketTfootTd = document.getElementById('totalSidePocketDisplay');
+            const backPocketTfootTd = document.getElementById('totalBackPocketDisplay');
+            const collarCuffTfootTd = document.getElementById('totalCollarCuffDisplay');
+
+            if (pocketTfootTd) (!isTextileActive && isPoloActive) ? pocketTfootTd.classList.remove('hidden') : pocketTfootTd.classList.add('hidden');
+            if (sidePocketTfootTd) (!isTextileActive && isPantActive && pantHasSidePocket) ? sidePocketTfootTd.classList.remove('hidden') : sidePocketTfootTd.classList.add('hidden');
+            if (backPocketTfootTd) (!isTextileActive && isPantActive && pantHasBackPocket) ? backPocketTfootTd.classList.remove('hidden') : backPocketTfootTd.classList.add('hidden');
+            if (collarCuffTfootTd) (!isTextileActive && isPoloActive) ? collarCuffTfootTd.classList.remove('hidden') : collarCuffTfootTd.classList.add('hidden');
+
+            // Update top calculated single fabric consumption strictly mapped to 3 decimals
+            let singleCalculatedCons = 0;
+            if (stdGsm > 0) {
+                singleCalculatedCons = (stdCons / stdGsm) * fabricGsm;
+            }
+            document.getElementById('headerCalculatedCons').innerText = singleCalculatedCons.toFixed(3);
+
+            // Fetch global batch weights for calculations
+            const totalPocketGlobal = isPoloActive && poloHasPocket ? (parseFloat(document.getElementById('poloTotalPocketInput').value) || 0) : 0;
+            const totalPlaketGlobal = isPoloActive ? (parseFloat(document.getElementById('poloTotalPlaketInput').value) || 0) : 0;
+            const totalByPlaketGlobal = isPoloActive && poloHasByPlaket ? (parseFloat(document.getElementById('poloTotalByPlaketInput').value) || 0) : 0;
+            const totalCollarCuffGlobal = isPoloActive ? (parseFloat(document.getElementById('poloTotalCollarCuffInput').value) || 0) : 0;
+            
+            const totalSidePocketGlobal = isPantActive && pantHasSidePocket ? (parseFloat(document.getElementById('pantTotalSidePocketInput').value) || 0) : 0;
+            const totalBackPocketGlobal = isPantActive && pantHasBackPocket ? (parseFloat(document.getElementById('pantTotalBackPocketInput').value) || 0) : 0;
+
+            const globalWastage = parseFloat(document.getElementById('globalWastageInput').value) || 0;
+            const globalMukpat = parseFloat(document.getElementById('globalMukpatInput').value) || 0;
+            const globalByPlaketWastage = isPoloActive && poloHasByPlaket ? (parseFloat(document.getElementById('poloTotalByPlaketWastageInput').value) || 0) : 0;
+            const globalRibWastage = isGrsActive ? (parseFloat(document.getElementById('globalRibWastageInput').value) || 0) : 0;
+            const globalRibTotal = isGrsActive ? (parseFloat(document.getElementById('globalTotalRibInput').value) || 0) : 0;
+
+            // Pre-loop pass to sum up total pieces required for proportional sharing calculation
+            let tempTotalPicsSum = 0;
+            rows.forEach(row => {
+                tempTotalPicsSum += parseFloat(row.querySelector('.row-pics').value) || 0;
+                
+                const bodyWtInput = row.querySelector('.row-bodywt');
+                if (!isCheckActive && bodyWtInput.dataset.weight !== undefined) {
+                    bodyWtInput.value = bodyWtInput.dataset.weight;
+                    bodyWtInput.removeAttribute('data-weight');
+                    bodyWtInput.disabled = false;
+                    bodyWtInput.classList.remove('bg-gray-100');
+                }
+                if (!isTextileActive) {
+                    bodyWtInput.disabled = false;
+                    bodyWtInput.classList.remove('bg-gray-100');
+                }
+            });
+
+            let tempTotalWeightSum = 0;
+            let textileFactor = 0;
+            const textileTotalMeters = parseFloat(document.getElementById('textileTotalMetersInput').value) || 0;
+            const textileStdCons = parseFloat(document.getElementById('textileStdConsInput').value) || 0;
+
+            if (isTextileActive) {
+                rows.forEach(row => {
+                    const bodyWtInput = row.querySelector('.row-bodywt');
+                    let bodywt = 0;
+                    if (isCheckActive) {
+                        if (bodyWtInput.dataset.weight === undefined) {
+                            bodyWtInput.dataset.weight = bodyWtInput.value;
+                        }
+                        bodywt = parseFloat(bodyWtInput.dataset.weight) || 0;
+                        bodyWtInput.disabled = true;
+                        bodyWtInput.classList.add('bg-gray-100');
+                    } else {
+                        bodywt = parseFloat(bodyWtInput.value) || 0;
+                    }
+
+                    const pics = parseFloat(row.querySelector('.row-pics').value) || 0;
+                    let rowWastage = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * globalWastage : 0;
+                    const rowTotalWeight = bodywt + rowWastage;
+
+                    tempTotalWeightSum += rowTotalWeight;
+                });
+                textileFactor = tempTotalWeightSum > 0 ? textileTotalMeters / tempTotalWeightSum : 0;
+            }
+
+            // Weight Adjustment Allocation Pre-pass Factor Computation logic
+            let adjWeightValue = parseFloat(document.getElementById('adjWeightInput').value) || 0;
+            let adjAction = document.getElementById('adjActionSelect').value;
+            let adjFactor = 0;
+
+            if (!isTextileActive && adjWeightValue > 0) {
+                let baseSum = 0;
+                let chkBody = document.getElementById('adjTargetBodyWt').checked;
+                let chkWastage = document.getElementById('adjTargetWastage').checked;
+                let chkMukpat = document.getElementById('adjTargetMukpat').checked;
+                let chkRib = document.getElementById('adjTargetRib').checked;
+                let chkPocket = document.getElementById('adjTargetPocket').checked;
+                let chkSidePkt = document.getElementById('adjTargetSidePocket').checked;
+                let chkBackPkt = document.getElementById('adjTargetBackPocket').checked;
+                let chkCollar = document.getElementById('adjTargetCollar').checked;
+
+                rows.forEach(row => {
+                    const pics = parseFloat(row.querySelector('.row-pics').value) || 0;
+                    const bodyWtInput = row.querySelector('.row-bodywt');
+                    let bodywt = parseFloat(bodyWtInput.value) || 0;
+
+                    if (chkBody) baseSum += bodywt;
+                    if (chkWastage) {
+                        let rowWastageShare = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * (globalWastage + globalByPlaketWastage + globalRibWastage) : 0;
+                        baseSum += rowWastageShare;
+                    }
+                    if (chkMukpat) {
+                        let rowMukpatShare = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * globalMukpat : 0;
+                        baseSum += rowMukpatShare;
+                    }
+                    if (chkRib && isGrsActive) {
+                        let ribWt = globalRibTotal > 0 ? (tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * globalRibTotal : 0) : (parseFloat(row.querySelector('.row-ribwt').value) || 0);
+                        baseSum += ribWt;
+                    }
+                    if (chkPocket && isPoloActive) {
+                        let plaketWt = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * totalPlaketGlobal : 0;
+                        let pocketOnlyWt = (poloHasPocket && tempTotalPicsSum > 0) ? (pics / tempTotalPicsSum) * totalPocketGlobal : 0;
+                        baseSum += (pocketOnlyWt + plaketWt);
+                    }
+                    if (chkSidePkt && isPantActive && pantHasSidePocket) {
+                        let sidePocketWt = totalSidePocketGlobal > 0 ? (tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * totalSidePocketGlobal : 0) : (parseFloat(row.querySelector('.row-sidepocket').value) || 0);
+                        baseSum += sidePocketWt;
+                    }
+                    if (chkBackPkt && isPantActive && pantHasBackPocket) {
+                        let backPocketWt = totalBackPocketGlobal > 0 ? (tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * totalBackPocketGlobal : 0) : (parseFloat(row.querySelector('.row-backpocket').value) || 0);
+                        baseSum += backPocketWt;
+                    }
+                    if (chkCollar && isPoloActive) {
+                        let collarCuffWt = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * totalCollarCuffGlobal : 0;
+                        baseSum += collarCuffWt;
+                    }
+                });
+
+                if (baseSum > 0) {
+                    adjFactor = adjWeightValue / baseSum;
+                    let adjSign = (adjAction === 'ADD') ? 1 : -1;
+                    if (chkWastage) {
+                        ['globalWastageInput', 'poloTotalByPlaketWastageInput', 'globalRibWastageInput'].forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el && el.value !== "") {
+                                const val = parseFloat(el.value) || 0;
+                                if (val > 0) { el.dataset.origValue = el.value; el.value = (val + val * adjFactor * adjSign).toFixed(3); }
+                            }
+                        });
+                    }
+                    if (chkMukpat) {
+                        const el = document.getElementById('globalMukpatInput');
+                        if (el && el.value !== "") {
+                            const val = parseFloat(el.value) || 0;
+                            if (val > 0) { el.dataset.origValue = el.value; el.value = (val + val * adjFactor * adjSign).toFixed(3); }
+                        }
+                    }
+                    if (chkRib && isGrsActive) {
+                        const el = document.getElementById('globalTotalRibInput');
+                        if (el && el.value !== "") {
+                            const val = parseFloat(el.value) || 0;
+                            if (val > 0) { el.dataset.origValue = el.value; el.value = (val + val * adjFactor * adjSign).toFixed(3); }
+                        }
+                    }
+                    if (chkPocket && isPoloActive) {
+                        ['poloTotalPocketInput', 'poloTotalPlaketInput'].forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el && el.value !== "") {
+                                const val = parseFloat(el.value) || 0;
+                                if (val > 0) { el.dataset.origValue = el.value; el.value = (val + val * adjFactor * adjSign).toFixed(3); }
+                            }
+                        });
+                    }
+                    if (chkSidePkt && isPantActive && pantHasSidePocket) {
+                        const el = document.getElementById('pantTotalSidePocketInput');
+                        if (el && el.value !== "") {
+                            const val = parseFloat(el.value) || 0;
+                            if (val > 0) { el.dataset.origValue = el.value; el.value = (val + val * adjFactor * adjSign).toFixed(3); }
+                        }
+                    }
+                    if (chkBackPkt && isPantActive && pantHasBackPocket) {
+                        const el = document.getElementById('pantTotalBackPocketInput');
+                        if (el && el.value !== "") {
+                            const val = parseFloat(el.value) || 0;
+                            if (val > 0) { el.dataset.origValue = el.value; el.value = (val + val * adjFactor * adjSign).toFixed(3); }
+                        }
+                    }
+                    if (chkCollar && isPoloActive) {
+                        const el = document.getElementById('poloTotalCollarCuffInput');
+                        if (el && el.value !== "") {
+                            const val = parseFloat(el.value) || 0;
+                            if (val > 0) { el.dataset.origValue = el.value; el.value = (val + val * adjFactor * adjSign).toFixed(3); }
+                        }
+                    }
+                }
+            }
+
+            rows.forEach(row => {
+                const pics = parseFloat(row.querySelector('.row-pics').value) || 0;
+                const bodyWtInput = row.querySelector('.row-bodywt');
+                let bodywt = isCheckActive ? (parseFloat(bodyWtInput.dataset.weight) || 0) : (parseFloat(bodyWtInput.value) || 0);
+
+                // Force layout state clean synchronization parameters to explicitly prevent shattered bounds
+                const foldingTd = row.querySelector('.row-folding');
+                const ribTd = row.querySelector('.row-ribwt-td');
+                const pocketTd = row.querySelector('.row-pocket');
+                const sidePocketTd = row.querySelector('.row-sidepocket-td');
+                const backPocketTd = row.querySelector('.row-backpocket-td');
+                const collarCuffTd = row.querySelector('.row-collarcuff');
+
+                if (isTextileActive) {
+                    if (foldingTd) foldingTd.classList.add('hidden');
+                    if (ribTd) ribTd.classList.add('hidden');
+                    if (pocketTd) pocketTd.classList.add('hidden');
+                    if (sidePocketTd) sidePocketTd.classList.add('hidden');
+                    if (backPocketTd) backPocketTd.classList.add('hidden');
+                    if (foldingTd) foldingTd.classList.add('hidden');
+                    if (collarCuffTd) collarCuffTd.classList.add('hidden');
+
+                    let rowWastage = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * globalWastage : 0;
+
+                    if (isCheckActive) {
+                        const rowBodyMtr = parseFloat((textileFactor * bodywt).toFixed(3));
+                        const rowWastageMtr = parseFloat((textileFactor * rowWastage).toFixed(3));
+                        const rowTotalMtr = rowBodyMtr + rowWastageMtr;
+
+                        bodyWtInput.value = rowBodyMtr.toFixed(3);
+                        row.querySelector('.row-wastage').innerText = rowWastageMtr.toFixed(3);
+                        row.querySelector('.row-total').innerText = rowTotalMtr.toFixed(3);
+
+                        const rowBodyMtrPerPc = pics > 0 ? rowBodyMtr / pics : 0;
+                        const rowTotalMtrPerPc = pics > 0 ? rowTotalMtr / pics : 0;
+
+                        row.querySelector('.row-bcons').innerText = rowBodyMtrPerPc.toFixed(3);
+                        row.querySelector('.row-tcons').innerText = rowTotalMtrPerPc.toFixed(3);
+
+                        totalPicsSum += pics;
+                        totalBodyWtSum += rowBodyMtr;
+                        totalWastageSum += rowWastageMtr;
+                        totalWeightSum += rowTotalMtr;
+                    } else {
+                        const rowWastageRounded = parseFloat(rowWastage.toFixed(3));
+                        const rowTotalWeightRounded = parseFloat(bodywt.toFixed(3)) + rowWastageRounded;
+
+                        row.querySelector('.row-wastage').innerText = rowWastageRounded.toFixed(3);
+                        row.querySelector('.row-total').innerText = rowTotalWeightRounded.toFixed(3);
+
+                        const grandBCons = pics > 0 ? bodywt / pics : 0;
+                        const grandTCons = pics > 0 ? rowTotalWeightRounded / pics : 0;
+
+                        row.querySelector('.row-bcons').innerText = grandBCons.toFixed(3);
+                        row.querySelector('.row-tcons').innerText = grandTCons.toFixed(3);
+
+                        totalPicsSum += pics;
+                        totalBodyWtSum += parseFloat(bodywt.toFixed(3));
+                        totalWastageSum += rowWastageRounded;
+                        totalWeightSum += rowTotalWeightRounded;
+                    }
+                } else {
+                    const fName = qualityFoldingNameData[currentQuality] || "";
+                    const fGm = parseFloat(qualityFoldingGmData[currentQuality]) || 0;
+
+                    // Evaluate auto generated item parameters weight conversions (Folding + By-Plaket combined)
+                    let foldingWt = isFoldingActive ? (pics * fGm) : 0;
+                    if (isPoloActive && poloHasByPlaket) {
+                        let byPlaketWt = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * totalByPlaketGlobal : 0;
+                        foldingWt += byPlaketWt;
+                    }
+
+                    if (foldingTd) {
+                        if (isFoldingActive || (isPoloActive && poloHasByPlaket)) {
+                            foldingTd.innerText = foldingWt.toFixed(3);
+                            foldingTd.classList.remove('hidden');
+                        } else {
+                            foldingTd.classList.add('hidden');
+                        }
+                    }
+
+                    // Dual-mode global/manual Rib Wt mechanism
+                    let ribWt = 0;
+                    const ribInput = row.querySelector('.row-ribwt');
+                    if (ribTd && ribInput) {
+                        if (isGrsActive) {
+                            ribTd.classList.remove('hidden');
+                            if (globalRibTotal > 0) {
+                                ribWt = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * globalRibTotal : 0;
+                                ribInput.value = ribWt.toFixed(3);
+                                ribInput.disabled = true;
+                                ribInput.classList.add('bg-gray-100');
+                            } else {
+                                ribInput.disabled = false;
+                                ribInput.classList.remove('bg-gray-100');
+                                ribWt = parseFloat(ribInput.value) || 0;
+                            }
+                        } else {
+                            ribTd.classList.add('hidden');
+                            ribInput.value = '';
+                        }
+                    }
+
+                    // Combined pocket and plaket calculations
+                    let pktPlktWt = 0;
+                    if (pocketTd) {
+                        if (isPoloActive) {
+                            pocketTd.classList.remove('hidden');
+                            let plaketWt = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * totalPlaketGlobal : 0;
+                            let pocketOnlyWt = (poloHasPocket && tempTotalPicsSum > 0) ? (pics / tempTotalPicsSum) * totalPocketGlobal : 0;
+                            pktPlktWt = pocketOnlyWt + plaketWt;
+                            pocketTd.innerText = pktPlktWt.toFixed(3);
+                        } else {
+                            pocketTd.classList.add('hidden');
+                            pocketTd.innerText = '0.000';
+                        }
+                    }
+
+                    // Dual-mode Side Pocket weight mechanism
+                    let sidePocketWt = 0;
+                    const sidePocketInput = row.querySelector('.row-sidepocket');
+                    if (sidePocketTd && sidePocketInput) {
+                        if (isPantActive && pantHasSidePocket) {
+                            sidePocketTd.classList.remove('hidden');
+                            if (totalSidePocketGlobal > 0) {
+                                sidePocketWt = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * totalSidePocketGlobal : 0;
+                                sidePocketInput.value = sidePocketWt.toFixed(3);
+                                sidePocketInput.disabled = true;
+                                sidePocketInput.classList.add('bg-gray-100');
+                            } else {
+                                sidePocketInput.disabled = false;
+                                sidePocketInput.classList.remove('bg-gray-100');
+                                sidePocketWt = parseFloat(sidePocketInput.value) || 0;
+                            }
+                        } else {
+                            sidePocketTd.classList.add('hidden');
+                            sidePocketInput.value = '';
+                        }
+                    }
+
+                    // Dual-mode Back Pocket weight mechanism
+                    let backPocketWt = 0;
+                    const backPocketInput = row.querySelector('.row-backpocket');
+                    if (backPocketTd && backPocketInput) {
+                        if (isPantActive && pantHasBackPocket) {
+                            backPocketTd.classList.remove('hidden');
+                            if (totalBackPocketGlobal > 0) {
+                                backPocketWt = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * totalBackPocketGlobal : 0;
+                                backPocketInput.value = backPocketWt.toFixed(3);
+                                backPocketInput.disabled = true;
+                                backPocketInput.classList.add('bg-gray-100');
+                            } else {
+                                backPocketInput.disabled = false;
+                                backPocketInput.classList.remove('bg-gray-100');
+                                backPocketWt = parseFloat(backPocketInput.value) || 0;
+                            }
+                        } else {
+                            backPocketTd.classList.add('hidden');
+                            backPocketInput.value = '';
+                        }
+                    }
+
+                    let collarCuffWt = 0;
+                    if (collarCuffTd) {
+                        if (isPoloActive) {
+                            collarCuffTd.classList.remove('hidden');
+                            collarCuffWt = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * totalCollarCuffGlobal : 0;
+                            collarCuffTd.innerText = collarCuffWt.toFixed(3);
+                        } else {
+                            collarCuffTd.classList.add('hidden');
+                            collarCuffTd.innerText = '0.000';
+                        }
+                    }
+
+                    // Distributed base shares parts definition
+                    let rowWastagePart = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * (globalWastage + globalByPlaketWastage + globalRibWastage) : 0;
+                    let rowMukpatPart = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * globalMukpat : 0;
+
+                    let mainWastageOnlyPart = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * (globalWastage + globalRibWastage) : 0;
+                    let mainMukpatPart = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * globalMukpat : 0;
+
+                    // Apply proportional adjustment modifiers
+                    if (adjWeightValue > 0) {
+                        let chkBody = document.getElementById('adjTargetBodyWt').checked;
+                        let chkWastage = document.getElementById('adjTargetWastage').checked;
+                        let chkMukpat = document.getElementById('adjTargetMukpat').checked;
+                        let chkRib = document.getElementById('adjTargetRib').checked;
+                        let chkPocket = document.getElementById('adjTargetPocket').checked;
+                        let chkSidePkt = document.getElementById('adjTargetSidePocket').checked;
+                        let chkBackPkt = document.getElementById('adjTargetBackPocket').checked;
+                        let chkCollar = document.getElementById('adjTargetCollar').checked;
+                        let adjSign = (adjAction === 'ADD') ? 1 : -1;
+
+                        if (chkBody) {
+                            bodyWtInput.dataset.origBodyWt = bodywt;
+                            bodywt += bodywt * adjFactor * adjSign;
+                            bodyWtInput.value = bodywt.toFixed(3);
+                        }
+                        if (chkWastage) {
+                            rowWastagePart += rowWastagePart * adjFactor * adjSign;
+                            mainWastageOnlyPart += mainWastageOnlyPart * adjFactor * adjSign;
+                        }
+                        if (chkMukpat) {
+                            rowMukpatPart += rowMukpatPart * adjFactor * adjSign;
+                            mainMukpatPart += mainMukpatPart * adjFactor * adjSign;
+                        }
+                        if (chkRib && isGrsActive) {
+                            ribWt += ribWt * adjFactor * adjSign;
+                        }
+                        if (chkPocket && isPoloActive) pktPlktWt += pktPlktWt * adjFactor * adjSign;
+                        if (chkSidePkt && isPantActive && pantHasSidePocket) {
+                            sidePocketWt += sidePocketWt * adjFactor * adjSign;
+                        }
+                        if (chkBackPkt && isPantActive && pantHasBackPocket) {
+                            backPocketWt += backPocketWt * adjFactor * adjSign;
+                        }
+                        if (chkCollar && isPoloActive) collarCuffWt += collarCuffWt * adjFactor * adjSign;
+                    }
+
+                    // Unconditionally push live adjusted parameters text displays into inner target inputs/cells
+                    if (ribInput && isGrsActive) ribInput.value = ribWt.toFixed(3);
+                    if (pocketTd && isPoloActive) pocketTd.innerText = pktPlktWt.toFixed(3);
+                    if (sidePocketInput && isPantActive && pantHasSidePocket) sidePocketInput.value = sidePocketWt.toFixed(3);
+                    if (backPocketInput && isPantActive && pantHasBackPocket) backPocketInput.value = backPocketWt.toFixed(3);
+                    if (collarCuffTd && isPoloActive) collarCuffTd.innerText = collarCuffWt.toFixed(3);
+
+                    let rowWastage = rowWastagePart + rowMukpatPart;
+                    
+                    const rBody = parseFloat(bodywt.toFixed(3));
+                    const rFolding = parseFloat(foldingWt.toFixed(3));
+                    const rRib = parseFloat(ribWt.toFixed(3));
+                    const rPktPlkt = parseFloat(pktPlktWt.toFixed(3));
+                    const rSidePkt = parseFloat(sidePocketWt.toFixed(3));
+                    const rBackPkt = parseFloat(backPocketWt.toFixed(3));
+                    const rCollarCuff = parseFloat(collarCuffWt.toFixed(3));
+                    const rWastage = parseFloat(rowWastage.toFixed(3));
+
+                    row.querySelector('.row-wastage').innerText = rWastage.toFixed(3);
+
+                    // Calculate total weight for this row
+                    const rowTotalWeight = rBody + rFolding + rRib + rPktPlkt + rSidePkt + rBackPkt + rCollarCuff + rWastage;
+                    row.querySelector('.row-total').innerText = rowTotalWeight.toFixed(3);
+
+                    // Consumption calculation zone: Include lay components + lay wastages
+                    let mainWastageShare = mainWastageOnlyPart + mainMukpatPart;
+                    let mainFabricRowWeight = bodywt + pktPlktWt + sidePocketWt + backPocketWt + mainWastageShare;
+
+                    // Display regular weights per pc
+                    const grandBCons = pics > 0 ? rBody / pics : 0;
+                    const grandTCons = pics > 0 ? mainFabricRowWeight / pics : 0;
+
+                    row.querySelector('.row-bcons').innerText = grandBCons.toFixed(3);
+                    row.querySelector('.row-tcons').innerText = grandTCons.toFixed(3);
+
+                    // Accumulate values for grand totals
+                    totalMainFabricSum += mainFabricRowWeight;
+                    totalPicsSum += pics;
+                    totalBodyWtSum += rBody;
+                    totalWastageSum += rWastage;
+                    totalFoldingSum += rFolding;
+                    totalRibWtSum += rRib;
+                    totalPocketSum += rPktPlkt;
+                    totalSidePocketSum += rSidePkt;
+                    totalBackPocketSum += rBackPkt;
+                    totalCollarCuffSum += rCollarCuff;
+                    totalWeightSum += rowTotalWeight;
+                }
+            });
+
+            // Calculate grand total averages based on accumulated sums
+            let grandBCons = totalPicsSum > 0 ? (totalBodyWtSum / totalPicsSum) : 0;
+            let grandTCons = totalPicsSum > 0 ? (totalMainFabricSum / totalPicsSum) : 0;
+
+            document.getElementById('totalPicsDisplay').innerText = totalPicsSum;
+            
+            if (isCheckActive) {
+                const totalBodyMtrSum = totalBodyWtSum;
+                const totalWastageMtrSum = totalWastageSum;
+                const totalMtrSum = totalWeightSum;
+
+                document.getElementById('totalBodyWtDisplay').innerText = totalBodyMtrSum.toFixed(3);
+                document.getElementById('totalWastageDisplay').innerText = totalWastageMtrSum.toFixed(3);
+                document.getElementById('totalWeightDisplay').innerText = totalMtrSum.toFixed(3);
+
+                const avgBodyMtrPerPc = totalPicsSum > 0 ? totalBodyMtrSum / totalPicsSum : 0;
+                const avgTotalMtrPerPc = totalPicsSum > 0 ? totalMtrSum / totalPicsSum : 0;
+
+                document.getElementById('totalBCons').innerText = avgBodyMtrPerPc.toFixed(3);
+                document.getElementById('totalTCons').innerText = avgTotalMtrPerPc.toFixed(3);
+                
+                // Variance logic tracking for Textile meters mode
+                let diff = avgTotalMtrPerPc - textileStdCons;
+                let varianceEl = document.getElementById('consVariance');
+                if (totalPicsSum > 0 && textileStdCons > 0) {
+                    let diffStr = (diff >= 0 ? "+" : "") + diff.toFixed(3);
+                    if (diff < 0) {
+                        if (Math.abs(diff) > 0.0025) {
+                            varianceEl.innerText = `(${diffStr} LOW - NOT ALLOWED)`;
+                        } else {
+                            varianceEl.innerText = `(${diffStr} LOW - OK)`;
+                        }
+                        varianceEl.className = "text-[10px] font-bold text-amber-500 mt-0.5 block text-center";
+                    } else if (diff > 0) {
+                        if (diff > 0.0025) {
+                            varianceEl.innerText = `(${diffStr} HIGH - NOT ALLOWED)`;
+                            varianceEl.className = "text-[10px] font-bold text-red-600 mt-0.5 block text-center";
+                        } else {
+                            varianceEl.innerText = `(${diffStr} HIGH - OK)`;
+                            varianceEl.className = "text-[10px] font-bold text-green-600 mt-0.5 block text-center";
+                        }
+                    } else {
+                        varianceEl.innerText = "(MATCHED)";
+                        varianceEl.className = "text-[10px] font-bold text-green-600 mt-0.5 block text-center";
+                    }
+                } else {
+                    varianceEl.innerText = "";
+                }
+            } else {
+                document.getElementById('totalBodyWtDisplay').innerText = totalBodyWtSum.toFixed(3);
+                document.getElementById('totalWastageDisplay').innerText = totalWastageSum.toFixed(3);
+                document.getElementById('totalWeightDisplay').innerText = totalWeightSum.toFixed(3);
+
+                if (isTextileActive) {
+                    const avgBodyWtPerPc = totalPicsSum > 0 ? totalBodyWtSum / totalPicsSum : 0;
+                    const avgTotalWtPerPc = totalPicsSum > 0 ? totalWeightSum / totalPicsSum : 0;
+                    document.getElementById('totalBCons').innerText = avgBodyWtPerPc.toFixed(3);
+                    document.getElementById('totalTCons').innerText = avgTotalWtPerPc.toFixed(3);
+                    document.getElementById('consVariance').innerText = "";
+                } else {
+                    document.getElementById('totalBCons').innerText = grandBCons.toFixed(3);
+                    document.getElementById('totalTCons').innerText = grandTCons.toFixed(3);
+
+                    // Calculate variance to 3 decimal formats safely and apply dynamic user coloration
+                    let diff = grandTCons - singleCalculatedCons;
+                    let varianceEl = document.getElementById('consVariance');
+                    if (totalPicsSum > 0 && stdGsm > 0) {
+                        let diffStr = (diff >= 0 ? "+" : "") + diff.toFixed(3);
+                        
+                        if (diff < 0) {
+                            // Low condition: Always Yellow/Amber regardless of tolerance limit
+                            if (Math.abs(diff) > 0.0025) {
+                                varianceEl.innerText = `(${diffStr} LOW - NOT ALLOWED)`;
+                            } else {
+                                varianceEl.innerText = `(${diffStr} LOW - OK)`;
+                            }
+                            varianceEl.className = "text-[10px] font-bold text-amber-500 mt-0.5 block text-center";
+                        } else if (diff > 0) {
+                            // High condition: Green if allowed, Red if not allowed
+                            if (diff > 0.0025) {
+                                varianceEl.innerText = `(${diffStr} HIGH - NOT ALLOWED)`;
+                                varianceEl.className = "text-[10px] font-bold text-red-600 mt-0.5 block text-center";
+                            } else {
+                                varianceEl.innerText = `(${diffStr} HIGH - OK)`;
+                                varianceEl.className = "text-[10px] font-bold text-green-600 mt-0.5 block text-center";
+                            }
+                        } else {
+                            // Exactly matched condition: Always Green
+                            varianceEl.innerText = "(MATCHED)";
+                            varianceEl.className = "text-[10px] font-bold text-green-600 mt-0.5 block text-center";
+                        }
+                    } else {
+                        varianceEl.innerText = "";
+                    }
+                }
+            }
+
+            // Bind the grand footer averages text indicators dynamically
+            if (document.getElementById('totalFoldingDisplay')) document.getElementById('totalFoldingDisplay').innerText = totalFoldingSum.toFixed(3);
+            if (document.getElementById('totalRibWtDisplay')) document.getElementById('totalRibWtDisplay').innerText = totalRibWtSum.toFixed(3);
+            if (document.getElementById('totalPocketDisplay')) document.getElementById('totalPocketDisplay').innerText = totalPocketSum.toFixed(3);
+            if (document.getElementById('totalSidePocketDisplay')) document.getElementById('totalSidePocketDisplay').innerText = totalSidePocketSum.toFixed(3);
+            if (document.getElementById('totalBackPocketDisplay')) document.getElementById('totalBackPocketDisplay').innerText = totalBackPocketSum.toFixed(3);
+            if (document.getElementById('totalCollarCuffDisplay')) document.getElementById('totalCollarCuffDisplay').innerText = totalCollarCuffSum.toFixed(3);
+
+            saveState();
+        }
+
+        function prepareAndPrint() {
+            const select = document.getElementById('globalQuality');
+            document.getElementById('printQuality').innerText = select.value || "";
+            document.getElementById('printRemarks').innerText = qualityRemarksData[select.value] || "";
+            document.getElementById('printConsumption').innerText = qualityData[select.value] || "0";
+            document.getElementById('printGsm').innerText = qualityGsmData[select.value] || "0";
+            document.getElementById('printFabricGsm').innerText = document.getElementById('fabricGsmInput').value || "0";
+            
+            const currentQuality = select.value;
+            const fName = qualityFoldingNameData[currentQuality] || "";
+            const fGm = parseFloat(qualityFoldingGmData[currentQuality]) || 0;
+            const isFoldingActive = fName.trim() !== "" && fGm > 0;
+            const isTextileActive = currentQuality.toUpperCase().includes('TEXTILE');
+
+            const printLabel = document.getElementById('printFoldingLabel');
+            const printVal = document.getElementById('printFoldingVal');
+            if (printLabel && printVal) {
+                if (!isTextileActive && isFoldingActive) {
+                    printLabel.innerText = fName + " VALUE (GM/PC)";
+                    printLabel.classList.remove('hidden');
+                    printVal.innerText = fGm.toFixed(3);
+                    printVal.classList.remove('hidden');
+                } else {
+                    printLabel.classList.add('hidden');
+                    printVal.classList.add('hidden');
+                }
+            }
+
+            const printTextileStdConsLabel = document.getElementById('printTextileStdConsLabel');
+            const printTextileStdConsVal = document.getElementById('printTextileStdConsVal');
+            const printTotalMetersLabel = document.getElementById('printTotalMetersLabel');
+            const printTotalMetersVal = document.getElementById('printTotalMetersVal');
+            const printTextileCheckLabel = document.getElementById('printTextileCheckLabel');
+            const printTextileCheckVal = document.getElementById('printTextileCheckVal');
+
+            const printConsumptionHeader = document.getElementById('printConsumptionHeader');
+            const printConsumption = document.getElementById('printConsumption');
+            const printGsmHeader = document.getElementById('printGsmHeader');
+            const printGsm = document.getElementById('printGsm');
+            const printFabricGsmHeader = document.getElementById('printFabricGsmHeader');
+            const printFabricGsm = document.getElementById('printFabricGsm');
+
+            if (isTextileActive) {
+                printTextileStdConsLabel.classList.remove('hidden');
+                printTextileStdConsVal.classList.remove('hidden');
+                printTextileStdConsVal.innerText = document.getElementById('textileStdConsInput').value || "0.000";
+
+                printTotalMetersLabel.classList.remove('hidden');
+                printTotalMetersVal.classList.remove('hidden');
+                printTotalMetersVal.innerText = document.getElementById('textileTotalMetersInput').value || "0.000";
+
+                printTextileCheckLabel.classList.remove('hidden');
+                printTextileCheckVal.classList.remove('hidden');
+                printTextileCheckVal.innerText = document.getElementById('textileCheckMode').checked ? "YES" : "NO";
+
+                printConsumptionHeader.classList.add('hidden');
+                printConsumption.classList.add('hidden');
+                printGsmHeader.classList.add('hidden');
+                printGsm.classList.add('hidden');
+                printFabricGsmHeader.classList.add('hidden');
+                printFabricGsm.classList.add('hidden');
+            } else {
+                printTextileStdConsLabel.classList.add('hidden');
+                printTextileStdConsVal.classList.add('hidden');
+                printTotalMetersLabel.classList.add('hidden');
+                printTotalMetersVal.classList.add('hidden');
+                printTextileCheckLabel.classList.add('hidden');
+                printTextileCheckVal.classList.add('hidden');
+
+                printConsumptionHeader.classList.remove('hidden');
+                printConsumption.classList.remove('hidden');
+                printGsmHeader.classList.remove('hidden');
+                printGsm.classList.remove('hidden');
+                printFabricGsmHeader.classList.remove('hidden');
+                printFabricGsm.classList.remove('hidden');
+            }
+
+            // Clean view conversion for text inputs during print
+            const inputClasses = ['.row-size', '.row-pics', '.row-bodywt', '.row-ribwt', '.row-sidepocket', '.row-backpocket'];
+            inputClasses.forEach(selector => {
+                const inputs = document.querySelectorAll(selector);
+                inputs.forEach(input => {
+                    let span = input.nextSibling;
+                    if (!span || span.className !== 'print-val hidden print:inline') {
+                        span = document.createElement('span');
+                        span.className = 'print-val hidden print:inline';
+                        input.parentNode.appendChild(span);
+                    }
+                    span.innerText = input.value;
+                });
+            });
+
+            window.print();
+        }
+
+        // Export Data to JSON File
+        function exportData() {
+            const rows = document.querySelectorAll('#itemRows tr');
+            const items = [];
+            rows.forEach(row => {
+                const bodyWtInput = row.querySelector('.row-bodywt');
+                items.push({
+                    size: row.querySelector('.row-size').value,
+                    pics: row.querySelector('.row-pics').value,
+                    bodywt: bodyWtInput.dataset.origBodyWt !== undefined ? bodyWtInput.dataset.origBodyWt : (bodyWtInput.dataset.weight !== undefined ? bodyWtInput.dataset.weight : bodyWtInput.value),
+                    ribwt: row.querySelector('.row-ribwt') ? row.querySelector('.row-ribwt').value : '',
+                    sidepocket: row.querySelector('.row-sidepocket') ? row.querySelector('.row-sidepocket').value : '',
+                    backpocket: row.querySelector('.row-backpocket') ? row.querySelector('.row-backpocket').value : ''
+                });
+            });
+
+            const getGlobalVal = (id) => {
+                const el = document.getElementById(id);
+                return el && el.dataset.origValue !== undefined ? el.dataset.origValue : (el ? el.value : "");
+            };
+
+            const exportObj = {
+                qualityData: qualityData,
+                qualityGsmData: qualityGsmData,
+                qualityFoldingNameData: qualityFoldingNameData,
+                qualityFoldingGmData: qualityFoldingGmData,
+                qualityRemarksData: qualityRemarksData,
+                qualityTextileStdConsData: qualityTextileStdConsData,
+                qualityTextileTotalMetersData: qualityTextileTotalMetersData,
+                selectedQuality: document.getElementById('globalQuality').value,
+                fabricGsm: document.getElementById('fabricGsmInput').value,
+                poloTotalPocket: getGlobalVal('poloTotalPocketInput'),
+                poloTotalPlaket: getGlobalVal('poloTotalPlaketInput'),
+                poloTotalByPlaket: getGlobalVal('poloTotalByPlaketInput'),
+                poloTotalByPlaketWastage: getGlobalVal('poloTotalByPlaketWastageInput'),
+                poloTotalCollarCuff: getGlobalVal('poloTotalCollarCuffInput'),
+                pantTotalSidePocket: getGlobalVal('pantTotalSidePocketInput'),
+                pantTotalBackPocket: getGlobalVal('pantTotalBackPocketInput'),
+                globalWastage: getGlobalVal('globalWastageInput'),
+                globalMukpat: getGlobalVal('globalMukpatInput'),
+                globalRibWastage: getGlobalVal('globalRibWastageInput'),
+                globalRibTotal: getGlobalVal('globalTotalRibInput'),
+                textileStdCons: document.getElementById('textileStdConsInput').value,
+                textileTotalMeters: document.getElementById('textileTotalMetersInput').value,
+                textileCheckMode: document.getElementById('textileCheckMode').checked,
+                adjWeight: document.getElementById('adjWeightInput').value,
+                adjAction: document.getElementById('adjActionSelect').value,
+                adjTargetBodyWt: document.getElementById('adjTargetBodyWt').checked,
+                adjTargetWastage: document.getElementById('adjTargetWastage').checked,
+                adjTargetMukpat: document.getElementById('adjTargetMukpat').checked,
+                adjTargetRib: document.getElementById('adjTargetRib').checked,
+                adjTargetPocket: document.getElementById('adjTargetPocket').checked,
+                adjTargetSidePocket: document.getElementById('adjTargetSidePocket').checked,
+                adjTargetBackPocket: document.getElementById('adjTargetBackPocket').checked,
+                adjTargetCollar: document.getElementById('adjTargetCollar').checked,
+                items: items,
+                historyData: historyData
+            };
+
+            const dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "challan data.txt");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // Trigger hidden file input for Import
+        function triggerImport() {
+            document.getElementById('importFile').click();
+        }
+
+        // Load Data from JSON File
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedObj = JSON.parse(e.target.result);
+                    
+                    if (importedObj.qualityData && importedObj.qualityGsmData && importedObj.items) {
+                        // Clear existing global maps
+                        for (let key in qualityData) delete qualityData[key];
+                        for (let key in qualityGsmData) delete qualityGsmData[key];
+                        for (let key in qualityFoldingNameData) delete qualityFoldingNameData[key];
+                        for (let key in qualityFoldingGmData) delete qualityFoldingGmData[key];
+                        for (let key in qualityRemarksData) delete qualityRemarksData[key];
+                        for (let key in qualityTextileStdConsData) delete qualityTextileStdConsData[key];
+                        for (let key in qualityTextileTotalMetersData) delete qualityTextileTotalMetersData[key];
+
+                        // Assign imported maps
+                        Object.assign(qualityData, importedObj.qualityData);
+                        Object.assign(qualityGsmData, importedObj.qualityGsmData);
+                        if (importedObj.qualityFoldingNameData) Object.assign(qualityFoldingNameData, importedObj.qualityFoldingNameData);
+                        if (importedObj.qualityFoldingGmData) Object.assign(qualityFoldingGmData, importedObj.qualityFoldingGmData);
+                        if (importedObj.qualityRemarksData) Object.assign(qualityRemarksData, importedObj.qualityRemarksData);
+                        if (importedObj.qualityTextileStdConsData) Object.assign(qualityTextileStdConsData, importedObj.qualityTextileStdConsData);
+                        if (importedObj.qualityTextileTotalMetersData) Object.assign(qualityTextileTotalMetersData, importedObj.qualityTextileTotalMetersData);
+
+                        // Rebuild dropdown option elements
+                        const select = document.getElementById('globalQuality');
+                        select.innerHTML = "";
+                        Object.keys(qualityData).forEach(q => {
+                            const option = document.createElement('option');
+                            option.value = q;
+                            option.text = q;
+                            select.add(option);
+                        });
+
+                        // Set selected fields
+                        if (importedObj.selectedQuality) {
+                            select.value = importedObj.selectedQuality;
+                        }
+                        if (importedObj.fabricGsm !== undefined) {
+                            document.getElementById('fabricGsmInput').value = importedObj.fabricGsm;
+                        }
+                        if (importedObj.poloTotalPocket !== undefined) document.getElementById('poloTotalPocketInput').value = importedObj.poloTotalPocket;
+                        if (importedObj.poloTotalPlaket !== undefined) document.getElementById('poloTotalPlaketInput').value = importedObj.poloTotalPlaket;
+                        if (importedObj.poloTotalByPlaket !== undefined) document.getElementById('poloTotalByPlaketInput').value = importedObj.poloTotalByPlaket;
+                        if (importedObj.poloTotalByPlaketWastage !== undefined) document.getElementById('poloTotalByPlaketWastageInput').value = importedObj.poloTotalByPlaketWastage;
+                        if (importedObj.poloTotalCollarCuff !== undefined) document.getElementById('poloTotalCollarCuffInput').value = importedObj.poloTotalCollarCuff;
+                        if (importedObj.pantTotalSidePocket !== undefined) document.getElementById('pantTotalSidePocketInput').value = importedObj.pantTotalSidePocket;
+                        if (importedObj.pantTotalBackPocket !== undefined) document.getElementById('pantTotalBackPocketInput').value = importedObj.pantTotalBackPocket;
+                        if (importedObj.globalWastage !== undefined) document.getElementById('globalWastageInput').value = importedObj.globalWastage;
+                        if (importedObj.globalMukpat !== undefined) document.getElementById('globalMukpatInput').value = importedObj.globalMukpat;
+                        if (importedObj.globalRibWastage !== undefined) document.getElementById('globalRibWastageInput').value = importedObj.globalRibWastage;
+                        if (importedObj.globalRibTotal !== undefined) document.getElementById('globalTotalRibInput').value = importedObj.globalRibTotal;
+                        if (importedObj.textileStdCons !== undefined) document.getElementById('textileStdConsInput').value = importedObj.textileStdCons;
+                        if (importedObj.textileTotalMeters !== undefined) document.getElementById('textileTotalMetersInput').value = importedObj.textileTotalMeters;
+                        if (importedObj.textileCheckMode !== undefined) document.getElementById('textileCheckMode').checked = importedObj.textileCheckMode === true;
+
+                        if (importedObj.adjWeight !== undefined) document.getElementById('adjWeightInput').value = importedObj.adjWeight;
+                        if (importedObj.adjAction !== undefined) document.getElementById('adjActionSelect').value = importedObj.adjAction;
+                        if (importedObj.adjTargetBodyWt !== undefined) document.getElementById('adjTargetBodyWt').checked = importedObj.adjTargetBodyWt === true;
+                        if (importedObj.adjTargetWastage !== undefined) document.getElementById('adjTargetWastage').checked = importedObj.adjTargetWastage === true;
+                        if (importedObj.adjTargetMukpat !== undefined) document.getElementById('adjTargetMukpat').checked = importedObj.adjTargetMukpat === true;
+                        if (importedObj.adjTargetRib !== undefined) document.getElementById('adjTargetRib').checked = importedObj.adjTargetRib === true;
+                        if (importedObj.adjTargetPocket !== undefined) document.getElementById('adjTargetPocket').checked = importedObj.adjTargetPocket === true;
+                        if (importedObj.adjTargetSidePocket !== undefined) document.getElementById('adjTargetSidePocket').checked = importedObj.adjTargetSidePocket === true;
+                        if (importedObj.adjTargetBackPocket !== undefined) document.getElementById('adjTargetBackPocket').checked = importedObj.adjTargetBackPocket === true;
+                        if (importedObj.adjTargetCollar !== undefined) document.getElementById('adjTargetCollar').checked = importedObj.adjTargetCollar === true;
+
+                        if (importedObj.historyData) {
+                            historyData = importedObj.historyData;
+                            localStorage.setItem('challan_history', JSON.stringify(historyData));
+                        }
+
+                        // Rebuild rows
+                        const tbody = document.getElementById('itemRows');
+                        tbody.innerHTML = "";
+                        importedObj.items.forEach(item => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td class="p-2 border border-gray-300"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" value="${item.size || ''}" oninput="this.value = this.value.toUpperCase()"></td>
+                                <td class="p-2 border border-gray-300"><input type="number" value="${item.pics || ''}" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                                <td class="p-2 border border-gray-300"><input type="number" value="${item.bodywt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                                <td class="p-2 border border-gray-300 hidden row-ribwt-td"><input type="number" value="${item.ribwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();"></td>
+                                <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
+                                <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
+                                <td class="p-2 border border-gray-300 hidden row-sidepocket-td"><input type="number" value="${item.sidepocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                                <td class="p-2 border border-gray-300 hidden row-backpocket-td"><input type="number" value="${item.backpocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                                <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
+                                <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
+                                <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
+                                <td class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50 row-bcons">0.000</td>
+                                <td class="p-2 border border-gray-300 text-center font-bold text-purple-600 bg-purple-50/50 row-tcons">0.000</td>
+                                <td class="p-2 border border-gray-300 text-center no-print">
+                                    <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-700 font-bold">X</button>
+                                </td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+
+                        loadConsumption();
+                        renderHistory();
+                        alert("Data successfully imported!");
+                        saveState();
+                    } else {
+                        alert("Invalid file format.");
+                    }
+                } catch (err) {
+                    alert("Error parsing JSON file.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ""; // Clear file choice
+        }
+
+        // Reset all application states back to initial default
+        function resetAllData() {
+            if (confirm("Are you sure you want to reset all data?")) {
+                // Reset global objects to starting configuration
+                for (let key in qualityData) delete qualityData[key];
+                for (let key in qualityGsmData) delete qualityGsmData[key];
+                for (let key in qualityFoldingNameData) delete qualityFoldingNameData[key];
+                for (let key in qualityFoldingGmData) delete qualityFoldingGmData[key];
+                for (let key in qualityRemarksData) delete qualityRemarksData[key];
+                for (let key in qualityTextileStdConsData) delete qualityTextileStdConsData[key];
+                for (let key in qualityTextileTotalMetersData) delete qualityTextileTotalMetersData[key];
+                for (let key in qualityPoloPocketData) delete qualityPoloPocketData[key];
+                for (let key in qualityPoloByPlaketData) delete qualityPoloByPlaketData[key];
+                for (let key in qualityPantSidePocketData) delete qualityPantSidePocketData[key];
+                for (let key in qualityPantBackPocketData) delete qualityPantBackPocketData[key];
+                
+                qualityData["MICRO MODAL BRIEF 101"] = "0";
+                qualityData["MICRO MODAL BOXER 102"] = "0";
+                qualityData["TEXTILE"] = "0";
+                qualityGsmData["MICRO MODAL BRIEF 101"] = "0";
+                qualityGsmData["MICRO MODAL BOXER 102"] = "0";
+                qualityGsmData["TEXTILE"] = "0";
+                qualityFoldingNameData["MICRO MODAL BRIEF 101"] = "RIB";
+                qualityFoldingNameData["MICRO MODAL BOXER 102"] = "";
+                qualityFoldingNameData["TEXTILE"] = "";
+                qualityFoldingGmData["MICRO MODAL BRIEF 101"] = "0.010";
+                qualityFoldingGmData["MICRO MODAL BOXER 102"] = "0.000";
+                qualityFoldingGmData["TEXTILE"] = "0.000";
+                qualityRemarksData["MICRO MODAL BRIEF 101"] = "";
+                qualityRemarksData["MICRO MODAL BOXER 102"] = "";
+                qualityRemarksData["TEXTILE"] = "";
+                qualityTextileStdConsData["MICRO MODAL BRIEF 101"] = "";
+                qualityTextileStdConsData["MICRO MODAL BOXER 102"] = "";
+                qualityTextileStdConsData["TEXTILE"] = "";
+                qualityTextileTotalMetersData["MICRO MODAL BRIEF 101"] = "";
+                qualityTextileTotalMetersData["MICRO MODAL BOXER 102"] = "";
+                qualityTextileTotalMetersData["TEXTILE"] = "";
+
+                // Reset drop-down options
+                const select = document.getElementById('globalQuality');
+                select.innerHTML = `
+                    <option value="MICRO MODAL BRIEF 101">MICRO MODAL BRIEF 101</option>
+                    <option value="MICRO MODAL BOXER 102">MICRO MODAL BOXER 102</option>
+                    <option value="TEXTILE">TEXTILE</option>
+                `;
+                select.value = "MICRO MODAL BRIEF 101";
+
+                // Reset manual fabric inputs
+                document.getElementById('fabricGsmInput').value = "";
+                document.getElementById('poloTotalPocketInput').value = "";
+                document.getElementById('poloTotalPlaketInput').value = "";
+                document.getElementById('poloTotalByPlaketInput').value = "";
+                document.getElementById('poloTotalByPlaketWastageInput').value = "";
+                document.getElementById('poloTotalCollarCuffInput').value = "";
+                document.getElementById('pantTotalSidePocketInput').value = "";
+                document.getElementById('pantTotalBackPocketInput').value = "";
+                document.getElementById('globalWastageInput').value = "";
+                document.getElementById('globalMukpatInput').value = "";
+                document.getElementById('globalRibWastageInput').value = "";
+                document.getElementById('globalTotalRibInput').value = "";
+                document.getElementById('qualityRemarksInput').value = "";
+                document.getElementById('textileStdConsInput').value = "";
+                document.getElementById('textileTotalMetersInput').value = "";
+                document.getElementById('textileCheckMode').checked = false;
+
+                document.getElementById('adjWeightInput').value = "";
+                document.getElementById('adjActionSelect').value = "ADD";
+                document.getElementById('adjTargetBodyWt').checked = true;
+                document.getElementById('adjTargetWastage').checked = true;
+                document.getElementById('adjTargetMukpat').checked = false;
+                document.getElementById('adjTargetRib').checked = false;
+                document.getElementById('adjTargetPocket').checked = false;
+                document.getElementById('adjTargetSidePocket').checked = false;
+                document.getElementById('adjTargetBackPocket').checked = false;
+                document.getElementById('adjTargetCollar').checked = false;
+                
+                editIndex = -1;
+                const submitBtn = document.getElementById('submitBtn');
+                const clearBtn = document.getElementById('clearBtn');
+                if (submitBtn) {
+                    submitBtn.innerText = "Submit";
+                    submitBtn.className = "bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 shadow transition";
+                }
+                if (clearBtn) {
+                    clearBtn.innerText = "Clear";
+                    clearBtn.className = "bg-amber-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-amber-600 shadow transition";
+                }
+
+                // Clear the table and reconstruct a single clean starting row with standard column structure
+                const tbody = document.getElementById('itemRows');
+                tbody.innerHTML = `
+                    <tr>
+                        <td class="p-2 border border-gray-300"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" oninput="this.value = this.value.toUpperCase()"></td>
+                        <td class="p-2 border border-gray-300"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                        <td class="p-2 border border-gray-300"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
+                        <td class="p-2 border border-gray-300 hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 hidden row-backpocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50 row-bcons">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center font-bold text-purple-600 bg-purple-50/50 row-tcons">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center no-print">
+                            <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-700 font-bold">X</button>
+                        </td>
+                    </tr>
+                `;
+                
+                historyData = [];
+                const container = document.getElementById('historyList');
+                if (container) container.innerHTML = "";
+                if (document.getElementById('historySearchInput')) document.getElementById('historySearchInput').value = "";
+                
+                loadConsumption();
+                localStorage.clear();
+            }
+        }
+
+        // Reset only the current working input box rows without wiping storage configurations
+        function resetCurrentItems() {
+            const globalInputIds = [
+                'globalWastageInput', 'globalMukpatInput', 'poloTotalByPlaketWastageInput', 
+                'globalRibWastageInput', 'globalTotalRibInput', 'poloTotalPocketInput', 
+                'poloTotalPlaketInput', 'poloTotalByPlaketInput', 'poloTotalCollarCuffInput', 
+                'pantTotalSidePocketInput', 'pantTotalBackPocketInput'
+            ];
+            globalInputIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) delete el.dataset.origValue;
+            });
+            document.getElementById('poloTotalPocketInput').value = "";
+            document.getElementById('poloTotalPlaketInput').value = "";
+            document.getElementById('poloTotalByPlaketInput').value = "";
+            document.getElementById('poloTotalByPlaketWastageInput').value = "";
+            document.getElementById('poloTotalCollarCuffInput').value = "";
+            document.getElementById('pantTotalSidePocketInput').value = "";
+            document.getElementById('pantTotalBackPocketInput').value = "";
+            document.getElementById('globalWastageInput').value = "";
+            document.getElementById('globalMukpatInput').value = "";
+            document.getElementById('globalRibWastageInput').value = "";
+            document.getElementById('globalTotalRibInput').value = "";
+            document.getElementById('fabricGsmInput').value = "";
+            document.getElementById('textileTotalMetersInput').value = "";
+            document.getElementById('textileCheckMode').checked = false;
+            document.getElementById('adjWeightInput').value = "";
+            document.getElementById('adjActionSelect').value = "ADD";
+
+            const tbody = document.getElementById('itemRows');
+            tbody.innerHTML = `
+                <tr>
+                    <td class="p-2 border border-gray-300"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" oninput="this.value = this.value.toUpperCase()"></td>
+                    <td class="p-2 border border-gray-300"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                    <td class="p-2 border border-gray-300"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                    <td class="p-2 border border-gray-300 hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                    <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
+                    <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
+                    <td class="p-2 border border-gray-300 hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                    <td class="p-2 border border-gray-300 hidden row-backpocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                    <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
+                    <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
+                    <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
+                    <td class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50 row-bcons">0.000</td>
+                    <td class="p-2 border border-gray-300 text-center font-bold text-purple-600 bg-purple-50/50 row-tcons">0.000</td>
+                    <td class="p-2 border border-gray-300 text-center no-print">
+                        <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-700 font-bold">X</button>
+                    </td>
+                </tr>
+            `;
+
+            // Reset buttons if canceling an edit session
+            if (editIndex !== -1) {
+                editIndex = -1;
+                const submitBtn = document.getElementById('submitBtn');
+                const clearBtn = document.getElementById('clearBtn');
+                if (submitBtn) {
+                    submitBtn.innerText = "Submit";
+                    submitBtn.className = "bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 shadow transition";
+                }
+                if (clearBtn) {
+                    clearBtn.innerText = "Clear";
+                    clearBtn.className = "bg-amber-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-amber-600 shadow transition";
+                }
+            }
+
+            calculateTotals();
+        }
+
+        // Submit the current record summaries directly into history storage list logs
+        function submitToHistory() {
+            const quality = document.getElementById('globalQuality').value;
+            const stdCons = document.getElementById('consumptionInput').value;
+            const stdGsm = document.getElementById('gsmInput').value;
+            const fabricGsm = document.getElementById('fabricGsmInput').value || "0";
+            
+            const totalMainPics = document.getElementById('totalPicsDisplay').innerText;
+            const totalBodyWt = document.getElementById('totalBodyWtDisplay').innerText;
+            const totalWastage = document.getElementById('totalWastageDisplay').innerText;
+            const totalWeight = document.getElementById('totalWeightDisplay').innerText;
+            const totalBCons = document.getElementById('totalBCons').innerText;
+            const totalTCons = document.getElementById('totalTCons').innerText;
+
+            const getGlobalVal = (id) => {
+                const el = document.getElementById(id);
+                return el && el.dataset.origValue !== undefined ? el.dataset.origValue : (el ? el.value : "");
+            };
+
+            // Half-done validation check logic bounds: verify if absolutely anything has been filled
+            let hasAnyInput = false;
+            const checkGlobalIds = [
+                'fabricGsmInput', 'globalWastageInput', 'globalMukpatInput',
+                'poloTotalByPlaketWastageInput', 'globalRibWastageInput', 'globalTotalRibInput',
+                'poloTotalPocketInput', 'poloTotalPlaketInput', 'poloTotalByPlaketInput',
+                'poloTotalCollarCuffInput', 'pantTotalSidePocketInput', 'pantTotalBackPocketInput',
+                'textileStdConsInput', 'textileTotalMetersInput', 'qualityRemarksInput'
+            ];
+            checkGlobalIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.value.trim() !== "" && el.value.trim() !== "0" && el.value.trim() !== "0.000") {
+                    hasAnyInput = true;
+                }
+            });
+
+            const allRowsCheck = document.querySelectorAll('#itemRows tr');
+            allRowsCheck.forEach(row => {
+                const sIn = row.querySelector('.row-size');
+                const pIn = row.querySelector('.row-pics');
+                const bIn = row.querySelector('.row-bodywt');
+                const rIn = row.querySelector('.row-ribwt');
+                const spIn = row.querySelector('.row-sidepocket');
+                const bpIn = row.querySelector('.row-backpocket');
+
+                if ((sIn && sIn.value.trim() !== "") || 
+                    (pIn && pIn.value.trim() !== "" && pIn.value.trim() !== "0") || 
+                    (bIn && bIn.value.trim() !== "" && bIn.value.trim() !== "0" && bIn.value.trim() !== "0.000") ||
+                    (rIn && rIn.value.trim() !== "" && rIn.value.trim() !== "0") ||
+                    (spIn && spIn.value.trim() !== "" && spIn.value.trim() !== "0") ||
+                    (bpIn && bpIn.value.trim() !== "" && bpIn.value.trim() !== "0")) {
+                    hasAnyInput = true;
+                }
+            });
+
+            if (!hasAnyInput) {
+                alert("চালানে কোনো তথ্য ইনপুট করা হয়নি। সাবমিট করার জন্য দয়া করে অন্তত একটি ঘরে তথ্য দিন।");
+                return;
+            }
+            
+            const timeOptions = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            const timestamp = new Date().toLocaleString('en-US', timeOptions);
+            
+            const rows = document.querySelectorAll('#itemRows tr');
+            const items = [];
+            rows.forEach(row => {
+                const sizeEl = row.querySelector('.row-size');
+                const picsEl = row.querySelector('.row-pics');
+                const bodywtEl = row.querySelector('.row-bodywt');
+                const ribwtEl = row.querySelector('.row-ribwt');
+                const sidepocketEl = row.querySelector('.row-sidepocket');
+                const backpocketEl = row.querySelector('.row-backpocket');
+                if (sizeEl && picsEl && bodywtEl) {
+                    items.push({
+                        size: sizeEl.value,
+                        pics: picsEl.value,
+                        bodywt: bodywtEl.dataset.origBodyWt !== undefined ? bodywtEl.dataset.origBodyWt : (bodywtEl.dataset.weight !== undefined ? bodywtEl.dataset.weight : bodywtEl.value),
+                        ribwt: ribwtEl ? ribwtEl.value : '',
+                        sidepocket: sidepocketEl ? sidepocketEl.value : '',
+                        backpocket: backpocketEl ? backpocketEl.value : ''
+                    });
+                }
+            });
+
+            const varianceEl = document.getElementById('consVariance');
+            const isPoloActive = quality.toUpperCase().includes('POLO');
+            const isPantActive = quality.toUpperCase().includes('PANT');
+            const logEntry = {
+                timestamp,
+                quality,
+                stdCons,
+                stdGsm,
+                fabricGsm,
+                foldingName: qualityFoldingNameData[quality] || "",
+                foldingGm: qualityFoldingGmData[quality] || "0.000",
+                qualityRemarks: qualityRemarksData[quality] || "",
+                totalPics: totalMainPics,
+                totalBodyWt,
+                totalWastage,
+                totalWeight,
+                totalBCons,
+                totalTCons,
+                totalRibWt: document.getElementById('totalRibWtDisplay').innerText,
+                poloTotalPocket: getGlobalVal('poloTotalPocketInput'),
+                poloTotalPlaket: getGlobalVal('poloTotalPlaketInput'),
+                poloTotalByPlaket: getGlobalVal('poloTotalByPlaketInput'),
+                poloTotalByPlaketWastage: getGlobalVal('poloTotalByPlaketWastageInput'),
+                poloTotalCollarCuff: getGlobalVal('poloTotalCollarCuffInput'),
+                pantTotalSidePocket: getGlobalVal('pantTotalSidePocketInput'),
+                pantTotalBackPocket: getGlobalVal('pantTotalBackPocketInput'),
+                globalWastage: getGlobalVal('globalWastageInput'),
+                globalMukpat: getGlobalVal('globalMukpatInput'),
+                globalRibWastage: getGlobalVal('globalRibWastageInput'),
+                globalRibTotal: getGlobalVal('globalTotalRibInput'),
+                textileStdCons: document.getElementById('textileStdConsInput').value,
+                textileTotalMeters: document.getElementById('textileTotalMetersInput').value,
+                textileCheckMode: document.getElementById('textileCheckMode').checked,
+                adjWeight: document.getElementById('adjWeightInput').value,
+                adjAction: document.getElementById('adjActionSelect').value,
+                adjTargetBodyWt: document.getElementById('adjTargetBodyWt').checked,
+                adjTargetWastage: document.getElementById('adjTargetWastage').checked,
+                adjTargetMukpat: document.getElementById('adjTargetMukpat').checked,
+                adjTargetRib: document.getElementById('adjTargetRib').checked,
+                adjTargetPocket: document.getElementById('adjTargetPocket').checked,
+                adjTargetSidePocket: document.getElementById('adjTargetSidePocket').checked,
+                adjTargetBackPocket: document.getElementById('adjTargetBackPocket').checked,
+                adjTargetCollar: document.getElementById('adjTargetCollar').checked,
+                poloHasPocket: isPoloActive ? (qualityPoloPocketData[quality] !== false) : false,
+                poloHasByPlaket: isPoloActive ? (qualityPoloByPlaketData[quality] !== false) : false,
+                pantHasSidePocket: isPantActive ? (qualityPantSidePocketData[quality] !== false) : false,
+                pantHasBackPocket: isPantActive ? (qualityPantBackPocketData[quality] !== false) : false,
+                consVarianceText: varianceEl ? varianceEl.innerText : "",
+                consVarianceClass: varianceEl ? varianceEl.className : "",
+                items: items
+            };
+            
+            if (editIndex !== -1) {
+                // Overwrite the existing record instead of pushing a new log snapshot entry
+                historyData[editIndex] = logEntry;
+                alert("Record successfully updated in history!");
+                
+                // Return buttons back to default state parameters
+                editIndex = -1;
+                const submitBtn = document.getElementById('submitBtn');
+                const clearBtn = document.getElementById('clearBtn');
+                if (submitBtn) {
+                    submitBtn.innerText = "Submit";
+                    submitBtn.className = "bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 shadow transition";
+                }
+                if (clearBtn) {
+                    clearBtn.innerText = "Clear";
+                    clearBtn.className = "bg-amber-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-amber-600 shadow transition";
+                }
+            } else {
+                historyData.push(logEntry);
+                alert("Record successfully saved to history!");
+            }
+            
+            localStorage.setItem('challan_history', JSON.stringify(historyData));
+            renderHistory();
+            calculateTotals();
+        }
+
+        // Load historical entry into the current inputs for editing
+        function loadHistoryItem(index) {
+            const item = historyData[index];
+            if (!item) return;
+
+            // Set edit index reference explicitly
+            editIndex = index;
+
+            // Update execution layout triggers styling properties dynamically
+            const submitBtn = document.getElementById('submitBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            if (submitBtn) {
+                submitBtn.innerText = "Update";
+                submitBtn.className = "bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 shadow transition";
+            }
+            if (clearBtn) {
+                clearBtn.innerText = "Cancel";
+                clearBtn.className = "bg-gray-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-600 shadow transition";
+            }
+
+            const select = document.getElementById('globalQuality');
+            if (select) {
+                let exists = false;
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].value === item.quality) {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists) {
+                    const option = document.createElement('option');
+                    option.value = item.quality;
+                    option.text = item.quality;
+                    select.add(option);
+                    qualityData[item.quality] = item.stdCons;
+                    qualityGsmData[item.quality] = item.stdGsm;
+                    qualityFoldingNameData[item.quality] = item.foldingName;
+                    qualityFoldingGmData[item.quality] = item.foldingGm;
+                    qualityRemarksData[item.quality] = item.qualityRemarks || "";
+                    qualityTextileStdConsData[item.quality] = item.textileStdCons || "";
+                    qualityTextileTotalMetersData[item.quality] = item.textileTotalMeters || "";
+                    qualityPoloPocketData[item.quality] = item.poloHasPocket !== false;
+                    qualityPoloByPlaketData[item.quality] = item.poloHasByPlaket !== false;
+                    qualityPantSidePocketData[item.quality] = item.pantHasSidePocket !== false;
+                    qualityPantBackPocketData[item.quality] = item.pantHasBackPocket !== false;
+                }
+                select.value = item.quality;
+            }
+
+            document.getElementById('fabricGsmInput').value = item.fabricGsm;
+
+            // Restoring feature configurations explicit properties
+            qualityPoloPocketData[item.quality] = item.poloHasPocket !== false;
+            qualityPoloByPlaketData[item.quality] = item.poloHasByPlaket !== false;
+            qualityPantSidePocketData[item.quality] = item.pantHasSidePocket !== false;
+            qualityPantBackPocketData[item.quality] = item.pantHasBackPocket !== false;
+            
+            document.getElementById('poloHasPocket').checked = item.poloHasPocket !== false;
+            document.getElementById('poloHasByPlaket').checked = item.poloHasByPlaket !== false;
+            document.getElementById('pantHasSidePocket').checked = item.pantHasSidePocket !== false;
+            document.getElementById('pantHasBackPocket').checked = item.pantHasBackPocket !== false;
+            
+            document.getElementById('poloTotalPocketInput').value = item.poloTotalPocket || "";
+            document.getElementById('poloTotalPlaketInput').value = item.poloTotalPlaket || "";
+            document.getElementById('poloTotalByPlaketInput').value = item.poloTotalByPlaket || "";
+            document.getElementById('poloTotalByPlaketWastageInput').value = item.poloTotalByPlaketWastage || "";
+            document.getElementById('poloTotalCollarCuffInput').value = item.poloTotalCollarCuff || "";
+            document.getElementById('pantTotalSidePocketInput').value = item.pantTotalSidePocket || "";
+            document.getElementById('pantTotalBackPocketInput').value = item.pantTotalBackPocket || "";
+            document.getElementById('globalWastageInput').value = item.globalWastage || "";
+            document.getElementById('globalMukpatInput').value = item.globalMukpat || "";
+            document.getElementById('globalRibWastageInput').value = item.globalRibWastage || "";
+            document.getElementById('globalTotalRibInput').value = item.globalRibTotal || "";
+            
+            qualityRemarksData[item.quality] = item.qualityRemarks || "";
+            document.getElementById('qualityRemarksInput').value = item.qualityRemarks || "";
+            
+            qualityTextileStdConsData[item.quality] = item.textileStdCons || "";
+            qualityTextileTotalMetersData[item.quality] = item.textileTotalMeters || "";
+            document.getElementById('textileStdConsInput').value = item.textileStdCons || "";
+            document.getElementById('textileTotalMetersInput').value = item.textileTotalMeters || "";
+            document.getElementById('textileCheckMode').checked = item.textileCheckMode === true;
+
+            document.getElementById('adjWeightInput').value = item.adjWeight || "";
+            document.getElementById('adjActionSelect').value = item.adjAction || "ADD";
+            document.getElementById('adjTargetBodyWt').checked = item.adjTargetBodyWt !== false;
+            document.getElementById('adjTargetWastage').checked = item.adjTargetWastage !== false;
+            document.getElementById('adjTargetMukpat').checked = item.adjTargetMukpat === true;
+            document.getElementById('adjTargetRib').checked = item.adjTargetRib === true;
+            document.getElementById('adjTargetPocket').checked = item.adjTargetPocket === true;
+            document.getElementById('adjTargetSidePocket').checked = item.adjTargetSidePocket === true;
+            document.getElementById('adjTargetBackPocket').checked = item.adjTargetBackPocket === true;
+            document.getElementById('adjTargetCollar').checked = item.adjTargetCollar === true;
+
+            if (item.items && item.items.length > 0) {
+                const tbody = document.getElementById('itemRows');
+                tbody.innerHTML = "";
+                item.items.forEach(rowItem => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="p-2 border border-gray-300"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" value="${rowItem.size || ''}" oninput="this.value = this.value.toUpperCase()"></td>
+                        <td class="p-2 border border-gray-300"><input type="number" value="${rowItem.pics || ''}" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                        <td class="p-2 border border-gray-300"><input type="number" value="${rowItem.bodywt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 hidden row-ribwt-td"><input type="number" value="${rowItem.ribwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();"></td>
+                        <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
+                        <td class="p-2 border border-gray-300 hidden row-sidepocket-td"><input type="number" value="${rowItem.sidepocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 hidden row-backpocket-td"><input type="number" value="${rowItem.backpocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50 row-bcons">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center font-bold text-purple-600 bg-purple-50/50 row-tcons">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center no-print">
+                            <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-700 font-bold">X</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            loadConsumption();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteHistoryItem(index) {
+            if (confirm("Delete this log record from history permanently?")) {
+                historyData.splice(index, 1);
+                if(editIndex === index) {
+                    editIndex = -1;
+                    const submitBtn = document.getElementById('submitBtn');
+                    const clearBtn = document.getElementById('clearBtn');
+                    if (submitBtn) {
+                        submitBtn.innerText = "Submit";
+                        submitBtn.className = "bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600 shadow transition";
+                    }
+                    if (clearBtn) {
+                        clearBtn.innerText = "Clear";
+                        clearBtn.className = "bg-amber-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-amber-600 shadow transition";
+                    }
+                } else if(editIndex > index) {
+                    editIndex--;
+                }
+                localStorage.setItem('challan_history', JSON.stringify(historyData));
+                renderHistory();
+                calculateTotals();
+            }
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            if (!container) return;
+            container.innerHTML = "";
+            
+            const searchVal = document.getElementById('historySearchInput') ? document.getElementById('historySearchInput').value.trim().toUpperCase() : "";
+
+            if (historyData.length === 0) {
+                container.innerHTML = `<div class="text-center text-xs text-gray-400 py-4 italic bg-gray-50 rounded border border-dashed border-gray-200">No history snapshots generated yet.</div>`;
+                return;
+            }
+            
+            let renderingCount = 0;
+            
+            historyData.forEach((item, index) => {
+                if (searchVal) {
+                    const qualityMatch = (item.quality || "").toUpperCase().includes(searchVal);
+                    const timeMatch = (item.timestamp || "").toUpperCase().includes(searchVal);
+                    const remarksMatch = (item.qualityRemarks || "").toUpperCase().includes(searchVal);
+                    const sizeMatch = item.items && item.items.some(row => (row.size || "").toUpperCase().includes(searchVal));
+                    if (!qualityMatch && !timeMatch && !remarksMatch && !sizeMatch) {
+                        return;
+                    }
+                }
+
+                renderingCount++;
+
+                const logCard = document.createElement('div');
+                logCard.className = "bg-gray-50 border border-gray-200 rounded-lg p-3 relative shadow-sm hover:shadow transition flex flex-col sm:flex-row justify-between sm:items-center gap-3";
+                
+                let foldingInfoStr = "";
+                const fGmNum = parseFloat(item.foldingGm) || 0;
+                if (item.foldingName && fGmNum > 0) {
+                    foldingInfoStr = `<span>${item.foldingName}: <span class="text-gray-700">${fGmNum.toFixed(3)}g</span></span>`;
+                }
+
+                let ribInfoStr = "";
+                if (item.totalRibWt && parseFloat(item.totalRibWt) > 0) {
+                    ribInfoStr = `<span>Total Rib Wt: <span class="text-gray-700">${item.totalRibWt}</span></span>`;
+                }
+
+                let wastageInfoStr = "";
+                const totalWst = parseFloat(item.globalWastage) || 0;
+                const totalMkpt = parseFloat(item.globalMukpat) || 0;
+                const totalByPlktWst = parseFloat(item.poloTotalByPlaketWastage) || 0;
+                const totalRibWst = parseFloat(item.globalRibWastage) || 0;
+                if (totalWst > 0 || totalMkpt > 0 || totalByPlktWst > 0 || totalRibWst > 0) {
+                    wastageInfoStr = `<span>Wst/Mkpt/By-Plkt Wst/Rib Wst: <span class="text-gray-700">${(totalWst + totalMkpt + totalByPlktWst + totalRibWst).toFixed(3)}kg</span></span>`;
+                }
+
+                let textileInfoStr = "";
+                if (item.quality.toUpperCase().includes('TEXTILE')) {
+                    textileInfoStr = `<span>Std Meters Cons: <span class="text-gray-700">${item.textileStdCons || '0.000'}</span></span><span>Total Meters: <span class="text-gray-700">${item.textileTotalMeters || '0.000'}m</span></span><span>Meters Mode: <span class="text-gray-700">${item.textileCheckMode ? 'YES' : 'NO'}</span></span>`;
+                }
+
+                let adjInfoStr = "";
+                if (item.adjWeight && parseFloat(item.adjWeight) > 0) {
+                    adjInfoStr = `<span>Adj: <span class="text-blue-600 font-bold">${item.adjAction === 'ADD' ? '+' : '-'}${parseFloat(item.adjWeight).toFixed(3)}kg</span></span>`;
+                }
+
+                let poloInfoStr = "";
+                if (item.quality.toUpperCase().includes('POLO')) {
+                    let pocketStr = item.poloHasPocket !== false ? `<span>Pkt: <span class="text-gray-700">${item.poloTotalPocket || '0.000'}</span></span>` : '';
+                    let byPlaketStr = item.poloHasByPlaket !== false ? `<span>By-Plkt: <span class="text-gray-700">${item.poloTotalByPlaket || '0.000'}</span></span>` : '';
+                    poloInfoStr = `
+                        ${pocketStr}
+                        <span>Plkt: <span class="text-gray-700">${item.poloTotalPlaket || '0.000'}</span></span>
+                        ${byPlaketStr}
+                        <span>Collar: <span class="text-gray-700">${item.poloTotalCollarCuff || '0.000'}</span></span>
+                    `;
+                }
+
+                let pantInfoStr = "";
+                if (item.quality.toUpperCase().includes('PANT')) {
+                    let pSideStr = item.pantHasSidePocket !== false ? `<span>Side Pkt: <span class="text-gray-700">${item.pantTotalSidePocket || '0.000'}</span></span>` : '';
+                    let pBackStr = item.pantHasBackPocket !== false ? `<span>Back Pkt: <span class="text-gray-700">${item.pantTotalBackPocket || '0.000'}</span></span>` : '';
+                    if (pSideStr || pBackStr) {
+                        pantInfoStr = `
+                            ${pSideStr}
+                            ${pBackStr}
+                        `;
+                    }
+                }
+
+                let remarksInfoStr = item.qualityRemarks ? `<div class="text-[11px] text-amber-700 italic mt-0.5 font-bold">Note: ${item.qualityRemarks}</div>` : '';
+
+                logCard.innerHTML = `
+                    <div class="flex flex-col gap-0.5 min-w-0 flex-1">
+                        <span class="font-bold text-gray-800 text-sm truncate">${item.quality}</span>
+                        <span class="text-[10px] text-gray-400 font-medium">${item.timestamp}</span>
+                        ${remarksInfoStr}
+                        <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-500 mt-1 font-semibold">
+                            ${!item.quality.toUpperCase().includes('TEXTILE') ? `<span>Std Cons: <span class="text-gray-700">${item.stdCons}</span></span><span>Std GSM: <span class="text-gray-700">${item.stdGsm}</span></span><span>Fab GSM: <span class="text-gray-700">${item.fabricGsm}</span></span>` : ''}
+                            ${textileInfoStr}
+                            ${foldingInfoStr}
+                            ${ribInfoStr}
+                            ${wastageInfoStr}
+                            ${adjInfoStr}
+                            ${poloInfoStr}
+                            ${pantInfoStr}
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between sm:justify-end gap-3 border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-200 shrink-0 w-full sm:w-auto">
+                        <div class="flex gap-4 text-xs font-bold text-gray-700 items-center flex-wrap sm:flex-nowrap">
+                            <div class="text-center"><span class="block text-[10px] font-medium text-gray-400">PICS</span><span class="text-blue-600">${item.totalPics}</span></div>
+                            <div class="text-center"><span class="block text-[10px] font-medium text-gray-400">
+                                ${item.quality.toUpperCase().includes('TEXTILE') && item.textileCheckMode ? 'MTR TOTAL' : 'WT TOTAL'}
+                            </span><span class="text-purple-600">${item.totalWeight}</span></div>
+                            <div class="text-center"><span class="block text-[10px] font-medium text-gray-400">
+                                ${item.quality.toUpperCase().includes('TEXTILE') ? (item.textileCheckMode ? 'TOTAL MTR/PC' : 'TOTAL WT/PC') : 'T. CONS'}
+                            </span><span class="text-green-600">${item.totalTCons}</span></div>
+                            ${item.consVarianceText ? `<div class="text-center min-w-[90px]"><span class="block text-[10px] font-medium text-gray-400">VARIANCE</span><span class="${item.consVarianceClass}">${item.consVarianceText}</span></div>` : ''}
+                        </div>
+                        <div class="flex gap-2 shrink-0 ml-auto sm:ml-2">
+                            <button onclick="loadHistoryItem(${index})" class="text-blue-500 hover:text-blue-700 font-bold text-xs p-1">Edit</button>
+                            <button onclick="deleteHistoryItem(${index})" class="text-red-500 hover:text-red-700 font-bold text-xs p-1">Delete</button>
+                        </div>
+                    </div>
+                `;
+                container.prepend(logCard);
+            });
+
+            if (searchVal && renderingCount === 0) {
+                container.innerHTML = `<div class="text-center text-xs text-gray-400 py-4 italic bg-gray-50 rounded border border-dashed border-gray-200">No matching search results found.</div>`;
+            }
+        }
+
+        // Keep existing helper layout operations unmodified
+        function addRow() {
+            const tbody = document.getElementById('itemRows');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="p-2 border border-gray-300"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" oninput="this.value = this.value.toUpperCase()"></td>
+                <td class="p-2 border border-gray-300"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                <td class="p-2 border border-gray-300"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                <td class="p-2 border border-gray-300 hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
+                <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
+                <td class="p-2 border border-gray-300 hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                <td class="p-2 border border-gray-300 hidden row-backpocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
+                <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
+                <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
+                <td class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50 row-bcons">0.000</td>
+                <td class="p-2 border border-gray-300 text-center font-bold text-purple-600 bg-purple-50/50 row-tcons">0.000</td>
+                <td class="p-2 border border-gray-300 text-center no-print">
+                    <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-700 font-bold">X</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            calculateTotals();
+        }
+
+        function deleteRow(btn) {
+            const row = btn.parentNode.parentNode;
+            const tbody = document.getElementById('itemRows');
+            if (tbody.querySelectorAll('tr').length > 1) {
+                row.remove();
+            } else {
+                row.querySelector('.row-size').value = '';
+                row.querySelector('.row-pics').value = '';
+                row.querySelector('.row-bodywt').value = '';
+                if(row.querySelector('.row-ribwt')) row.querySelector('.row-ribwt').value = '';
+                if(row.querySelector('.row-sidepocket')) row.querySelector('.row-sidepocket').value = '';
+                if(row.querySelector('.row-backpocket')) row.querySelector('.row-backpocket').value = '';
+            }
+            calculateTotals();
+        }
+    </script>
+</body>
+</html>
