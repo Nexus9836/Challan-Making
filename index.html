@@ -8,10 +8,40 @@
     <style>
         /* Forces the browser to strictly use light mode and removes forced black backgrounds */
         :root { color-scheme: light !important; }
+        
         @media print {
+            @page {
+                size: landscape;
+                margin: 6mm;
+            }
             .no-print { display: none !important; }
-            body { background-color: white; font-size: 12px; }
-            .challan-container { border: none; box-shadow: none; padding: 0; }
+            body { 
+                background-color: white !important; 
+                font-size: 10px !important; 
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .challan-container { 
+                border: none !important; 
+                box-shadow: none !important; 
+                padding: 0 !important; 
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+            table {
+                width: 100% !important;
+                font-size: 9.5px !important;
+                border-collapse: collapse !important;
+            }
+            th, td {
+                padding: 3px 2px !important;
+            }
+            input {
+                display: none !important;
+            }
+            .print-val {
+                display: inline-block !important;
+            }
         }
         /* Forces the text display to be uppercase instantly */
         input[type="text"] { text-transform: uppercase; }
@@ -19,13 +49,19 @@
 </head>
 <body class="bg-gray-100 p-2 sm:p-6">
 
-    <div class="max-w-6xl mx-auto bg-white p-4 sm:p-8 rounded-lg shadow-md challan-container">
+    <div id="challanMainBlock" class="max-w-6xl mx-auto bg-white p-4 sm:p-8 rounded-lg shadow-md challan-container">
         
         <!-- Top Small Action Buttons -->
         <div class="flex flex-wrap justify-end gap-2 no-print mb-4 border-b border-gray-100 pb-2">
             <button onclick="exportData()" class="bg-purple-500 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-purple-600 shadow-sm transition">Export</button>
             <button onclick="triggerImport()" class="bg-amber-500 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-amber-600 shadow-sm transition">Import</button>
-            <input type="file" id="importFile" class="hidden" accept=".txt" onchange="importData(event)">
+            <input type="file" id="importFile" class="hidden" accept=".txt,.json" onchange="importData(event)">
+            <button onclick="downloadDocument()" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-indigo-700 shadow-sm transition flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download File
+            </button>
             <button onclick="resetAllData()" class="bg-red-500 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-red-600 shadow-sm transition">Reset All</button>
         </div>
 
@@ -44,9 +80,21 @@
                         <option value="TEXTILE">TEXTILE</option>
                     </select>
                     
-                    <button onclick="addQuality()" class="no-print bg-blue-500 hover:bg-blue-600 text-white font-bold w-7 h-7 flex items-center justify-center rounded transition">+</button>
+                    <button onclick="addQuality()" class="no-print bg-blue-500 hover:bg-blue-600 text-white font-bold w-7 h-7 flex items-center justify-center rounded transition" title="Add Quality">+</button>
                     
-                    <button onclick="deleteQuality()" class="no-print bg-red-500 hover:bg-red-600 text-white w-7 h-7 flex items-center justify-center rounded transition">
+                    <button onclick="editQualityName()" class="no-print bg-amber-500 hover:bg-amber-600 text-white w-7 h-7 flex items-center justify-center rounded transition" title="Edit / Rename Quality">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                    </button>
+
+                    <button onclick="openQualityOrderModal()" class="no-print bg-indigo-500 hover:bg-indigo-600 text-white w-7 h-7 flex items-center justify-center rounded transition" title="Reorder / Manage Qualities">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+
+                    <button onclick="deleteQuality()" class="no-print bg-red-500 hover:bg-red-600 text-white w-7 h-7 flex items-center justify-center rounded transition" title="Delete Quality">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -65,8 +113,8 @@
                 <div id="standardMetricsRow" class="flex flex-nowrap justify-center items-end gap-3 no-print mt-2 w-full max-w-md mx-auto">
                     <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
                         <span class="font-bold text-gray-700 text-[10px] sm:text-[11px] tracking-wide text-center block h-8 flex items-center justify-center">STANDARD CONSUMPTION</span>
-                        <input type="text" id="consumptionInput" placeholder="VALUE" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full max-w-[96px] text-center font-semibold text-gray-800" oninput="this.value = this.value.toUpperCase(); updateConsumption(this.value)" onblur="if(this.value!='' && !isNaN(this.value)) { this.value=parseFloat(this.value).toFixed(3); updateConsumption(this.value); }">
-                        <div class="text-[10px] font-bold text-blue-600 mt-1 whitespace-nowrap">CALC: <span id="headerCalculatedCons">0.000</span></div>
+                        <input type="text" id="consumptionInput" placeholder="VALUE" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full max-w-[110px] text-center font-semibold text-gray-800" oninput="this.value = this.value.toUpperCase(); updateConsumption(this.value)" onblur="if(this.value!='' && !isNaN(this.value)) { this.value=parseFloat(this.value).toFixed(5); updateConsumption(this.value); }">
+                        <div class="text-[10px] font-bold text-blue-600 mt-1 whitespace-nowrap">CALC: <span id="headerCalculatedCons">0.00000</span></div>
                     </div>
 
                     <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
@@ -84,7 +132,7 @@
                 <div id="textileMetricsRow" class="flex flex-nowrap justify-center items-end gap-3 no-print mt-2 w-full max-w-md mx-auto hidden">
                     <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
                         <span class="font-bold text-gray-700 text-[10px] sm:text-[11px] tracking-wide text-center block h-8 flex items-center justify-center">STD METERS CONS</span>
-                        <input type="number" step="0.001" id="textileStdConsInput" placeholder="VALUE" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full max-w-[96px] text-center font-semibold text-gray-800" oninput="calculateTotals()">
+                        <input type="number" step="0.00001" id="textileStdConsInput" placeholder="VALUE" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full max-w-[110px] text-center font-semibold text-gray-800" oninput="calculateTotals()">
                     </div>
                     <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
                         <span class="font-bold text-gray-700 text-[10px] sm:text-[11px] tracking-wide text-center block h-8 flex items-center justify-center">TOTAL METERS</span>
@@ -97,16 +145,14 @@
                     </div>
                 </div>
 
-                <!-- Custom Dynamic Folding Settings Optional Row -->
-                <div id="foldingOptionsRow" class="flex flex-nowrap justify-center items-end gap-3 no-print mt-1 w-full max-w-md mx-auto border-t border-gray-100 pt-2">
-                    <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
-                        <span class="font-bold text-gray-600 text-[10px] tracking-wide text-center block h-6 flex items-center justify-center">FOLDING NAME (RIB/PIPING)</span>
-                        <input type="text" id="foldingNameInput" placeholder="NONE / RIB" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full max-w-[120px] text-center font-semibold text-gray-800 text-xs" oninput="this.value = this.value.toUpperCase(); updateFoldingName(this.value)">
-                    </div>
-                    <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
-                        <span class="font-bold text-gray-600 text-[10px] tracking-wide text-center block h-6 flex items-center justify-center">FOLDING GM / PC</span>
-                        <input type="text" id="foldingGmInput" placeholder="GRAMS" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full max-w-[96px] text-center font-semibold text-gray-800 text-xs" oninput="updateFoldingGm(this.value)" onblur="if(this.value!='' && !isNaN(this.value)) { this.value=parseFloat(this.value).toFixed(3); updateFoldingGm(this.value); }">
-                    </div>
+                <!-- Custom Dynamic Folding Settings Optional Row (Pop-up Trigger Button) -->
+                <div id="foldingOptionsRow" class="flex flex-nowrap justify-center items-center gap-3 no-print mt-1 w-full max-w-md mx-auto border-t border-gray-100 pt-2">
+                    <button onclick="openFoldingModal()" class="bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 font-bold py-1 px-3 rounded text-xs transition flex items-center gap-1 shadow-xs cursor-pointer select-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        </svg>
+                        Folding Settings
+                    </button>
                 </div>
 
                 <!-- Global Wastage, Mukpat, By-Plaket & Rib Wastage Settings Row -->
@@ -137,7 +183,7 @@
                 <div id="weightAdjustmentRow" class="flex flex-nowrap justify-center items-end gap-3 no-print mt-1 w-full max-w-xl mx-auto border-t border-gray-100 pt-2">
                     <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
                         <span class="font-bold text-gray-600 text-[10px] tracking-wide text-center block h-6 flex items-center justify-center">ADJUST WEIGHT (KG)</span>
-                        <input type="number" step="0.001" min="0" id="adjWeightInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()">
+                        <input type="number" step="0.001" min="0" id="adjWeightInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='' && !isNaN(this.value)) { this.value=parseFloat(this.value).toFixed(3); calculateTotals(); }">
                     </div>
                     <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
                         <span class="font-bold text-gray-600 text-[10px] tracking-wide text-center block h-6 flex items-center justify-center">ADJUST ACTION</span>
@@ -209,36 +255,63 @@
                     </div>
                 </div>
                 
-                <!-- Print View Labels Stacked Vertically -->
-                <div class="hidden print:block text-center">
-                    <span class="font-bold text-gray-700 text-lg block">CUTTING QUALITY</span>
-                    <span id="printQuality" class="font-semibold text-gray-800 block text-base mt-1"></span>
-                    <span class="font-bold text-gray-700 text-md block mt-3" id="printRemarksLabel">QUALITY REMARKS</span>
-                    <span id="printRemarks" class="font-semibold text-gray-800 block text-base mt-1"></span>
-                    <span id="printConsumptionHeader" class="font-bold text-gray-700 text-md block mt-3">STANDARD CONSUMPTION</span>
-                    <span id="printConsumption" class="font-semibold text-gray-800 block text-base mt-1"></span>
-                    <span id="printGsmHeader" class="font-bold text-gray-700 text-md block mt-3">STANDARD GSM</span>
-                    <span id="printGsm" class="font-semibold text-gray-800 block text-base mt-1"></span>
-                    <span id="printFabricGsmHeader" class="font-bold text-gray-700 text-md block mt-3">FABRIC GSM</span>
-                    <span id="printFabricGsm" class="font-semibold text-gray-800 block text-base mt-1"></span>
-                    <span class="font-bold text-gray-700 text-md block mt-3 hidden" id="printFoldingLabel">FOLDING</span>
-                    <span class="font-semibold text-gray-800 block text-base mt-1 hidden" id="printFoldingVal"></span>
-                    <span class="font-bold text-gray-700 text-md block mt-3 hidden" id="printTextileStdConsLabel">STD METERS CONS</span>
-                    <span class="font-semibold text-gray-800 block text-base mt-1 hidden" id="printTextileStdConsVal"></span>
-                    <span class="font-bold text-gray-700 text-md block mt-3 hidden" id="printTotalMetersLabel">TOTAL METERS</span>
-                    <span class="font-semibold text-gray-800 block text-base mt-1 hidden" id="printTotalMetersVal"></span>
-                    <span class="font-bold text-gray-700 text-md block mt-3 hidden" id="printTextileCheckLabel">METERS MODE (CHECK)</span>
-                    <span class="font-semibold text-gray-800 block text-base mt-1 hidden" id="printTextileCheckVal"></span>
+                <!-- Print View Header & Detailed Configuration Table -->
+                <div class="hidden print:block w-full border-b border-gray-400 pb-3 mb-2">
+                    <div class="text-center mb-2">
+                        <span class="font-black text-gray-900 text-lg uppercase tracking-wider block">CUTTING CHALLAN REPORT</span>
+                        <div class="text-xs font-bold text-gray-700 mt-0.5">
+                            QUALITY: <span id="printQuality" class="text-black font-black"></span> | 
+                            REMARKS: <span id="printRemarks" class="text-black font-bold"></span>
+                        </div>
+                    </div>
+
+                    <!-- Compact 2-Row Grid for Metrics & Extra Weights in Print -->
+                    <div class="border border-gray-300 rounded p-1.5 bg-gray-50/50 text-[9.5px]">
+                        <div class="flex flex-wrap justify-between gap-y-1 font-semibold text-gray-700">
+                            <div id="printMetricsNonTextile" class="flex gap-3">
+                                <span>STD CONS: <b id="printConsumption" class="text-black"></b></span>
+                                <span>STD GSM: <b id="printGsm" class="text-black"></b></span>
+                                <span>FABRIC GSM: <b id="printFabricGsm" class="text-black"></b></span>
+                                <span>CALC CONS: <b id="printCalcCons" class="text-blue-700"></b></span>
+                            </div>
+                            <div id="printMetricsTextile" class="hidden flex gap-3">
+                                <span>STD MTR CONS: <b id="printTextileStdConsVal" class="text-black"></b></span>
+                                <span>TOTAL METERS: <b id="printTotalMetersVal" class="text-black"></b></span>
+                                <span>METERS MODE: <b id="printTextileCheckVal" class="text-black"></b></span>
+                            </div>
+                            <div id="printFoldingDetail" class="hidden">
+                                <span id="printFoldingLabel"></span>: <b id="printFoldingVal" class="text-black"></b>
+                            </div>
+                        </div>
+
+                        <!-- All Components Weights Summary Row -->
+                        <div id="printWeightsBreakdownRow" class="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 pt-1 border-t border-gray-200 text-[9px] text-gray-600 font-medium">
+                            <span id="printWastageWtSpan">WASTAGE WT: <b id="printWastageVal" class="text-black">0.000</b></span>
+                            <span id="printMukpatWtSpan">MUKPAT WT: <b id="printMukpatVal" class="text-black">0.000</b></span>
+                            <span id="printRibWastageSpan" class="hidden">RIB WASTAGE: <b id="printRibWastageVal" class="text-black">0.000</b></span>
+                            <span id="printRibWtSpan" class="hidden">RIB WT: <b id="printRibWtVal" class="text-black">0.000</b></span>
+                            <span id="printPocketWtSpan" class="hidden">PKT WT: <b id="printPocketVal" class="text-black">0.000</b></span>
+                            <span id="printPlaketWtSpan" class="hidden">PLKT WT: <b id="printPlaketVal" class="text-black">0.000</b></span>
+                            <span id="printByPlaketWtSpan" class="hidden">BY-PLKT WT: <b id="printByPlaketVal" class="text-black">0.000</b></span>
+                            <span id="printByPlaketWstSpan" class="hidden">BY-PLKT WST: <b id="printByPlaketWstVal" class="text-black">0.000</b></span>
+                            <span id="printCollarCuffSpan" class="hidden">COLLAR CUFF: <b id="printCollarCuffVal" class="text-black">0.000</b></span>
+                            <span id="printSidePocketSpan" class="hidden">SIDE PKT: <b id="printSidePocketVal" class="text-black">0.000</b></span>
+                            <span id="printBackPocketSpan" class="hidden">BACK PKT: <b id="printBackPocketVal" class="text-black">0.000</b></span>
+                            <span id="printAdjWeightSpan" class="hidden">ADJUST WT: <b id="printAdjWeightVal" class="text-blue-700"></b></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Items Table Container for Horizontal Scroll on Mobile -->
         <div class="overflow-x-auto w-full border border-gray-200 rounded-md mb-6">
-            <table class="w-full text-left border-collapse min-w-[950px]">
+            <table class="w-full text-left border-collapse min-w-[1100px]">
                 <thead>
                     <tr class="bg-gray-200">
+                        <th class="p-3 border border-gray-300 text-center w-28">Slip No</th>
                         <th class="p-3 border border-gray-300 text-center w-20">Size</th>
+                        <th class="p-3 border border-gray-300 text-center w-20">Slips</th>
                         <th class="p-3 border border-gray-300 text-center w-24">Pics</th>
                         <th id="bodyWtHeaderTh" class="p-3 border border-gray-300 text-center w-28">Body Wt</th>
                         <th id="ribHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Rib Wt</th>
@@ -255,20 +328,28 @@
                     </tr>
                 </thead>
                 <tbody id="itemRows">
-                    <tr>
-                        <td class="p-2 border border-gray-300"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" oninput="this.value = this.value.toUpperCase()"></td>
-                        <td class="p-2 border border-gray-300"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
-                        <td class="p-2 border border-gray-300"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                        <td class="p-2 border border-gray-300 hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                    <tr data-original-index="0">
+                        <td class="p-2 border border-gray-300 text-center"><input type="text" placeholder="SLIP NO" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slipno" oninput="calculateTotals()"></td>
+                        <td class="p-2 border border-gray-300 text-center"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" oninput="this.value = this.value.toUpperCase(); calculateTotals();"></td>
+                        <td class="p-2 border border-gray-300 text-center"><input type="number" min="0" placeholder="SLIPS" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slips" oninput="calculateTotals(true)" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                        <td class="p-2 border border-gray-300 text-center"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                        <td class="p-2 border border-gray-300 text-center"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
-                        <td class="p-2 border border-gray-300 hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                        <td class="p-2 border border-gray-300 hidden row-backpocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-backpocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
-                        <td class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50 row-bcons">0.000</td>
-                        <td class="p-2 border border-gray-300 text-center font-bold text-purple-600 bg-purple-50/50 row-tcons">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center bg-blue-50/50">
+                            <div class="font-bold text-blue-600 row-bcons">0.00000</div>
+                            <div class="row-bcons-ref no-print leading-tight"></div>
+                        </td>
+                        <td class="p-2 border border-gray-300 text-center bg-purple-50/50">
+                            <div class="font-bold text-purple-600 row-tcons">0.00000</div>
+                            <div class="row-tcons-ref no-print leading-tight"></div>
+                        </td>
                         <td class="p-2 border border-gray-300 text-center no-print">
                             <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-700 font-bold">X</button>
                         </td>
@@ -278,6 +359,8 @@
                 <tfoot class="bg-gray-100 font-bold border-t-2 border-gray-300">
                     <tr>
                         <td class="p-2 border border-gray-300 text-center text-xs text-gray-700">TOTAL:</td>
+                        <td class="p-2 border border-gray-300 text-center text-gray-800">-</td>
+                        <td id="totalSlipsDisplay" class="p-2 border border-gray-300 text-center text-gray-800">0</td>
                         <td id="totalPicsDisplay" class="p-2 border border-gray-300 text-center text-gray-800">0</td>
                         <td id="totalBodyWtDisplay" class="p-2 border border-gray-300 text-center text-gray-800">0.000</td>
                         <td id="totalRibWtDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
@@ -288,10 +371,10 @@
                         <td id="totalCollarCuffDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
                         <td id="totalWastageDisplay" class="p-2 border border-gray-300 text-center text-gray-800">0.000</td>
                         <td id="totalWeightDisplay" class="p-2 border border-gray-300 text-center text-gray-800">0.000</td>
-                        <td id="totalBCons" class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50">0.000</td>
+                        <td id="totalBCons" class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50">0.00000</td>
                         <td class="p-2 border border-gray-300 text-center font-bold text-purple-600 bg-purple-50/50">
                             <div class="flex flex-col items-center justify-center">
-                                <span id="totalTCons">0.000</span>
+                                <span id="totalTCons">0.00000</span>
                                 <span id="consVariance" class="block"></span>
                             </div>
                         </td>
@@ -301,9 +384,10 @@
             </table>
         </div>
 
-        <!-- Add Item -->
-        <div class="mb-6 no-print">
+        <!-- Add Item & Sort Actions -->
+        <div class="mb-6 no-print flex flex-wrap gap-2">
             <button onclick="addRow()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">+ Add Item</button>
+            <button onclick="sortBySize()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">Sort by Size</button>
         </div>
 
         <!-- Action Buttons Bar -->
@@ -324,6 +408,26 @@
         </div>
     </div>
 
+    <!-- Pop up Modal for Folding Settings -->
+    <div id="foldingModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 hidden no-print">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
+            <h4 class="font-bold text-sm text-gray-800 mb-3 border-b border-gray-100 pb-2">Folding Settings</h4>
+            <div class="space-y-3 text-xs font-semibold text-gray-700">
+                <div class="flex flex-col gap-1">
+                    <span class="font-bold text-gray-600 text-[11px]">FOLDING NAME (RIB/PIPING)</span>
+                    <input type="text" id="foldingNameInput" placeholder="NONE / RIB" class="border border-gray-300 focus:outline-none p-1.5 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="this.value = this.value.toUpperCase(); updateFoldingName(this.value)">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <span class="font-bold text-gray-600 text-[11px]">FOLDING GM / PC</span>
+                    <input type="text" id="foldingGmInput" placeholder="GRAMS" class="border border-gray-300 focus:outline-none p-1.5 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="updateFoldingGm(this.value)" onblur="if(this.value!='' && !isNaN(this.value)) { this.value=parseFloat(this.value).toFixed(5); updateFoldingGm(this.value); }">
+                </div>
+            </div>
+            <div class="mt-5 flex justify-end">
+                <button onclick="closeFoldingModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-1.5 rounded text-xs transition">Done</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Pop up Modal for Adjustment Targets -->
     <div id="adjModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 hidden no-print">
         <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
@@ -334,6 +438,9 @@
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer py-1">
                     <input type="checkbox" id="adjTargetWastage" checked onchange="calculateTotals()" class="w-4 h-4 accent-blue-600"> Wastage Wt
+                </label>
+                <label id="adjTargetRibWastageLabel" class="flex items-center gap-2 cursor-pointer py-1">
+                    <input type="checkbox" id="adjTargetRibWastage" onchange="calculateTotals()" class="w-4 h-4 accent-blue-600"> Rib Wastage Wt
                 </label>
                 <label id="adjTargetMukpatLabel" class="flex items-center gap-2 cursor-pointer py-1">
                     <input type="checkbox" id="adjTargetMukpat" onchange="calculateTotals()" class="w-4 h-4 accent-blue-600"> Mukpat Wt
@@ -360,12 +467,29 @@
         </div>
     </div>
 
+    <!-- Pop up Modal for Quality Reordering & Management -->
+    <div id="qualityOrderModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 hidden no-print">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4 flex flex-col max-h-[85vh]">
+            <h4 class="font-bold text-sm text-gray-800 mb-2 border-b border-gray-100 pb-2 flex items-center justify-between">
+                <span>Manage Quality Order</span>
+                <span class="text-xs font-normal text-gray-500">Arrange or Edit names</span>
+            </h4>
+            <p class="text-xs text-gray-500 mb-3">Use up (▲) / down (▼) to reorder, or click the pencil (✏️) icon to rename a quality.</p>
+            <div id="qualityOrderList" class="space-y-1.5 overflow-y-auto flex-1 pr-1">
+                <!-- Quality list items will render here dynamically -->
+            </div>
+            <div class="mt-5 flex justify-end">
+                <button onclick="closeQualityOrderModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-1.5 rounded text-xs transition">Done</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global object to store consumption mapping for each quality
         const qualityData = {
-            "MICRO MODAL BRIEF 101": "0",
-            "MICRO MODAL BOXER 102": "0",
-            "TEXTILE": "0"
+            "MICRO MODAL BRIEF 101": "0.00000",
+            "MICRO MODAL BOXER 102": "0.00000",
+            "TEXTILE": "0.00000"
         };
 
         // Parallel tracking object for GSM
@@ -383,9 +507,9 @@
         };
 
         const qualityFoldingGmData = {
-            "MICRO MODAL BRIEF 101": "0.010",
-            "MICRO MODAL BOXER 102": "0.000",
-            "TEXTILE": "0.000"
+            "MICRO MODAL BRIEF 101": "0.01000",
+            "MICRO MODAL BOXER 102": "0.00000",
+            "TEXTILE": "0.00000"
         };
 
         // Parallel tracking object for Remarks mapping
@@ -421,6 +545,271 @@
         
         // Track the index of the history entry currently being edited (-1 means no active edit)
         let editIndex = -1;
+
+        // Auto-increment counter to uniquely track original creation order of rows
+        let nextRowOriginalId = 1;
+
+        // Helper function to round distributed weight values to 50g (0.050 kg) increments
+        function roundTo50g(val) {
+            if (!val || isNaN(val)) return 0;
+            return parseFloat((Math.round(val / 0.050) * 0.050).toFixed(3));
+        }
+
+        // Helper function to populate the quality dropdown based on qualityData keys
+        function renderQualityDropdown(selectedVal) {
+            const select = document.getElementById('globalQuality');
+            if (!select) return;
+            const currentSelected = selectedVal || select.value;
+            select.innerHTML = "";
+            Object.keys(qualityData).forEach(q => {
+                const option = document.createElement('option');
+                option.value = q;
+                option.text = q;
+                select.add(option);
+            });
+            if (currentSelected && qualityData[currentSelected] !== undefined) {
+                select.value = currentSelected;
+            } else if (select.options.length > 0) {
+                select.selectedIndex = 0;
+            }
+        }
+
+        // Modal for Reordering Qualities
+        function openQualityOrderModal() {
+            renderQualityOrderList();
+            document.getElementById('qualityOrderModal').classList.remove('hidden');
+        }
+
+        function closeQualityOrderModal() {
+            document.getElementById('qualityOrderModal').classList.add('hidden');
+        }
+
+        function renderQualityOrderList() {
+            const container = document.getElementById('qualityOrderList');
+            if (!container) return;
+            container.innerHTML = "";
+            const keys = Object.keys(qualityData);
+            
+            keys.forEach((q, index) => {
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between p-2 bg-gray-50 border border-gray-200 rounded text-xs";
+                row.innerHTML = `
+                    <span class="font-bold text-gray-700 truncate pr-2">${index + 1}. ${q}</span>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button onclick="editQualityName('${q}')" class="w-6 h-6 rounded bg-amber-100 hover:bg-amber-200 text-amber-700 font-bold flex items-center justify-center" title="Rename">✏️</button>
+                        <button onclick="moveQuality(${index}, -1)" ${index === 0 ? 'disabled' : ''} class="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-30 disabled:cursor-not-allowed font-bold text-gray-700 flex items-center justify-center">▲</button>
+                        <button onclick="moveQuality(${index}, 1)" ${index === keys.length - 1 ? 'disabled' : ''} class="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-30 disabled:cursor-not-allowed font-bold text-gray-700 flex items-center justify-center">▼</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function moveQuality(index, direction) {
+            const keys = Object.keys(qualityData);
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= keys.length) return;
+
+            const temp = keys[index];
+            keys[index] = keys[targetIndex];
+            keys[targetIndex] = temp;
+
+            // Rebuild all tracking maps according to new order
+            const reorderedData = {};
+            const reorderedGsm = {};
+            const reorderedFoldingName = {};
+            const reorderedFoldingGm = {};
+            const reorderedRemarks = {};
+            const reorderedTextileStdCons = {};
+            const reorderedTextileTotalMeters = {};
+
+            keys.forEach(k => {
+                reorderedData[k] = qualityData[k];
+                reorderedGsm[k] = qualityGsmData[k];
+                reorderedFoldingName[k] = qualityFoldingNameData[k];
+                reorderedFoldingGm[k] = qualityFoldingGmData[k];
+                reorderedRemarks[k] = qualityRemarksData[k];
+                reorderedTextileStdCons[k] = qualityTextileStdConsData[k];
+                reorderedTextileTotalMeters[k] = qualityTextileTotalMetersData[k];
+            });
+
+            for (let key in qualityData) delete qualityData[key];
+            for (let key in qualityGsmData) delete qualityGsmData[key];
+            for (let key in qualityFoldingNameData) delete qualityFoldingNameData[key];
+            for (let key in qualityFoldingGmData) delete qualityFoldingGmData[key];
+            for (let key in qualityRemarksData) delete qualityRemarksData[key];
+            for (let key in qualityTextileStdConsData) delete qualityTextileStdConsData[key];
+            for (let key in qualityTextileTotalMetersData) delete qualityTextileTotalMetersData[key];
+
+            Object.assign(qualityData, reorderedData);
+            Object.assign(qualityGsmData, reorderedGsm);
+            Object.assign(qualityFoldingNameData, reorderedFoldingName);
+            Object.assign(qualityFoldingGmData, reorderedFoldingGm);
+            Object.assign(qualityRemarksData, reorderedRemarks);
+            Object.assign(qualityTextileStdConsData, reorderedTextileStdCons);
+            Object.assign(qualityTextileTotalMetersData, reorderedTextileTotalMeters);
+
+            const curVal = document.getElementById('globalQuality').value;
+            renderQualityDropdown(curVal);
+            renderQualityOrderList();
+            saveState();
+        }
+
+        // Edit/Rename an existing quality and retain all settings & history linkages
+        function editQualityName(qualityToEdit) {
+            const currentSelected = qualityToEdit || document.getElementById('globalQuality').value;
+            if (!currentSelected) return;
+
+            const newName = prompt(`Edit Quality Name for "${currentSelected}":`, currentSelected);
+            if (!newName) return;
+
+            const upperNew = newName.trim().toUpperCase();
+            if (upperNew === "" || upperNew === currentSelected) return;
+
+            if (qualityData[upperNew] && upperNew !== currentSelected) {
+                alert(`Quality "${upperNew}" already exists! Please choose a unique name.`);
+                return;
+            }
+
+            const keys = Object.keys(qualityData);
+            const reorderedData = {};
+            const reorderedGsm = {};
+            const reorderedFoldingName = {};
+            const reorderedFoldingGm = {};
+            const reorderedRemarks = {};
+            const reorderedTextileStdCons = {};
+            const reorderedTextileTotalMeters = {};
+
+            keys.forEach(k => {
+                const effectiveKey = (k === currentSelected) ? upperNew : k;
+                reorderedData[effectiveKey] = qualityData[k];
+                reorderedGsm[effectiveKey] = qualityGsmData[k];
+                reorderedFoldingName[effectiveKey] = qualityFoldingNameData[k];
+                reorderedFoldingGm[effectiveKey] = qualityFoldingGmData[k];
+                reorderedRemarks[effectiveKey] = qualityRemarksData[k];
+                reorderedTextileStdCons[effectiveKey] = qualityTextileStdConsData[k];
+                reorderedTextileTotalMeters[effectiveKey] = qualityTextileTotalMetersData[k];
+            });
+
+            if (qualityPoloPocketData[currentSelected] !== undefined) {
+                qualityPoloPocketData[upperNew] = qualityPoloPocketData[currentSelected];
+                delete qualityPoloPocketData[currentSelected];
+            }
+            if (qualityPoloByPlaketData[currentSelected] !== undefined) {
+                qualityPoloByPlaketData[upperNew] = qualityPoloByPlaketData[currentSelected];
+                delete qualityPoloByPlaketData[currentSelected];
+            }
+            if (qualityPantSidePocketData[currentSelected] !== undefined) {
+                qualityPantSidePocketData[upperNew] = qualityPantSidePocketData[currentSelected];
+                delete qualityPantSidePocketData[currentSelected];
+            }
+            if (qualityPantBackPocketData[currentSelected] !== undefined) {
+                qualityPantBackPocketData[upperNew] = qualityPantBackPocketData[currentSelected];
+                delete qualityPantBackPocketData[currentSelected];
+            }
+
+            for (let key in qualityData) delete qualityData[key];
+            for (let key in qualityGsmData) delete qualityGsmData[key];
+            for (let key in qualityFoldingNameData) delete qualityFoldingNameData[key];
+            for (let key in qualityFoldingGmData) delete qualityFoldingGmData[key];
+            for (let key in qualityRemarksData) delete qualityRemarksData[key];
+            for (let key in qualityTextileStdConsData) delete qualityTextileStdConsData[key];
+            for (let key in qualityTextileTotalMetersData) delete qualityTextileTotalMetersData[key];
+
+            Object.assign(qualityData, reorderedData);
+            Object.assign(qualityGsmData, reorderedGsm);
+            Object.assign(qualityFoldingNameData, reorderedFoldingName);
+            Object.assign(qualityFoldingGmData, reorderedFoldingGm);
+            Object.assign(qualityRemarksData, reorderedRemarks);
+            Object.assign(qualityTextileStdConsData, reorderedTextileStdCons);
+            Object.assign(qualityTextileTotalMetersData, reorderedTextileTotalMeters);
+
+            // Update history entries referencing the old name
+            if (historyData && historyData.length > 0) {
+                historyData.forEach(entry => {
+                    if (entry.quality === currentSelected) {
+                        entry.quality = upperNew;
+                    }
+                });
+                localStorage.setItem('challan_history', JSON.stringify(historyData));
+            }
+
+            renderQualityDropdown(upperNew);
+            loadConsumption();
+            renderQualityOrderList();
+            renderHistory();
+            saveState();
+        }
+
+        // Helper function to compute Historical Average B.Cons and T.Cons for a specific quality and size
+        function getHistoricalAverages(quality, size) {
+            if (!quality || !size || !historyData || historyData.length === 0) return null;
+            const normQuality = quality.trim().toUpperCase();
+            const normSize = size.trim().toUpperCase();
+
+            let totalPieces = 0;
+            let totalBodyWt = 0;
+            let totalMainFabricWt = 0;
+
+            const isPoloActive = normQuality.includes('POLO');
+            const isPantActive = normQuality.includes('PANT');
+
+            historyData.forEach((entry, idx) => {
+                if (editIndex !== -1 && idx === editIndex) return; // Skip currently editing entry
+                if ((entry.quality || "").trim().toUpperCase() !== normQuality) return;
+                if (!entry.items || entry.items.length === 0) return;
+
+                let entryTotalPics = 0;
+                entry.items.forEach(it => {
+                    entryTotalPics += parseFloat(it.pics) || 0;
+                });
+
+                const globalWastage = parseFloat(entry.globalWastage) || 0;
+                const globalMukpat = parseFloat(entry.globalMukpat) || 0;
+                const globalRibWastage = normQuality.includes('GRS') ? (parseFloat(entry.globalRibWastage) || 0) : 0;
+                const poloTotalPocket = (isPoloActive && entry.poloHasPocket !== false) ? (parseFloat(entry.poloTotalPocket) || 0) : 0;
+                const poloTotalPlaket = isPoloActive ? (parseFloat(entry.poloTotalPlaket) || 0) : 0;
+                const pantTotalSidePocket = (isPantActive && entry.pantHasSidePocket !== false) ? (parseFloat(entry.pantTotalSidePocket) || 0) : 0;
+                const pantTotalBackPocket = (isPantActive && entry.pantHasBackPocket !== false) ? (parseFloat(entry.pantTotalBackPocket) || 0) : 0;
+
+                entry.items.forEach(it => {
+                    if ((it.size || "").trim().toUpperCase() === normSize) {
+                        const pics = parseFloat(it.pics) || 0;
+                        const bodywt = parseFloat(it.bodywt) || 0;
+                        if (pics > 0) {
+                            totalPieces += pics;
+                            totalBodyWt += bodywt;
+
+                            let pktPlktWt = 0;
+                            if (isPoloActive) {
+                                let plkt = entryTotalPics > 0 ? (pics / entryTotalPics) * poloTotalPlaket : 0;
+                                let pkt = (entry.poloHasPocket !== false && entryTotalPics > 0) ? (pics / entryTotalPics) * poloTotalPocket : 0;
+                                pktPlktWt = pkt + plkt;
+                            }
+
+                            let sidePktWt = (isPantActive && entry.pantHasSidePocket !== false && entryTotalPics > 0) ? (pics / entryTotalPics) * pantTotalSidePocket : 0;
+                            let backPktWt = (isPantActive && entry.pantHasBackPocket !== false && entryTotalPics > 0) ? (pics / entryTotalPics) * pantTotalBackPocket : 0;
+
+                            let mainWstOnly = entryTotalPics > 0 ? (pics / entryTotalPics) * (globalWastage + globalRibWastage) : 0;
+                            let mukpatPart = entryTotalPics > 0 ? (pics / entryTotalPics) * globalMukpat : 0;
+                            let mainWastageShare = mainWstOnly + mukpatPart;
+
+                            let mainFabricWeight = bodywt + pktPlktWt + sidePktWt + backPktWt + mainWastageShare;
+                            totalMainFabricWt += mainFabricWeight;
+                        }
+                    }
+                });
+            });
+
+            if (totalPieces > 0) {
+                return {
+                    avgBCons: totalBodyWt / totalPieces,
+                    avgTCons: totalMainFabricWt / totalPieces,
+                    totalSamples: totalPieces
+                };
+            }
+            return null;
+        }
 
         // Initialize fields on first load
         window.onload = function() {
@@ -476,8 +865,8 @@
             if (localStorage.getItem('challan_poloTotalByPlaket')) document.getElementById('poloTotalByPlaketInput').value = localStorage.getItem('challan_poloTotalByPlaket');
             if (localStorage.getItem('challan_poloTotalByPlaketWastage')) document.getElementById('poloTotalByPlaketWastageInput').value = localStorage.getItem('challan_poloTotalByPlaketWastage');
             if (localStorage.getItem('challan_poloTotalCollarCuff')) document.getElementById('poloTotalCollarCuffInput').value = localStorage.getItem('challan_poloTotalCollarCuff');
-            if (localStorage.getItem('challan_pantTotalSidePocket')) document.getElementById('pantTotalSidePocketInput').value = localStorage.getItem('pantTotalSidePocket');
-            if (localStorage.getItem('challan_pantTotalBackPocket')) document.getElementById('pantTotalBackPocketInput').value = localStorage.getItem('pantTotalBackPocket');
+            if (localStorage.getItem('pantTotalSidePocket')) document.getElementById('pantTotalSidePocketInput').value = localStorage.getItem('challan_pantTotalSidePocket');
+            if (localStorage.getItem('pantTotalBackPocket')) document.getElementById('pantTotalBackPocketInput').value = localStorage.getItem('challan_pantTotalBackPocket');
             if (localStorage.getItem('challan_globalWastage')) document.getElementById('globalWastageInput').value = localStorage.getItem('challan_globalWastage');
             if (localStorage.getItem('challan_globalMukpat')) document.getElementById('globalMukpatInput').value = localStorage.getItem('challan_globalMukpat');
             if (localStorage.getItem('challan_globalRibWastage')) document.getElementById('globalRibWastageInput').value = localStorage.getItem('challan_globalRibWastage');
@@ -490,6 +879,7 @@
             if (localStorage.getItem('challan_adjAction')) document.getElementById('adjActionSelect').value = localStorage.getItem('challan_adjAction');
             if (localStorage.getItem('challan_adjTargetBodyWt')) document.getElementById('adjTargetBodyWt').checked = localStorage.getItem('challan_adjTargetBodyWt') === 'true';
             if (localStorage.getItem('challan_adjTargetWastage')) document.getElementById('adjTargetWastage').checked = localStorage.getItem('challan_adjTargetWastage') === 'true';
+            if (localStorage.getItem('challan_adjTargetRibWastage')) document.getElementById('adjTargetRibWastage').checked = localStorage.getItem('challan_adjTargetRibWastage') === 'true';
             if (localStorage.getItem('challan_adjTargetMukpat')) document.getElementById('adjTargetMukpat').checked = localStorage.getItem('challan_adjTargetMukpat') === 'true';
             if (localStorage.getItem('challan_adjTargetRib')) document.getElementById('adjTargetRib').checked = localStorage.getItem('challan_adjTargetRib') === 'true';
             if (localStorage.getItem('challan_adjTargetPocket')) document.getElementById('adjTargetPocket').checked = localStorage.getItem('challan_adjTargetPocket') === 'true';
@@ -497,19 +887,9 @@
             if (localStorage.getItem('challan_adjTargetBackPocket')) document.getElementById('adjTargetBackPocket').checked = localStorage.getItem('challan_adjTargetBackPocket') === 'true';
             if (localStorage.getItem('challan_adjTargetCollar')) document.getElementById('adjTargetCollar').checked = localStorage.getItem('challan_adjTargetCollar') === 'true';
 
-            const select = document.getElementById('globalQuality');
-            if (select) {
-                select.innerHTML = "";
-                Object.keys(qualityData).forEach(q => {
-                    const option = document.createElement('option');
-                    option.value = q;
-                    option.text = q;
-                    select.add(option);
-                });
-            }
-            if (localStorage.getItem('challan_selectedQuality')) {
-                select.value = localStorage.getItem('challan_selectedQuality');
-            }
+            const savedSelectedQuality = localStorage.getItem('challan_selectedQuality');
+            renderQualityDropdown(savedSelectedQuality);
+
             if (localStorage.getItem('fabricGsmInput')) {
                 document.getElementById('fabricGsmInput').value = localStorage.getItem('fabricGsmInput');
             }
@@ -518,22 +898,33 @@
                 const tbody = document.getElementById('itemRows');
                 if (items && items.length > 0) {
                     tbody.innerHTML = "";
+                    nextRowOriginalId = 0;
                     items.forEach(item => {
                         const tr = document.createElement('tr');
+                        tr.dataset.originalIndex = (item.origIndex !== undefined) ? item.origIndex : nextRowOriginalId;
+                        nextRowOriginalId = Math.max(nextRowOriginalId, parseInt(tr.dataset.originalIndex) + 1);
                         tr.innerHTML = `
-                            <td class="p-2 border border-gray-300"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" value="${item.size || ''}" oninput="this.value = this.value.toUpperCase()"></td>
-                            <td class="p-2 border border-gray-300"><input type="number" value="${item.pics || ''}" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
-                            <td class="p-2 border border-gray-300"><input type="number" value="${item.bodywt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                            <td class="p-2 border border-gray-300 hidden row-ribwt-td"><input type="number" value="${item.ribwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                            <td class="p-2 border border-gray-300 text-center"><input type="text" placeholder="SLIP NO" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slipno" value="${item.slipno || ''}" oninput="calculateTotals()"></td>
+                            <td class="p-2 border border-gray-300 text-center"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" value="${item.size || ''}" oninput="this.value = this.value.toUpperCase(); calculateTotals();"></td>
+                            <td class="p-2 border border-gray-300 text-center"><input type="number" min="0" placeholder="SLIPS" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slips" value="${item.slips || ''}" oninput="calculateTotals(true)" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                            <td class="p-2 border border-gray-300 text-center"><input type="number" value="${item.pics || ''}" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                            <td class="p-2 border border-gray-300 text-center"><input type="number" value="${item.bodywt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                            <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" value="${item.ribwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                             <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
                             <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
-                            <td class="p-2 border border-gray-300 hidden row-sidepocket-td"><input type="number" value="${item.sidepocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                            <td class="p-2 border border-gray-300 hidden row-backpocket-td"><input type="number" value="${rowItem.backpocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                            <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" value="${item.sidepocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                            <td class="p-2 border border-gray-300 text-center hidden row-backpocket-td"><input type="number" value="${item.backpocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                             <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
                             <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
                             <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
-                            <td class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50 row-bcons">0.000</td>
-                            <td class="p-2 border border-gray-300 text-center font-bold text-purple-600 bg-purple-50/50 row-tcons">0.000</td>
+                            <td class="p-2 border border-gray-300 text-center bg-blue-50/50">
+                                <div class="font-bold text-blue-600 row-bcons">0.00000</div>
+                                <div class="row-bcons-ref no-print leading-tight"></div>
+                            </td>
+                            <td class="p-2 border border-gray-300 text-center bg-purple-50/50">
+                                <div class="font-bold text-purple-600 row-tcons">0.00000</div>
+                                <div class="row-tcons-ref no-print leading-tight"></div>
+                            </td>
                             <td class="p-2 border border-gray-300 text-center no-print">
                                 <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-700 font-bold">X</button>
                             </td>
@@ -574,8 +965,8 @@
             localStorage.setItem('challan_poloTotalByPlaket', getGlobalVal('poloTotalByPlaketInput'));
             localStorage.setItem('challan_poloTotalByPlaketWastage', getGlobalVal('poloTotalByPlaketWastageInput'));
             localStorage.setItem('challan_poloTotalCollarCuff', getGlobalVal('poloTotalCollarCuffInput'));
-            localStorage.setItem('challan_pantTotalSidePocket', getGlobalVal('pantTotalSidePocketInput'));
-            localStorage.setItem('challan_pantTotalBackPocket', getGlobalVal('pantTotalBackPocketInput'));
+            localStorage.setItem('pantTotalSidePocket', getGlobalVal('pantTotalSidePocketInput'));
+            localStorage.setItem('pantTotalBackPocket', getGlobalVal('pantTotalBackPocketInput'));
             localStorage.setItem('challan_globalWastage', getGlobalVal('globalWastageInput'));
             localStorage.setItem('challan_globalMukpat', getGlobalVal('globalMukpatInput'));
             localStorage.setItem('challan_globalRibWastage', getGlobalVal('globalRibWastageInput'));
@@ -587,6 +978,7 @@
             localStorage.setItem('challan_adjAction', document.getElementById('adjActionSelect').value);
             localStorage.setItem('challan_adjTargetBodyWt', document.getElementById('adjTargetBodyWt').checked);
             localStorage.setItem('challan_adjTargetWastage', document.getElementById('adjTargetWastage').checked);
+            localStorage.setItem('challan_adjTargetRibWastage', document.getElementById('adjTargetRibWastage') ? document.getElementById('adjTargetRibWastage').checked : false);
             localStorage.setItem('challan_adjTargetMukpat', document.getElementById('adjTargetMukpat').checked);
             localStorage.setItem('challan_adjTargetRib', document.getElementById('adjTargetRib').checked);
             localStorage.setItem('challan_adjTargetPocket', document.getElementById('adjTargetPocket').checked);
@@ -599,7 +991,10 @@
             rows.forEach(row => {
                 const bodyWtInput = row.querySelector('.row-bodywt');
                 items.push({
+                    origIndex: row.dataset.originalIndex,
+                    slipno: row.querySelector('.row-slipno') ? row.querySelector('.row-slipno').value : '',
                     size: row.querySelector('.row-size').value,
+                    slips: row.querySelector('.row-slips') ? row.querySelector('.row-slips').value : '',
                     pics: row.querySelector('.row-pics').value,
                     bodywt: bodyWtInput.dataset.origBodyWt !== undefined ? bodyWtInput.dataset.origBodyWt : (bodyWtInput.dataset.weight !== undefined ? bodyWtInput.dataset.weight : bodyWtInput.value),
                     ribwt: row.querySelector('.row-ribwt') ? row.querySelector('.row-ribwt').value : '',
@@ -610,7 +1005,14 @@
             localStorage.setItem('challan_items', JSON.stringify(items));
         }
 
-        /* Keep existing logic unaltered */
+        function openFoldingModal() {
+            document.getElementById('foldingModal').classList.remove('hidden');
+        }
+
+        function closeFoldingModal() {
+            document.getElementById('foldingModal').classList.add('hidden');
+        }
+
         function openAdjModal() {
             const selectEl = document.getElementById('globalQuality');
             const currentQuality = selectEl ? selectEl.value : "";
@@ -619,6 +1021,7 @@
             const isPantActive = currentQuality.toUpperCase().includes('PANT');
 
             document.getElementById('adjTargetMukpatLabel').style.display = currentQuality.toUpperCase().includes('TEXTILE') ? 'none' : 'flex';
+            document.getElementById('adjTargetRibWastageLabel').style.display = isGrsActive ? 'flex' : 'none';
             document.getElementById('adjTargetRibLabel').style.display = isGrsActive ? 'flex' : 'none';
             document.getElementById('adjTargetPocketLabel').style.display = isPoloActive ? 'flex' : 'none';
             document.getElementById('adjTargetSidePocketLabel').style.display = (isPantActive && qualityPantSidePocketData[currentQuality] !== false) ? 'flex' : 'none';
@@ -635,10 +1038,10 @@
         function loadConsumption() {
             const select = document.getElementById('globalQuality');
             const currentQuality = select.value;
-            document.getElementById('consumptionInput').value = qualityData[currentQuality] || "0";
+            document.getElementById('consumptionInput').value = qualityData[currentQuality] || "0.00000";
             document.getElementById('gsmInput').value = qualityGsmData[currentQuality] || "0";
             document.getElementById('foldingNameInput').value = qualityFoldingNameData[currentQuality] || "";
-            document.getElementById('foldingGmInput').value = qualityFoldingGmData[currentQuality] || "0.000";
+            document.getElementById('foldingGmInput').value = qualityFoldingGmData[currentQuality] || "0.00000";
             document.getElementById('qualityRemarksInput').value = qualityRemarksData[currentQuality] || "";
             document.getElementById('textileStdConsInput').value = qualityTextileStdConsData[currentQuality] || "";
             document.getElementById('textileTotalMetersInput').value = qualityTextileTotalMetersData[currentQuality] || "";
@@ -723,17 +1126,12 @@
             const newQuality = prompt("Enter new quality name:");
             if (newQuality && newQuality.trim() !== "") {
                 const upperQuality = newQuality.trim().toUpperCase();
-                const select = document.getElementById('globalQuality');
                 
                 if (!qualityData[upperQuality]) {
-                    const option = document.createElement('option');
-                    option.value = upperQuality;
-                    option.text = upperQuality;
-                    select.add(option);
-                    qualityData[upperQuality] = "0"; 
+                    qualityData[upperQuality] = "0.00000"; 
                     qualityGsmData[upperQuality] = "0"; 
                     qualityFoldingNameData[upperQuality] = "";
-                    qualityFoldingGmData[upperQuality] = "0.000";
+                    qualityFoldingGmData[upperQuality] = "0.00000";
                     qualityRemarksData[upperQuality] = "";
                     qualityTextileStdConsData[upperQuality] = "";
                     qualityTextileTotalMetersData[upperQuality] = "";
@@ -743,7 +1141,7 @@
                     qualityPantBackPocketData[upperQuality] = true;
                 }
                 
-                select.value = upperQuality;
+                renderQualityDropdown(upperQuality);
                 loadConsumption();
                 saveState();
             }
@@ -765,14 +1163,53 @@
                     delete qualityPoloByPlaketData[targetValue];
                     delete qualityPantSidePocketData[targetValue];
                     delete qualityPantBackPocketData[targetValue];
-                    select.remove(select.selectedIndex);
+                    renderQualityDropdown();
                     loadConsumption();
                     saveState();
                 }
             }
         }
 
-        function calculateTotals() {
+        function sortBySize() {
+            const sizeOrder = ["XS", "S", "M", "L", "XL", "2XL", "XXL", "3XL", "XXXL", "4XL", "5XL", "6XL", "7XL", "8XL", "FREE", "FREE SIZE"];
+            const rows = Array.from(document.querySelectorAll('#itemRows tr'));
+            if (rows.length <= 1) return;
+
+            const rowData = rows.map(row => {
+                const sizeVal = (row.querySelector('.row-size').value || "").trim().toUpperCase();
+                return {
+                    element: row,
+                    size: sizeVal
+                };
+            });
+
+            function getSizeIndex(sizeStr) {
+                if (!sizeStr) return 999;
+                const idx = sizeOrder.indexOf(sizeStr);
+                if (idx !== -1) return idx;
+                const num = parseFloat(sizeStr);
+                if (!isNaN(num)) return 100 + num;
+                return 500;
+            }
+
+            rowData.sort((a, b) => {
+                const idxA = getSizeIndex(a.size);
+                const idxB = getSizeIndex(b.size);
+                if (idxA !== idxB) return idxA - idxB;
+                return a.size.localeCompare(b.size);
+            });
+
+            const tbody = document.getElementById('itemRows');
+            rowData.forEach(item => {
+                tbody.appendChild(item.element);
+            });
+
+            // Recalculate totals without resetting slip numbers so they stay tied to their sorted row
+            calculateTotals(false);
+            saveState();
+        }
+
+        function calculateTotals(autoRenumberSlips = false) {
             const rows = document.querySelectorAll('#itemRows tr');
             
             // Instantly restore clean original user body weights prior to running new scaling logic passes
@@ -797,6 +1234,57 @@
                     el.removeAttribute('data-origValue');
                 }
             });
+
+            // Sequential Slip Numbers calculation mapped to original entry/creation sequence
+            let totalSlipsSum = 0;
+            const rowsArray = Array.from(rows);
+
+            rowsArray.forEach(row => {
+                const slipsInput = row.querySelector('.row-slips');
+                const slips = parseInt(slipsInput ? slipsInput.value : 0) || 0;
+                totalSlipsSum += slips;
+            });
+
+            if (autoRenumberSlips) {
+                let sortedByOriginal = [...rowsArray].sort((a, b) => {
+                    const idxA = parseInt(a.dataset.originalIndex !== undefined ? a.dataset.originalIndex : 0);
+                    const idxB = parseInt(b.dataset.originalIndex !== undefined ? b.dataset.originalIndex : 0);
+                    return idxA - idxB;
+                });
+
+                let currentSlip = 1;
+                const firstOrigSlipInput = sortedByOriginal.length > 0 ? sortedByOriginal[0].querySelector('.row-slipno') : null;
+                if (firstOrigSlipInput) {
+                    const val = firstOrigSlipInput.value || "";
+                    const match = val.match(/^\d+/);
+                    if (match) {
+                        currentSlip = parseInt(match[0]);
+                    }
+                }
+
+                sortedByOriginal.forEach((row, index) => {
+                    const slipNoInput = row.querySelector('.row-slipno');
+                    const slipsInput = row.querySelector('.row-slips');
+                    const slips = parseInt(slipsInput ? slipsInput.value : 0) || 0;
+
+                    if (slipNoInput) {
+                        if (slips > 0) {
+                            const endSlip = currentSlip + slips - 1;
+                            const rangeStr = (slips === 1) ? `${currentSlip}` : `${currentSlip}-${endSlip}`;
+                            slipNoInput.value = rangeStr;
+                            currentSlip = endSlip + 1;
+                        } else {
+                            if (index > 0) {
+                                slipNoInput.value = "";
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (document.getElementById('totalSlipsDisplay')) {
+                document.getElementById('totalSlipsDisplay').innerText = totalSlipsSum;
+            }
 
             let totalWeightSum = 0;
             let totalBodyWtSum = 0;
@@ -994,12 +1482,12 @@
             if (backPocketTfootTd) (!isTextileActive && isPantActive && pantHasBackPocket) ? backPocketTfootTd.classList.remove('hidden') : backPocketTfootTd.classList.add('hidden');
             if (collarCuffTfootTd) (!isTextileActive && isPoloActive) ? collarCuffTfootTd.classList.remove('hidden') : collarCuffTfootTd.classList.add('hidden');
 
-            // Update top calculated single fabric consumption strictly mapped to 3 decimals
+            // Update top calculated single fabric consumption strictly mapped to 5 decimals
             let singleCalculatedCons = 0;
             if (stdGsm > 0) {
                 singleCalculatedCons = (stdCons / stdGsm) * fabricGsm;
             }
-            document.getElementById('headerCalculatedCons').innerText = singleCalculatedCons.toFixed(3);
+            document.getElementById('headerCalculatedCons').innerText = singleCalculatedCons.toFixed(5);
 
             // Fetch global batch weights for calculations
             const totalPocketGlobal = isPoloActive && poloHasPocket ? (parseFloat(document.getElementById('poloTotalPocketInput').value) || 0) : 0;
@@ -1072,6 +1560,7 @@
                 let baseSum = 0;
                 let chkBody = document.getElementById('adjTargetBodyWt').checked;
                 let chkWastage = document.getElementById('adjTargetWastage').checked;
+                let chkRibWastage = document.getElementById('adjTargetRibWastage') ? document.getElementById('adjTargetRibWastage').checked : false;
                 let chkMukpat = document.getElementById('adjTargetMukpat').checked;
                 let chkRib = document.getElementById('adjTargetRib').checked;
                 let chkPocket = document.getElementById('adjTargetPocket').checked;
@@ -1086,8 +1575,12 @@
 
                     if (chkBody) baseSum += bodywt;
                     if (chkWastage) {
-                        let rowWastageShare = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * (globalWastage + globalByPlaketWastage + globalRibWastage) : 0;
+                        let rowWastageShare = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * (globalWastage + globalByPlaketWastage) : 0;
                         baseSum += rowWastageShare;
+                    }
+                    if (chkRibWastage && isGrsActive) {
+                        let rowRibWastageShare = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * globalRibWastage : 0;
+                        baseSum += rowRibWastageShare;
                     }
                     if (chkMukpat) {
                         let rowMukpatShare = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * globalMukpat : 0;
@@ -1120,65 +1613,84 @@
                     adjFactor = adjWeightValue / baseSum;
                     let adjSign = (adjAction === 'ADD') ? 1 : -1;
                     if (chkWastage) {
-                        ['globalWastageInput', 'poloTotalByPlaketWastageInput', 'globalRibWastageInput'].forEach(id => {
+                        ['globalWastageInput', 'poloTotalByPlaketWastageInput'].forEach(id => {
                             const el = document.getElementById(id);
                             if (el && el.value !== "") {
-                                const val = parseFloat(el.value) || 0;
-                                if (val > 0) { el.dataset.origValue = el.value; el.value = (val + val * adjFactor * adjSign).toFixed(3); }
+                                if (el.dataset.origValue === undefined) el.dataset.origValue = el.value;
+                                const val = parseFloat(el.dataset.origValue) || 0;
+                                el.value = roundTo50g(val + val * adjFactor * adjSign).toFixed(3);
                             }
                         });
+                    }
+                    if (chkRibWastage && isGrsActive) {
+                        const el = document.getElementById('globalRibWastageInput');
+                        if (el && el.value !== "") {
+                            if (el.dataset.origValue === undefined) el.dataset.origValue = el.value;
+                            const val = parseFloat(el.dataset.origValue) || 0;
+                            el.value = roundTo50g(val + val * adjFactor * adjSign).toFixed(3);
+                        }
                     }
                     if (chkMukpat) {
                         const el = document.getElementById('globalMukpatInput');
                         if (el && el.value !== "") {
-                            const val = parseFloat(el.value) || 0;
-                            if (val > 0) { el.dataset.origValue = el.value; el.value = (val + val * adjFactor * adjSign).toFixed(3); }
+                            if (el.dataset.origValue === undefined) el.dataset.origValue = el.value;
+                            const val = parseFloat(el.dataset.origValue) || 0;
+                            el.value = roundTo50g(val + val * adjFactor * adjSign).toFixed(3);
                         }
                     }
                     if (chkRib && isGrsActive) {
                         const el = document.getElementById('globalTotalRibInput');
                         if (el && el.value !== "") {
-                            const val = parseFloat(el.value) || 0;
-                            if (val > 0) { el.dataset.origValue = el.value; el.value = (val + val * adjFactor * adjSign).toFixed(3); }
+                            if (el.dataset.origValue === undefined) el.dataset.origValue = el.value;
+                            const val = parseFloat(el.dataset.origValue) || 0;
+                            el.value = roundTo50g(val + val * adjFactor * adjSign).toFixed(3);
                         }
                     }
                     if (chkPocket && isPoloActive) {
                         ['poloTotalPocketInput', 'poloTotalPlaketInput'].forEach(id => {
                             const el = document.getElementById(id);
                             if (el && el.value !== "") {
-                                const val = parseFloat(el.value) || 0;
-                                if (val > 0) { el.dataset.origValue = el.value; el.value = (val + val * adjFactor * adjSign).toFixed(3); }
+                                if (el.dataset.origValue === undefined) el.dataset.origValue = el.value;
+                                const val = parseFloat(el.dataset.origValue) || 0;
+                                el.value = roundTo50g(val + val * adjFactor * adjSign).toFixed(3);
                             }
                         });
                     }
                     if (chkSidePkt && isPantActive && pantHasSidePocket) {
                         const el = document.getElementById('pantTotalSidePocketInput');
                         if (el && el.value !== "") {
-                            const val = parseFloat(el.value) || 0;
-                            if (val > 0) { el.dataset.origValue = el.value; el.value = (val + val * adjFactor * adjSign).toFixed(3); }
+                            if (el.dataset.origValue === undefined) el.dataset.origValue = el.value;
+                            const val = parseFloat(el.dataset.origValue) || 0;
+                            el.value = roundTo50g(val + val * adjFactor * adjSign).toFixed(3);
                         }
                     }
                     if (chkBackPkt && isPantActive && pantHasBackPocket) {
                         const el = document.getElementById('pantTotalBackPocketInput');
                         if (el && el.value !== "") {
-                            const val = parseFloat(el.value) || 0;
-                            if (val > 0) { el.dataset.origValue = el.value; el.value = (val + val * adjFactor * adjSign).toFixed(3); }
+                            if (el.dataset.origValue === undefined) el.dataset.origValue = el.value;
+                            const val = parseFloat(el.dataset.origValue) || 0;
+                            el.value = roundTo50g(val + val * adjFactor * adjSign).toFixed(3);
                         }
                     }
                     if (chkCollar && isPoloActive) {
                         const el = document.getElementById('poloTotalCollarCuffInput');
                         if (el && el.value !== "") {
-                            const val = parseFloat(el.value) || 0;
-                            if (val > 0) { el.dataset.origValue = el.value; el.value = (val + val * adjFactor * adjSign).toFixed(3); }
+                            if (el.dataset.origValue === undefined) el.dataset.origValue = el.value;
+                            const val = parseFloat(el.dataset.origValue) || 0;
+                            el.value = roundTo50g(val + val * adjFactor * adjSign).toFixed(3);
                         }
                     }
                 }
             }
 
             rows.forEach(row => {
+                const sizeVal = (row.querySelector('.row-size').value || "").trim().toUpperCase();
                 const pics = parseFloat(row.querySelector('.row-pics').value) || 0;
                 const bodyWtInput = row.querySelector('.row-bodywt');
                 let bodywt = isCheckActive ? (parseFloat(bodyWtInput.dataset.weight) || 0) : (parseFloat(bodyWtInput.value) || 0);
+
+                // Fetch historical benchmarks for this row's size
+                const histBench = getHistoricalAverages(currentQuality, sizeVal);
 
                 // Force layout state clean synchronization parameters to explicitly prevent shattered bounds
                 const foldingTd = row.querySelector('.row-folding');
@@ -1211,14 +1723,15 @@
                         const rowBodyMtrPerPc = pics > 0 ? rowBodyMtr / pics : 0;
                         const rowTotalMtrPerPc = pics > 0 ? rowTotalMtr / pics : 0;
 
-                        row.querySelector('.row-bcons').innerText = rowBodyMtrPerPc.toFixed(3);
-                        row.querySelector('.row-tcons').innerText = rowTotalMtrPerPc.toFixed(3);
+                        row.querySelector('.row-bcons').innerText = rowBodyMtrPerPc.toFixed(5);
+                        row.querySelector('.row-tcons').innerText = rowTotalMtrPerPc.toFixed(5);
 
                         totalPicsSum += pics;
                         totalBodyWtSum += rowBodyMtr;
                         totalWastageSum += rowWastageMtr;
                         totalWeightSum += rowTotalMtr;
                     } else {
+                        rowWastage = roundTo50g(rowWastage);
                         const rowWastageRounded = parseFloat(rowWastage.toFixed(3));
                         const rowTotalWeightRounded = parseFloat(bodywt.toFixed(3)) + rowWastageRounded;
 
@@ -1228,14 +1741,16 @@
                         const grandBCons = pics > 0 ? bodywt / pics : 0;
                         const grandTCons = pics > 0 ? rowTotalWeightRounded / pics : 0;
 
-                        row.querySelector('.row-bcons').innerText = grandBCons.toFixed(3);
-                        row.querySelector('.row-tcons').innerText = grandTCons.toFixed(3);
+                        row.querySelector('.row-bcons').innerText = grandBCons.toFixed(5);
+                        row.querySelector('.row-tcons').innerText = grandTCons.toFixed(5);
 
                         totalPicsSum += pics;
                         totalBodyWtSum += parseFloat(bodywt.toFixed(3));
                         totalWastageSum += rowWastageRounded;
                         totalWeightSum += rowTotalWeightRounded;
                     }
+                    if (row.querySelector('.row-bcons-ref')) row.querySelector('.row-bcons-ref').innerHTML = "";
+                    if (row.querySelector('.row-tcons-ref')) row.querySelector('.row-tcons-ref').innerHTML = "";
                 } else {
                     const fName = qualityFoldingNameData[currentQuality] || "";
                     const fGm = parseFloat(qualityFoldingGmData[currentQuality]) || 0;
@@ -1249,7 +1764,6 @@
 
                     if (foldingTd) {
                         if (isFoldingActive || (isPoloActive && poloHasByPlaket)) {
-                            foldingTd.innerText = foldingWt.toFixed(3);
                             foldingTd.classList.remove('hidden');
                         } else {
                             foldingTd.classList.add('hidden');
@@ -1264,7 +1778,6 @@
                             ribTd.classList.remove('hidden');
                             if (globalRibTotal > 0) {
                                 ribWt = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * globalRibTotal : 0;
-                                ribInput.value = ribWt.toFixed(3);
                                 ribInput.disabled = true;
                                 ribInput.classList.add('bg-gray-100');
                             } else {
@@ -1286,7 +1799,6 @@
                             let plaketWt = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * totalPlaketGlobal : 0;
                             let pocketOnlyWt = (poloHasPocket && tempTotalPicsSum > 0) ? (pics / tempTotalPicsSum) * totalPocketGlobal : 0;
                             pktPlktWt = pocketOnlyWt + plaketWt;
-                            pocketTd.innerText = pktPlktWt.toFixed(3);
                         } else {
                             pocketTd.classList.add('hidden');
                             pocketTd.innerText = '0.000';
@@ -1301,7 +1813,6 @@
                             sidePocketTd.classList.remove('hidden');
                             if (totalSidePocketGlobal > 0) {
                                 sidePocketWt = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * totalSidePocketGlobal : 0;
-                                sidePocketInput.value = sidePocketWt.toFixed(3);
                                 sidePocketInput.disabled = true;
                                 sidePocketInput.classList.add('bg-gray-100');
                             } else {
@@ -1323,7 +1834,6 @@
                             backPocketTd.classList.remove('hidden');
                             if (totalBackPocketGlobal > 0) {
                                 backPocketWt = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * totalBackPocketGlobal : 0;
-                                backPocketInput.value = backPocketWt.toFixed(3);
                                 backPocketInput.disabled = true;
                                 backPocketInput.classList.add('bg-gray-100');
                             } else {
@@ -1342,7 +1852,6 @@
                         if (isPoloActive) {
                             collarCuffTd.classList.remove('hidden');
                             collarCuffWt = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * totalCollarCuffGlobal : 0;
-                            collarCuffTd.innerText = collarCuffWt.toFixed(3);
                         } else {
                             collarCuffTd.classList.add('hidden');
                             collarCuffTd.innerText = '0.000';
@@ -1360,6 +1869,7 @@
                     if (adjWeightValue > 0) {
                         let chkBody = document.getElementById('adjTargetBodyWt').checked;
                         let chkWastage = document.getElementById('adjTargetWastage').checked;
+                        let chkRibWastage = document.getElementById('adjTargetRibWastage') ? document.getElementById('adjTargetRibWastage').checked : false;
                         let chkMukpat = document.getElementById('adjTargetMukpat').checked;
                         let chkRib = document.getElementById('adjTargetRib').checked;
                         let chkPocket = document.getElementById('adjTargetPocket').checked;
@@ -1369,13 +1879,22 @@
                         let adjSign = (adjAction === 'ADD') ? 1 : -1;
 
                         if (chkBody) {
-                            bodyWtInput.dataset.origBodyWt = bodywt;
-                            bodywt += bodywt * adjFactor * adjSign;
+                            if (bodyWtInput.dataset.origBodyWt === undefined) {
+                                bodyWtInput.dataset.origBodyWt = bodywt;
+                            }
+                            let baseWt = parseFloat(bodyWtInput.dataset.origBodyWt) || 0;
+                            bodywt = roundTo50g(baseWt + baseWt * adjFactor * adjSign);
                             bodyWtInput.value = bodywt.toFixed(3);
                         }
                         if (chkWastage) {
-                            rowWastagePart += rowWastagePart * adjFactor * adjSign;
-                            mainWastageOnlyPart += mainWastageOnlyPart * adjFactor * adjSign;
+                            let wstShare = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * (globalWastage + globalByPlaketWastage) : 0;
+                            rowWastagePart += wstShare * adjFactor * adjSign;
+                            mainWastageOnlyPart += wstShare * adjFactor * adjSign;
+                        }
+                        if (chkRibWastage && isGrsActive) {
+                            let rWstShare = tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * globalRibWastage : 0;
+                            rowWastagePart += rWstShare * adjFactor * adjSign;
+                            mainWastageOnlyPart += rWstShare * adjFactor * adjSign;
                         }
                         if (chkMukpat) {
                             rowMukpatPart += rowMukpatPart * adjFactor * adjSign;
@@ -1394,11 +1913,24 @@
                         if (chkCollar && isPoloActive) collarCuffWt += collarCuffWt * adjFactor * adjSign;
                     }
 
+                    // Convert distributed and adjusted weights (Including folding to 50g increments)
+                    foldingWt = roundTo50g(foldingWt);
+                    if (globalRibTotal > 0) ribWt = roundTo50g(ribWt);
+                    pktPlktWt = roundTo50g(pktPlktWt);
+                    if (totalSidePocketGlobal > 0) sidePocketWt = roundTo50g(sidePocketWt);
+                    if (totalBackPocketGlobal > 0) backPocketWt = roundTo50g(backPocketWt);
+                    collarCuffWt = roundTo50g(collarCuffWt);
+                    rowWastagePart = roundTo50g(rowWastagePart);
+                    rowMukpatPart = roundTo50g(rowMukpatPart);
+                    mainWastageOnlyPart = roundTo50g(mainWastageOnlyPart);
+                    mainMukpatPart = roundTo50g(mainMukpatPart);
+
                     // Unconditionally push live adjusted parameters text displays into inner target inputs/cells
-                    if (ribInput && isGrsActive) ribInput.value = ribWt.toFixed(3);
+                    if (foldingTd && (isFoldingActive || (isPoloActive && poloHasByPlaket))) foldingTd.innerText = foldingWt.toFixed(3);
+                    if (ribInput && isGrsActive && globalRibTotal > 0) ribInput.value = ribWt.toFixed(3);
                     if (pocketTd && isPoloActive) pocketTd.innerText = pktPlktWt.toFixed(3);
-                    if (sidePocketInput && isPantActive && pantHasSidePocket) sidePocketInput.value = sidePocketWt.toFixed(3);
-                    if (backPocketInput && isPantActive && pantHasBackPocket) backPocketInput.value = backPocketWt.toFixed(3);
+                    if (sidePocketInput && isPantActive && pantHasSidePocket && totalSidePocketGlobal > 0) sidePocketInput.value = sidePocketWt.toFixed(3);
+                    if (backPocketInput && isPantActive && pantHasBackPocket && totalBackPocketGlobal > 0) backPocketInput.value = backPocketWt.toFixed(3);
                     if (collarCuffTd && isPoloActive) collarCuffTd.innerText = collarCuffWt.toFixed(3);
 
                     let rowWastage = rowWastagePart + rowMukpatPart;
@@ -1422,12 +1954,33 @@
                     let mainWastageShare = mainWastageOnlyPart + mainMukpatPart;
                     let mainFabricRowWeight = bodywt + pktPlktWt + sidePocketWt + backPocketWt + mainWastageShare;
 
-                    // Display regular weights per pc
+                    // Display regular weights per pc (mapped to 5 decimal places)
                     const grandBCons = pics > 0 ? rBody / pics : 0;
                     const grandTCons = pics > 0 ? mainFabricRowWeight / pics : 0;
 
-                    row.querySelector('.row-bcons').innerText = grandBCons.toFixed(3);
-                    row.querySelector('.row-tcons').innerText = grandTCons.toFixed(3);
+                    row.querySelector('.row-bcons').innerText = grandBCons.toFixed(5);
+                    row.querySelector('.row-tcons').innerText = grandTCons.toFixed(5);
+
+                    // Render Real-time Size Benchmark Comparison from History
+                    const bConsRefEl = row.querySelector('.row-bcons-ref');
+                    const tConsRefEl = row.querySelector('.row-tcons-ref');
+
+                    if (histBench && pics > 0) {
+                        const bDiff = grandBCons - histBench.avgBCons;
+                        const tDiff = grandTCons - histBench.avgTCons;
+
+                        const bDiffStr = (bDiff >= 0 ? "+" : "") + bDiff.toFixed(5);
+                        const tDiffStr = (tDiff >= 0 ? "+" : "") + tDiff.toFixed(5);
+
+                        const bClass = Math.abs(bDiff) > 0.0025 ? "text-red-500 font-bold" : "text-gray-400";
+                        const tClass = Math.abs(tDiff) > 0.0025 ? "text-red-500 font-bold" : "text-gray-400";
+
+                        if (bConsRefEl) bConsRefEl.innerHTML = `<span class="text-[9px] text-gray-500 font-medium block">Avg: ${histBench.avgBCons.toFixed(5)}</span><span class="text-[8px] ${bClass} block">(${bDiffStr})</span>`;
+                        if (tConsRefEl) tConsRefEl.innerHTML = `<span class="text-[9px] text-gray-500 font-medium block">Avg: ${histBench.avgTCons.toFixed(5)}</span><span class="text-[8px] ${tClass} block">(${tDiffStr})</span>`;
+                    } else {
+                        if (bConsRefEl) bConsRefEl.innerHTML = "";
+                        if (tConsRefEl) tConsRefEl.innerHTML = "";
+                    }
 
                     // Accumulate values for grand totals
                     totalMainFabricSum += mainFabricRowWeight;
@@ -1462,14 +2015,14 @@
                 const avgBodyMtrPerPc = totalPicsSum > 0 ? totalBodyMtrSum / totalPicsSum : 0;
                 const avgTotalMtrPerPc = totalPicsSum > 0 ? totalMtrSum / totalPicsSum : 0;
 
-                document.getElementById('totalBCons').innerText = avgBodyMtrPerPc.toFixed(3);
-                document.getElementById('totalTCons').innerText = avgTotalMtrPerPc.toFixed(3);
+                document.getElementById('totalBCons').innerText = avgBodyMtrPerPc.toFixed(5);
+                document.getElementById('totalTCons').innerText = avgTotalMtrPerPc.toFixed(5);
                 
                 // Variance logic tracking for Textile meters mode
                 let diff = avgTotalMtrPerPc - textileStdCons;
                 let varianceEl = document.getElementById('consVariance');
                 if (totalPicsSum > 0 && textileStdCons > 0) {
-                    let diffStr = (diff >= 0 ? "+" : "") + diff.toFixed(3);
+                    let diffStr = (diff >= 0 ? "+" : "") + diff.toFixed(5);
                     if (diff < 0) {
                         if (Math.abs(diff) > 0.0025) {
                             varianceEl.innerText = `(${diffStr} LOW - NOT ALLOWED)`;
@@ -1500,18 +2053,18 @@
                 if (isTextileActive) {
                     const avgBodyWtPerPc = totalPicsSum > 0 ? totalBodyWtSum / totalPicsSum : 0;
                     const avgTotalWtPerPc = totalPicsSum > 0 ? totalWeightSum / totalPicsSum : 0;
-                    document.getElementById('totalBCons').innerText = avgBodyWtPerPc.toFixed(3);
-                    document.getElementById('totalTCons').innerText = avgTotalWtPerPc.toFixed(3);
+                    document.getElementById('totalBCons').innerText = avgBodyWtPerPc.toFixed(5);
+                    document.getElementById('totalTCons').innerText = avgTotalWtPerPc.toFixed(5);
                     document.getElementById('consVariance').innerText = "";
                 } else {
-                    document.getElementById('totalBCons').innerText = grandBCons.toFixed(3);
-                    document.getElementById('totalTCons').innerText = grandTCons.toFixed(3);
+                    document.getElementById('totalBCons').innerText = grandBCons.toFixed(5);
+                    document.getElementById('totalTCons').innerText = grandTCons.toFixed(5);
 
-                    // Calculate variance to 3 decimal formats safely and apply dynamic user coloration
+                    // Calculate variance to 5 decimal formats safely and apply dynamic user coloration
                     let diff = grandTCons - singleCalculatedCons;
                     let varianceEl = document.getElementById('consVariance');
                     if (totalPicsSum > 0 && stdGsm > 0) {
-                        let diffStr = (diff >= 0 ? "+" : "") + diff.toFixed(3);
+                        let diffStr = (diff >= 0 ? "+" : "") + diff.toFixed(5);
                         
                         if (diff < 0) {
                             // Low condition: Always Yellow/Amber regardless of tolerance limit
@@ -1552,99 +2105,184 @@
             saveState();
         }
 
-        function prepareAndPrint() {
+        // Direct Download of Standalone Responsive Document File
+        function downloadDocument() {
             const select = document.getElementById('globalQuality');
-            document.getElementById('printQuality').innerText = select.value || "";
-            document.getElementById('printRemarks').innerText = qualityRemarksData[select.value] || "";
-            document.getElementById('printConsumption').innerText = qualityData[select.value] || "0";
-            document.getElementById('printGsm').innerText = qualityGsmData[select.value] || "0";
-            document.getElementById('printFabricGsm').innerText = document.getElementById('fabricGsmInput').value || "0";
-            
-            const currentQuality = select.value;
+            const currentQuality = select.value || "QUALITY";
+            const remarks = (qualityRemarksData[currentQuality] || document.getElementById('qualityRemarksInput').value || "").trim();
+
             const fName = qualityFoldingNameData[currentQuality] || "";
             const fGm = parseFloat(qualityFoldingGmData[currentQuality]) || 0;
             const isFoldingActive = fName.trim() !== "" && fGm > 0;
             const isTextileActive = currentQuality.toUpperCase().includes('TEXTILE');
+            const isGrsActive = currentQuality.toUpperCase().includes('GRS');
+            const isPoloActive = currentQuality.toUpperCase().includes('POLO');
+            const isPantActive = currentQuality.toUpperCase().includes('PANT');
 
-            const printLabel = document.getElementById('printFoldingLabel');
-            const printVal = document.getElementById('printFoldingVal');
-            if (printLabel && printVal) {
-                if (!isTextileActive && isFoldingActive) {
-                    printLabel.innerText = fName + " VALUE (GM/PC)";
-                    printLabel.classList.remove('hidden');
-                    printVal.innerText = fGm.toFixed(3);
-                    printVal.classList.remove('hidden');
-                } else {
-                    printLabel.classList.add('hidden');
-                    printVal.classList.add('hidden');
+            const getCleanVal = (id) => {
+                const el = document.getElementById(id);
+                return el ? (parseFloat(el.value) || 0) : 0;
+            };
+
+            const wst = getCleanVal('globalWastageInput');
+            const mkpt = getCleanVal('globalMukpatInput');
+            const ribWst = getCleanVal('globalRibWastageInput');
+            const ribWt = getCleanVal('globalTotalRibInput');
+            const pkt = getCleanVal('poloTotalPocketInput');
+            const plkt = getCleanVal('poloTotalPlaketInput');
+            const byPlkt = getCleanVal('poloTotalByPlaketInput');
+            const byPlktWst = getCleanVal('poloTotalByPlaketWastageInput');
+            const collar = getCleanVal('poloTotalCollarCuffInput');
+            const sidePkt = getCleanVal('pantTotalSidePocketInput');
+            const backPkt = getCleanVal('pantTotalBackPocketInput');
+            const adj = getCleanVal('adjWeightInput');
+            const adjAction = document.getElementById('adjActionSelect').value;
+
+            // Extract table headers that are currently visible
+            let ths = [];
+            document.querySelectorAll('table thead th').forEach(th => {
+                if (!th.classList.contains('no-print') && !th.classList.contains('hidden') && th.offsetParent !== null) {
+                    ths.push(th.innerText.trim());
                 }
-            }
-
-            const printTextileStdConsLabel = document.getElementById('printTextileStdConsLabel');
-            const printTextileStdConsVal = document.getElementById('printTextileStdConsVal');
-            const printTotalMetersLabel = document.getElementById('printTotalMetersLabel');
-            const printTotalMetersVal = document.getElementById('printTotalMetersVal');
-            const printTextileCheckLabel = document.getElementById('printTextileCheckLabel');
-            const printTextileCheckVal = document.getElementById('printTextileCheckVal');
-
-            const printConsumptionHeader = document.getElementById('printConsumptionHeader');
-            const printConsumption = document.getElementById('printConsumption');
-            const printGsmHeader = document.getElementById('printGsmHeader');
-            const printGsm = document.getElementById('printGsm');
-            const printFabricGsmHeader = document.getElementById('printFabricGsmHeader');
-            const printFabricGsm = document.getElementById('printFabricGsm');
-
-            if (isTextileActive) {
-                printTextileStdConsLabel.classList.remove('hidden');
-                printTextileStdConsVal.classList.remove('hidden');
-                printTextileStdConsVal.innerText = document.getElementById('textileStdConsInput').value || "0.000";
-
-                printTotalMetersLabel.classList.remove('hidden');
-                printTotalMetersVal.classList.remove('hidden');
-                printTotalMetersVal.innerText = document.getElementById('textileTotalMetersInput').value || "0.000";
-
-                printTextileCheckLabel.classList.remove('hidden');
-                printTextileCheckVal.classList.remove('hidden');
-                printTextileCheckVal.innerText = document.getElementById('textileCheckMode').checked ? "YES" : "NO";
-
-                printConsumptionHeader.classList.add('hidden');
-                printConsumption.classList.add('hidden');
-                printGsmHeader.classList.add('hidden');
-                printGsm.classList.add('hidden');
-                printFabricGsmHeader.classList.add('hidden');
-                printFabricGsm.classList.add('hidden');
-            } else {
-                printTextileStdConsLabel.classList.add('hidden');
-                printTextileStdConsVal.classList.add('hidden');
-                printTotalMetersLabel.classList.add('hidden');
-                printTotalMetersVal.classList.add('hidden');
-                printTextileCheckLabel.classList.add('hidden');
-                printTextileCheckVal.classList.add('hidden');
-
-                printConsumptionHeader.classList.remove('hidden');
-                printConsumption.classList.remove('hidden');
-                printGsmHeader.classList.remove('hidden');
-                printGsm.classList.remove('hidden');
-                printFabricGsmHeader.classList.remove('hidden');
-                printFabricGsm.classList.remove('hidden');
-            }
-
-            // Clean view conversion for text inputs during print
-            const inputClasses = ['.row-size', '.row-pics', '.row-bodywt', '.row-ribwt', '.row-sidepocket', '.row-backpocket'];
-            inputClasses.forEach(selector => {
-                const inputs = document.querySelectorAll(selector);
-                inputs.forEach(input => {
-                    let span = input.nextSibling;
-                    if (!span || span.className !== 'print-val hidden print:inline') {
-                        span = document.createElement('span');
-                        span.className = 'print-val hidden print:inline';
-                        input.parentNode.appendChild(span);
-                    }
-                    span.innerText = input.value;
-                });
             });
 
-            window.print();
+            // Extract table row values
+            let rowsHtml = "";
+            document.querySelectorAll('#itemRows tr').forEach(tr => {
+                let tdsHtml = "";
+                tr.querySelectorAll('td').forEach(td => {
+                    if (!td.classList.contains('no-print') && !td.classList.contains('hidden') && td.offsetParent !== null) {
+                        const input = td.querySelector('input');
+                        let val = "";
+                        if (input) {
+                            val = input.value.trim() || "-";
+                        } else {
+                            // Extract main text (ignoring sub-references)
+                            const bCons = td.querySelector('.row-bcons');
+                            const tCons = td.querySelector('.row-tcons');
+                            if (bCons) val = bCons.innerText.trim();
+                            else if (tCons) val = tCons.innerText.trim();
+                            else val = td.innerText.trim() || "-";
+                        }
+                        tdsHtml += `<td style="border: 1px solid #cbd5e1; padding: 4px 3px; text-align: center;">${val}</td>`;
+                    }
+                });
+                rowsHtml += `<tr>${tdsHtml}</tr>`;
+            });
+
+            // Extract table footer values
+            let tfootHtml = "";
+            document.querySelectorAll('table tfoot td').forEach(td => {
+                if (!td.classList.contains('no-print') && !td.classList.contains('hidden') && td.offsetParent !== null) {
+                    const totalTCons = td.querySelector('#totalTCons');
+                    let val = totalTCons ? totalTCons.innerText.trim() : td.innerText.trim();
+                    tfootHtml += `<td style="border: 1px solid #94a3b8; padding: 4px 3px; text-align: center; font-weight: bold; background: #e2e8f0;">${val}</td>`;
+                }
+            });
+
+            // Build metrics overview html
+            let metricsDetails = "";
+            if (isTextileActive) {
+                metricsDetails = `
+                    <span>STD MTR CONS: <b>${document.getElementById('textileStdConsInput').value || '0.00000'}</b></span>
+                    <span>TOTAL METERS: <b>${document.getElementById('textileTotalMetersInput').value || '0.000'}</b></span>
+                    <span>METERS MODE: <b>${document.getElementById('textileCheckMode').checked ? 'YES' : 'NO'}</b></span>
+                `;
+            } else {
+                metricsDetails = `
+                    <span>STD CONS: <b>${qualityData[currentQuality] || '0.00000'}</b></span>
+                    <span>STD GSM: <b>${qualityGsmData[currentQuality] || '0'}</b></span>
+                    <span>FABRIC GSM: <b>${document.getElementById('fabricGsmInput').value || '0'}</b></span>
+                    <span>CALC CONS: <b style="color: #1d4ed8;">${document.getElementById('headerCalculatedCons').innerText || '0.00000'}</b></span>
+                `;
+            }
+
+            if (!isTextileActive && isFoldingActive) {
+                metricsDetails += `<span>${fName} (GM/PC): <b>${fGm.toFixed(5)}</b></span>`;
+            }
+
+            let extraWeightsHtml = `<span>WASTAGE WT: <b>${wst.toFixed(3)}</b></span>`;
+            if (!isTextileActive) extraWeightsHtml += `<span>MUKPAT WT: <b>${mkpt.toFixed(3)}</b></span>`;
+            if (isGrsActive && ribWst > 0) extraWeightsHtml += `<span>RIB WASTAGE: <b>${ribWst.toFixed(3)}</b></span>`;
+            if (isGrsActive && ribWt > 0) extraWeightsHtml += `<span>RIB WT: <b>${ribWt.toFixed(3)}</b></span>`;
+            if (isPoloActive && pkt > 0) extraWeightsHtml += `<span>PKT WT: <b>${pkt.toFixed(3)}</b></span>`;
+            if (isPoloActive && plkt > 0) extraWeightsHtml += `<span>PLKT WT: <b>${plkt.toFixed(3)}</b></span>`;
+            if (isPoloActive && byPlkt > 0) extraWeightsHtml += `<span>BY-PLKT WT: <b>${byPlkt.toFixed(3)}</b></span>`;
+            if (isPoloActive && byPlktWst > 0) extraWeightsHtml += `<span>BY-PLKT WST: <b>${byPlktWst.toFixed(3)}</b></span>`;
+            if (isPoloActive && collar > 0) extraWeightsHtml += `<span>COLLAR CUFF: <b>${collar.toFixed(3)}</b></span>`;
+            if (isPantActive && sidePkt > 0) extraWeightsHtml += `<span>SIDE PKT: <b>${sidePkt.toFixed(3)}</b></span>`;
+            if (isPantActive && backPkt > 0) extraWeightsHtml += `<span>BACK PKT: <b>${backPkt.toFixed(3)}</b></span>`;
+            if (!isTextileActive && adj > 0) extraWeightsHtml += `<span style="color: #1d4ed8;">ADJUST WT: <b>${adjAction === 'ADD' ? '+' : '-'}${adj.toFixed(3)} KG</b></span>`;
+
+            // Build dynamic filename from Quality Remarks or auto fallback
+            let finalFileName = "";
+            const cleanRemarks = remarks.replace(/[/\\?%*:|"<>]/g, '_').trim();
+            const cleanQuality = currentQuality.replace(/[/\\?%*:|"<>]/g, '_').trim();
+            const dateStr = new Date().toISOString().slice(0,10);
+
+            if (cleanRemarks !== "") {
+                finalFileName = cleanRemarks;
+            } else {
+                finalFileName = `${cleanQuality}_Challan_${dateStr}`;
+            }
+
+            const documentContent = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>${finalFileName}</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 12px; margin: 0; background: #fff; color: #1e293b; font-size: 11px; }
+        .container { max-width: 100%; margin: 0 auto; }
+        .header { text-align: center; border-bottom: 2px solid #334155; padding-bottom: 8px; margin-bottom: 12px; }
+        .title { font-size: 16px; font-weight: 900; letter-spacing: 1px; }
+        .sub-header { font-size: 11px; font-weight: bold; margin-top: 4px; color: #334155; }
+        .info-card { border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 4px; padding: 6px 10px; margin-bottom: 12px; }
+        .metrics-row { display: flex; flex-wrap: wrap; gap: 12px; font-weight: 600; font-size: 10px; }
+        .weights-row { display: flex; flex-wrap: wrap; gap: 10px; font-size: 9.5px; border-top: 1px solid #e2e8f0; margin-top: 5px; padding-top: 5px; color: #475569; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 8px; table-layout: auto; }
+        th { background: #e2e8f0; color: #0f172a; font-weight: bold; border: 1px solid #cbd5e1; padding: 5px 3px; text-align: center; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">CUTTING CHALLAN REPORT</div>
+            <div class="sub-header">QUALITY: <span>${currentQuality}</span> | REMARKS: <span>${remarks || "-"}</span></div>
+        </div>
+        <div class="info-card">
+            <div class="metrics-row">${metricsDetails}</div>
+            <div class="weights-row">${extraWeightsHtml}</div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    ${ths.map(h => `<th>${h}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody>
+                ${rowsHtml}
+            </tbody>
+            <tfoot>
+                <tr>
+                    ${tfootHtml}
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</body>
+</html>`;
+
+            const blob = new Blob([documentContent], { type: 'text/html;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${finalFileName}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         // Export Data to JSON File
@@ -1654,7 +2292,10 @@
             rows.forEach(row => {
                 const bodyWtInput = row.querySelector('.row-bodywt');
                 items.push({
+                    origIndex: row.dataset.originalIndex,
+                    slipno: row.querySelector('.row-slipno') ? row.querySelector('.row-slipno').value : '',
                     size: row.querySelector('.row-size').value,
+                    slips: row.querySelector('.row-slips') ? row.querySelector('.row-slips').value : '',
                     pics: row.querySelector('.row-pics').value,
                     bodywt: bodyWtInput.dataset.origBodyWt !== undefined ? bodyWtInput.dataset.origBodyWt : (bodyWtInput.dataset.weight !== undefined ? bodyWtInput.dataset.weight : bodyWtInput.value),
                     ribwt: row.querySelector('.row-ribwt') ? row.querySelector('.row-ribwt').value : '',
@@ -1687,8 +2328,8 @@
                 pantTotalBackPocket: getGlobalVal('pantTotalBackPocketInput'),
                 globalWastage: getGlobalVal('globalWastageInput'),
                 globalMukpat: getGlobalVal('globalMukpatInput'),
-                globalRibWastage: getGlobalVal('globalRibWastageInput'),
-                globalRibTotal: getGlobalVal('globalTotalRibInput'),
+                globalRibWastage: getGlobalRibWastageInput ? getGlobalVal('globalRibWastageInput') : "",
+                globalRibTotal: getGlobalTotalRibInput ? getGlobalVal('globalTotalRibInput') : "",
                 textileStdCons: document.getElementById('textileStdConsInput').value,
                 textileTotalMeters: document.getElementById('textileTotalMetersInput').value,
                 textileCheckMode: document.getElementById('textileCheckMode').checked,
@@ -1696,6 +2337,7 @@
                 adjAction: document.getElementById('adjActionSelect').value,
                 adjTargetBodyWt: document.getElementById('adjTargetBodyWt').checked,
                 adjTargetWastage: document.getElementById('adjTargetWastage').checked,
+                adjTargetRibWastage: document.getElementById('adjTargetRibWastage') ? document.getElementById('adjTargetRibWastage').checked : false,
                 adjTargetMukpat: document.getElementById('adjTargetMukpat').checked,
                 adjTargetRib: document.getElementById('adjTargetRib').checked,
                 adjTargetPocket: document.getElementById('adjTargetPocket').checked,
@@ -1706,13 +2348,14 @@
                 historyData: historyData
             };
 
-            const dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "challan data.txt");
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+            const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `challan_data_backup_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         // Trigger hidden file input for Import
@@ -1731,7 +2374,6 @@
                     const importedObj = JSON.parse(e.target.result);
                     
                     if (importedObj.qualityData && importedObj.qualityGsmData && importedObj.items) {
-                        // Clear existing global maps
                         for (let key in qualityData) delete qualityData[key];
                         for (let key in qualityGsmData) delete qualityGsmData[key];
                         for (let key in qualityFoldingNameData) delete qualityFoldingNameData[key];
@@ -1740,7 +2382,6 @@
                         for (let key in qualityTextileStdConsData) delete qualityTextileStdConsData[key];
                         for (let key in qualityTextileTotalMetersData) delete qualityTextileTotalMetersData[key];
 
-                        // Assign imported maps
                         Object.assign(qualityData, importedObj.qualityData);
                         Object.assign(qualityGsmData, importedObj.qualityGsmData);
                         if (importedObj.qualityFoldingNameData) Object.assign(qualityFoldingNameData, importedObj.qualityFoldingNameData);
@@ -1749,20 +2390,8 @@
                         if (importedObj.qualityTextileStdConsData) Object.assign(qualityTextileStdConsData, importedObj.qualityTextileStdConsData);
                         if (importedObj.qualityTextileTotalMetersData) Object.assign(qualityTextileTotalMetersData, importedObj.qualityTextileTotalMetersData);
 
-                        // Rebuild dropdown option elements
-                        const select = document.getElementById('globalQuality');
-                        select.innerHTML = "";
-                        Object.keys(qualityData).forEach(q => {
-                            const option = document.createElement('option');
-                            option.value = q;
-                            option.text = q;
-                            select.add(option);
-                        });
+                        renderQualityDropdown(importedObj.selectedQuality);
 
-                        // Set selected fields
-                        if (importedObj.selectedQuality) {
-                            select.value = importedObj.selectedQuality;
-                        }
                         if (importedObj.fabricGsm !== undefined) {
                             document.getElementById('fabricGsmInput').value = importedObj.fabricGsm;
                         }
@@ -1785,6 +2414,7 @@
                         if (importedObj.adjAction !== undefined) document.getElementById('adjActionSelect').value = importedObj.adjAction;
                         if (importedObj.adjTargetBodyWt !== undefined) document.getElementById('adjTargetBodyWt').checked = importedObj.adjTargetBodyWt === true;
                         if (importedObj.adjTargetWastage !== undefined) document.getElementById('adjTargetWastage').checked = importedObj.adjTargetWastage === true;
+                        if (importedObj.adjTargetRibWastage !== undefined && document.getElementById('adjTargetRibWastage')) document.getElementById('adjTargetRibWastage').checked = importedObj.adjTargetRibWastage === true;
                         if (importedObj.adjTargetMukpat !== undefined) document.getElementById('adjTargetMukpat').checked = importedObj.adjTargetMukpat === true;
                         if (importedObj.adjTargetRib !== undefined) document.getElementById('adjTargetRib').checked = importedObj.adjTargetRib === true;
                         if (importedObj.adjTargetPocket !== undefined) document.getElementById('adjTargetPocket').checked = importedObj.adjTargetPocket === true;
@@ -1797,25 +2427,35 @@
                             localStorage.setItem('challan_history', JSON.stringify(historyData));
                         }
 
-                        // Rebuild rows
                         const tbody = document.getElementById('itemRows');
                         tbody.innerHTML = "";
+                        nextRowOriginalId = 0;
                         importedObj.items.forEach(item => {
                             const tr = document.createElement('tr');
+                            tr.dataset.originalIndex = (item.origIndex !== undefined) ? item.origIndex : nextRowOriginalId;
+                            nextRowOriginalId = Math.max(nextRowOriginalId, parseInt(tr.dataset.originalIndex) + 1);
                             tr.innerHTML = `
-                                <td class="p-2 border border-gray-300"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" value="${item.size || ''}" oninput="this.value = this.value.toUpperCase()"></td>
-                                <td class="p-2 border border-gray-300"><input type="number" value="${item.pics || ''}" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
-                                <td class="p-2 border border-gray-300"><input type="number" value="${item.bodywt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                                <td class="p-2 border border-gray-300 hidden row-ribwt-td"><input type="number" value="${item.ribwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();"></td>
+                                <td class="p-2 border border-gray-300 text-center"><input type="text" placeholder="SLIP NO" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slipno" value="${item.slipno || ''}" oninput="calculateTotals()"></td>
+                                <td class="p-2 border border-gray-300 text-center"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" value="${item.size || ''}" oninput="this.value = this.value.toUpperCase(); calculateTotals();"></td>
+                                <td class="p-2 border border-gray-300 text-center"><input type="number" min="0" placeholder="SLIPS" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slips" value="${item.slips || ''}" oninput="calculateTotals(true)" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                                <td class="p-2 border border-gray-300 text-center"><input type="number" value="${item.pics || ''}" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                                <td class="p-2 border border-gray-300 text-center"><input type="number" value="${item.bodywt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                                <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" value="${item.ribwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                                 <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
                                 <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
-                                <td class="p-2 border border-gray-300 hidden row-sidepocket-td"><input type="number" value="${item.sidepocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                                <td class="p-2 border border-gray-300 hidden row-backpocket-td"><input type="number" value="${item.backpocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                                <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" value="${item.sidepocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                                <td class="p-2 border border-gray-300 text-center hidden row-backpocket-td"><input type="number" value="${item.backpocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                                 <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
                                 <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
                                 <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
-                                <td class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50 row-bcons">0.000</td>
-                                <td class="p-2 border border-gray-300 text-center font-bold text-purple-600 bg-purple-50/50 row-tcons">0.000</td>
+                                <td class="p-2 border border-gray-300 text-center bg-blue-50/50">
+                                    <div class="font-bold text-blue-600 row-bcons">0.00000</div>
+                                    <div class="row-bcons-ref no-print leading-tight"></div>
+                                </td>
+                                <td class="p-2 border border-gray-300 text-center bg-purple-50/50">
+                                    <div class="font-bold text-purple-600 row-tcons">0.00000</div>
+                                    <div class="row-tcons-ref no-print leading-tight"></div>
+                                </td>
                                 <td class="p-2 border border-gray-300 text-center no-print">
                                     <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-700 font-bold">X</button>
                                 </td>
@@ -1835,13 +2475,11 @@
                 }
             };
             reader.readAsText(file);
-            event.target.value = ""; // Clear file choice
+            event.target.value = "";
         }
 
-        // Reset all application states back to initial default
         function resetAllData() {
             if (confirm("Are you sure you want to reset all data?")) {
-                // Reset global objects to starting configuration
                 for (let key in qualityData) delete qualityData[key];
                 for (let key in qualityGsmData) delete qualityGsmData[key];
                 for (let key in qualityFoldingNameData) delete qualityFoldingNameData[key];
@@ -1854,18 +2492,18 @@
                 for (let key in qualityPantSidePocketData) delete qualityPantSidePocketData[key];
                 for (let key in qualityPantBackPocketData) delete qualityPantBackPocketData[key];
                 
-                qualityData["MICRO MODAL BRIEF 101"] = "0";
-                qualityData["MICRO MODAL BOXER 102"] = "0";
-                qualityData["TEXTILE"] = "0";
+                qualityData["MICRO MODAL BRIEF 101"] = "0.00000";
+                qualityData["MICRO MODAL BOXER 102"] = "0.00000";
+                qualityData["TEXTILE"] = "0.00000";
                 qualityGsmData["MICRO MODAL BRIEF 101"] = "0";
                 qualityGsmData["MICRO MODAL BOXER 102"] = "0";
                 qualityGsmData["TEXTILE"] = "0";
                 qualityFoldingNameData["MICRO MODAL BRIEF 101"] = "RIB";
                 qualityFoldingNameData["MICRO MODAL BOXER 102"] = "";
                 qualityFoldingNameData["TEXTILE"] = "";
-                qualityFoldingGmData["MICRO MODAL BRIEF 101"] = "0.010";
-                qualityFoldingGmData["MICRO MODAL BOXER 102"] = "0.000";
-                qualityFoldingGmData["TEXTILE"] = "0.000";
+                qualityFoldingGmData["MICRO MODAL BRIEF 101"] = "0.01000";
+                qualityFoldingGmData["MICRO MODAL BOXER 102"] = "0.00000";
+                qualityFoldingGmData["TEXTILE"] = "0.00000";
                 qualityRemarksData["MICRO MODAL BRIEF 101"] = "";
                 qualityRemarksData["MICRO MODAL BOXER 102"] = "";
                 qualityRemarksData["TEXTILE"] = "";
@@ -1876,16 +2514,8 @@
                 qualityTextileTotalMetersData["MICRO MODAL BOXER 102"] = "";
                 qualityTextileTotalMetersData["TEXTILE"] = "";
 
-                // Reset drop-down options
-                const select = document.getElementById('globalQuality');
-                select.innerHTML = `
-                    <option value="MICRO MODAL BRIEF 101">MICRO MODAL BRIEF 101</option>
-                    <option value="MICRO MODAL BOXER 102">MICRO MODAL BOXER 102</option>
-                    <option value="TEXTILE">TEXTILE</option>
-                `;
-                select.value = "MICRO MODAL BRIEF 101";
+                renderQualityDropdown("MICRO MODAL BRIEF 101");
 
-                // Reset manual fabric inputs
                 document.getElementById('fabricGsmInput').value = "";
                 document.getElementById('poloTotalPocketInput').value = "";
                 document.getElementById('poloTotalPlaketInput').value = "";
@@ -1907,6 +2537,7 @@
                 document.getElementById('adjActionSelect').value = "ADD";
                 document.getElementById('adjTargetBodyWt').checked = true;
                 document.getElementById('adjTargetWastage').checked = true;
+                if (document.getElementById('adjTargetRibWastage')) document.getElementById('adjTargetRibWastage').checked = false;
                 document.getElementById('adjTargetMukpat').checked = false;
                 document.getElementById('adjTargetRib').checked = false;
                 document.getElementById('adjTargetPocket').checked = false;
@@ -1926,23 +2557,31 @@
                     clearBtn.className = "bg-amber-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-amber-600 shadow transition";
                 }
 
-                // Clear the table and reconstruct a single clean starting row with standard column structure
+                nextRowOriginalId = 1;
                 const tbody = document.getElementById('itemRows');
                 tbody.innerHTML = `
-                    <tr>
-                        <td class="p-2 border border-gray-300"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" oninput="this.value = this.value.toUpperCase()"></td>
-                        <td class="p-2 border border-gray-300"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
-                        <td class="p-2 border border-gray-300"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                        <td class="p-2 border border-gray-300 hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                    <tr data-original-index="0">
+                        <td class="p-2 border border-gray-300 text-center"><input type="text" placeholder="SLIP NO" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slipno" oninput="calculateTotals()"></td>
+                        <td class="p-2 border border-gray-300 text-center"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" oninput="this.value = this.value.toUpperCase(); calculateTotals();"></td>
+                        <td class="p-2 border border-gray-300 text-center"><input type="number" min="0" placeholder="SLIPS" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slips" oninput="calculateTotals(true)" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                        <td class="p-2 border border-gray-300 text-center"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                        <td class="p-2 border border-gray-300 text-center"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
-                        <td class="p-2 border border-gray-300 hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                        <td class="p-2 border border-gray-300 hidden row-backpocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-backpocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
-                        <td class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50 row-bcons">0.000</td>
-                        <td class="p-2 border border-gray-300 text-center font-bold text-purple-600 bg-purple-50/50 row-tcons">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center bg-blue-50/50">
+                            <div class="font-bold text-blue-600 row-bcons">0.00000</div>
+                            <div class="row-bcons-ref no-print leading-tight"></div>
+                        </td>
+                        <td class="p-2 border border-gray-300 text-center bg-purple-50/50">
+                            <div class="font-bold text-purple-600 row-tcons">0.00000</div>
+                            <div class="row-tcons-ref no-print leading-tight"></div>
+                        </td>
                         <td class="p-2 border border-gray-300 text-center no-print">
                             <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-700 font-bold">X</button>
                         </td>
@@ -1959,7 +2598,6 @@
             }
         }
 
-        // Reset only the current working input box rows without wiping storage configurations
         function resetCurrentItems() {
             const globalInputIds = [
                 'globalWastageInput', 'globalMukpatInput', 'poloTotalByPlaketWastageInput', 
@@ -1983,34 +2621,47 @@
             document.getElementById('globalRibWastageInput').value = "";
             document.getElementById('globalTotalRibInput').value = "";
             document.getElementById('fabricGsmInput').value = "";
+            document.getElementById('qualityRemarksInput').value = "";
+            const currentQuality = document.getElementById('globalQuality').value;
+            if (currentQuality) {
+                qualityRemarksData[currentQuality] = "";
+            }
             document.getElementById('textileTotalMetersInput').value = "";
             document.getElementById('textileCheckMode').checked = false;
             document.getElementById('adjWeightInput').value = "";
             document.getElementById('adjActionSelect').value = "ADD";
 
+            nextRowOriginalId = 1;
             const tbody = document.getElementById('itemRows');
             tbody.innerHTML = `
-                <tr>
-                    <td class="p-2 border border-gray-300"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" oninput="this.value = this.value.toUpperCase()"></td>
-                    <td class="p-2 border border-gray-300"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
-                    <td class="p-2 border border-gray-300"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                    <td class="p-2 border border-gray-300 hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                <tr data-original-index="0">
+                    <td class="p-2 border border-gray-300 text-center"><input type="text" placeholder="SLIP NO" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slipno" oninput="calculateTotals()"></td>
+                    <td class="p-2 border border-gray-300 text-center"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" oninput="this.value = this.value.toUpperCase(); calculateTotals();"></td>
+                    <td class="p-2 border border-gray-300 text-center"><input type="number" min="0" placeholder="SLIPS" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slips" oninput="calculateTotals(true)" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                    <td class="p-2 border border-gray-300 text-center"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                    <td class="p-2 border border-gray-300 text-center"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                    <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                     <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
                     <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
-                    <td class="p-2 border border-gray-300 hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                    <td class="p-2 border border-gray-300 hidden row-backpocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                    <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                    <td class="p-2 border border-gray-300 text-center hidden row-backpocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                     <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
                     <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
                     <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
-                    <td class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50 row-bcons">0.000</td>
-                    <td class="p-2 border border-gray-300 text-center font-bold text-purple-600 bg-purple-50/50 row-tcons">0.000</td>
+                    <td class="p-2 border border-gray-300 text-center bg-blue-50/50">
+                        <div class="font-bold text-blue-600 row-bcons">0.00000</div>
+                        <div class="row-bcons-ref no-print leading-tight"></div>
+                    </td>
+                    <td class="p-2 border border-gray-300 text-center bg-purple-50/50">
+                        <div class="font-bold text-purple-600 row-tcons">0.00000</div>
+                        <div class="row-tcons-ref no-print leading-tight"></div>
+                    </td>
                     <td class="p-2 border border-gray-300 text-center no-print">
                         <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-700 font-bold">X</button>
                     </td>
                 </tr>
             `;
 
-            // Reset buttons if canceling an edit session
             if (editIndex !== -1) {
                 editIndex = -1;
                 const submitBtn = document.getElementById('submitBtn');
@@ -2028,7 +2679,6 @@
             calculateTotals();
         }
 
-        // Submit the current record summaries directly into history storage list logs
         function submitToHistory() {
             const quality = document.getElementById('globalQuality').value;
             const stdCons = document.getElementById('consumptionInput').value;
@@ -2047,7 +2697,6 @@
                 return el && el.dataset.origValue !== undefined ? el.dataset.origValue : (el ? el.value : "");
             };
 
-            // Half-done validation check logic bounds: verify if absolutely anything has been filled
             let hasAnyInput = false;
             const checkGlobalIds = [
                 'fabricGsmInput', 'globalWastageInput', 'globalMukpatInput',
@@ -2058,21 +2707,25 @@
             ];
             checkGlobalIds.forEach(id => {
                 const el = document.getElementById(id);
-                if (el && el.value.trim() !== "" && el.value.trim() !== "0" && el.value.trim() !== "0.000") {
+                if (el && el.value.trim() !== "" && el.value.trim() !== "0" && el.value.trim() !== "0.000" && el.value.trim() !== "0.00000") {
                     hasAnyInput = true;
                 }
             });
 
             const allRowsCheck = document.querySelectorAll('#itemRows tr');
             allRowsCheck.forEach(row => {
+                const slIn = row.querySelector('.row-slipno');
                 const sIn = row.querySelector('.row-size');
+                const slpIn = row.querySelector('.row-slips');
                 const pIn = row.querySelector('.row-pics');
                 const bIn = row.querySelector('.row-bodywt');
                 const rIn = row.querySelector('.row-ribwt');
                 const spIn = row.querySelector('.row-sidepocket');
                 const bpIn = row.querySelector('.row-backpocket');
 
-                if ((sIn && sIn.value.trim() !== "") || 
+                if ((slIn && slIn.value.trim() !== "") ||
+                    (sIn && sIn.value.trim() !== "") || 
+                    (slpIn && slpIn.value.trim() !== "" && slpIn.value.trim() !== "0") ||
                     (pIn && pIn.value.trim() !== "" && pIn.value.trim() !== "0") || 
                     (bIn && bIn.value.trim() !== "" && bIn.value.trim() !== "0" && bIn.value.trim() !== "0.000") ||
                     (rIn && rIn.value.trim() !== "" && rIn.value.trim() !== "0") ||
@@ -2092,16 +2745,27 @@
             
             const rows = document.querySelectorAll('#itemRows tr');
             const items = [];
+            let allSlipNums = [];
             rows.forEach(row => {
+                const slipnoEl = row.querySelector('.row-slipno');
                 const sizeEl = row.querySelector('.row-size');
+                const slipsEl = row.querySelector('.row-slips');
                 const picsEl = row.querySelector('.row-pics');
                 const bodywtEl = row.querySelector('.row-bodywt');
                 const ribwtEl = row.querySelector('.row-ribwt');
                 const sidepocketEl = row.querySelector('.row-sidepocket');
                 const backpocketEl = row.querySelector('.row-backpocket');
                 if (sizeEl && picsEl && bodywtEl) {
+                    const slipVal = slipnoEl ? slipnoEl.value.trim() : '';
+                    if (slipVal) {
+                        const parts = slipVal.split('-').map(p => parseInt(p.trim())).filter(p => !isNaN(p));
+                        parts.forEach(num => allSlipNums.push(num));
+                    }
                     items.push({
+                        origIndex: row.dataset.originalIndex,
+                        slipno: slipVal,
                         size: sizeEl.value,
+                        slips: slipsEl ? slipsEl.value : '',
                         pics: picsEl.value,
                         bodywt: bodywtEl.dataset.origBodyWt !== undefined ? bodywtEl.dataset.origBodyWt : (bodywtEl.dataset.weight !== undefined ? bodywtEl.dataset.weight : bodywtEl.value),
                         ribwt: ribwtEl ? ribwtEl.value : '',
@@ -2110,6 +2774,13 @@
                     });
                 }
             });
+
+            let slipNoRange = "";
+            if (allSlipNums.length > 0) {
+                const minSlip = Math.min(...allSlipNums);
+                const maxSlip = Math.max(...allSlipNums);
+                slipNoRange = (minSlip === maxSlip) ? `${minSlip}` : `${minSlip}-${maxSlip}`;
+            }
 
             const varianceEl = document.getElementById('consVariance');
             const isPoloActive = quality.toUpperCase().includes('POLO');
@@ -2121,8 +2792,10 @@
                 stdGsm,
                 fabricGsm,
                 foldingName: qualityFoldingNameData[quality] || "",
-                foldingGm: qualityFoldingGmData[quality] || "0.000",
+                foldingGm: qualityFoldingGmData[quality] || "0.00000",
                 qualityRemarks: qualityRemarksData[quality] || "",
+                totalSlips: document.getElementById('totalSlipsDisplay') ? document.getElementById('totalSlipsDisplay').innerText : "0",
+                slipNoRange: slipNoRange,
                 totalPics: totalMainPics,
                 totalBodyWt,
                 totalWastage,
@@ -2139,8 +2812,8 @@
                 pantTotalBackPocket: getGlobalVal('pantTotalBackPocketInput'),
                 globalWastage: getGlobalVal('globalWastageInput'),
                 globalMukpat: getGlobalVal('globalMukpatInput'),
-                globalRibWastage: getGlobalVal('globalRibWastageInput'),
-                globalRibTotal: getGlobalVal('globalTotalRibInput'),
+                globalRibWastage: getGlobalRibWastageInput ? getGlobalVal('globalRibWastageInput') : "",
+                globalRibTotal: getGlobalTotalRibInput ? getGlobalVal('globalTotalRibInput') : "",
                 textileStdCons: document.getElementById('textileStdConsInput').value,
                 textileTotalMeters: document.getElementById('textileTotalMetersInput').value,
                 textileCheckMode: document.getElementById('textileCheckMode').checked,
@@ -2148,6 +2821,7 @@
                 adjAction: document.getElementById('adjActionSelect').value,
                 adjTargetBodyWt: document.getElementById('adjTargetBodyWt').checked,
                 adjTargetWastage: document.getElementById('adjTargetWastage').checked,
+                adjTargetRibWastage: document.getElementById('adjTargetRibWastage') ? document.getElementById('adjTargetRibWastage').checked : false,
                 adjTargetMukpat: document.getElementById('adjTargetMukpat').checked,
                 adjTargetRib: document.getElementById('adjTargetRib').checked,
                 adjTargetPocket: document.getElementById('adjTargetPocket').checked,
@@ -2164,11 +2838,9 @@
             };
             
             if (editIndex !== -1) {
-                // Overwrite the existing record instead of pushing a new log snapshot entry
                 historyData[editIndex] = logEntry;
                 alert("Record successfully updated in history!");
                 
-                // Return buttons back to default state parameters
                 editIndex = -1;
                 const submitBtn = document.getElementById('submitBtn');
                 const clearBtn = document.getElementById('clearBtn');
@@ -2190,15 +2862,12 @@
             calculateTotals();
         }
 
-        // Load historical entry into the current inputs for editing
         function loadHistoryItem(index) {
             const item = historyData[index];
             if (!item) return;
 
-            // Set edit index reference explicitly
             editIndex = index;
 
-            // Update execution layout triggers styling properties dynamically
             const submitBtn = document.getElementById('submitBtn');
             const clearBtn = document.getElementById('clearBtn');
             if (submitBtn) {
@@ -2220,10 +2889,6 @@
                     }
                 }
                 if (!exists) {
-                    const option = document.createElement('option');
-                    option.value = item.quality;
-                    option.text = item.quality;
-                    select.add(option);
                     qualityData[item.quality] = item.stdCons;
                     qualityGsmData[item.quality] = item.stdGsm;
                     qualityFoldingNameData[item.quality] = item.foldingName;
@@ -2235,13 +2900,14 @@
                     qualityPoloByPlaketData[item.quality] = item.poloHasByPlaket !== false;
                     qualityPantSidePocketData[item.quality] = item.pantHasSidePocket !== false;
                     qualityPantBackPocketData[item.quality] = item.pantHasBackPocket !== false;
+                    renderQualityDropdown(item.quality);
+                } else {
+                    select.value = item.quality;
                 }
-                select.value = item.quality;
             }
 
             document.getElementById('fabricGsmInput').value = item.fabricGsm;
 
-            // Restoring feature configurations explicit properties
             qualityPoloPocketData[item.quality] = item.poloHasPocket !== false;
             qualityPoloByPlaketData[item.quality] = item.poloHasByPlaket !== false;
             qualityPantSidePocketData[item.quality] = item.pantHasSidePocket !== false;
@@ -2277,6 +2943,7 @@
             document.getElementById('adjActionSelect').value = item.adjAction || "ADD";
             document.getElementById('adjTargetBodyWt').checked = item.adjTargetBodyWt !== false;
             document.getElementById('adjTargetWastage').checked = item.adjTargetWastage !== false;
+            if (document.getElementById('adjTargetRibWastage')) document.getElementById('adjTargetRibWastage').checked = item.adjTargetRibWastage === true;
             document.getElementById('adjTargetMukpat').checked = item.adjTargetMukpat === true;
             document.getElementById('adjTargetRib').checked = item.adjTargetRib === true;
             document.getElementById('adjTargetPocket').checked = item.adjTargetPocket === true;
@@ -2287,22 +2954,33 @@
             if (item.items && item.items.length > 0) {
                 const tbody = document.getElementById('itemRows');
                 tbody.innerHTML = "";
+                nextRowOriginalId = 0;
                 item.items.forEach(rowItem => {
                     const tr = document.createElement('tr');
+                    tr.dataset.originalIndex = (rowItem.origIndex !== undefined) ? rowItem.origIndex : nextRowOriginalId;
+                    nextRowOriginalId = Math.max(nextRowOriginalId, parseInt(tr.dataset.originalIndex) + 1);
                     tr.innerHTML = `
-                        <td class="p-2 border border-gray-300"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" value="${rowItem.size || ''}" oninput="this.value = this.value.toUpperCase()"></td>
-                        <td class="p-2 border border-gray-300"><input type="number" value="${rowItem.pics || ''}" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
-                        <td class="p-2 border border-gray-300"><input type="number" value="${rowItem.bodywt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                        <td class="p-2 border border-gray-300 hidden row-ribwt-td"><input type="number" value="${rowItem.ribwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();"></td>
+                        <td class="p-2 border border-gray-300 text-center"><input type="text" placeholder="SLIP NO" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slipno" value="${rowItem.slipno || ''}" oninput="calculateTotals()"></td>
+                        <td class="p-2 border border-gray-300 text-center"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" value="${rowItem.size || ''}" oninput="this.value = this.value.toUpperCase(); calculateTotals();"></td>
+                        <td class="p-2 border border-gray-300 text-center"><input type="number" min="0" placeholder="SLIPS" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slips" value="${rowItem.slips || ''}" oninput="calculateTotals(true)" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                        <td class="p-2 border border-gray-300 text-center"><input type="number" value="${rowItem.pics || ''}" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                        <td class="p-2 border border-gray-300 text-center"><input type="number" value="${rowItem.bodywt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" value="${rowItem.ribwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
-                        <td class="p-2 border border-gray-300 hidden row-sidepocket-td"><input type="number" value="${rowItem.sidepocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                        <td class="p-2 border border-gray-300 hidden row-backpocket-td"><input type="number" value="${rowItem.backpocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" value="${rowItem.sidepocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-backpocket-td"><input type="number" value="${rowItem.backpocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
-                        <td class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50 row-bcons">0.000</td>
-                        <td class="p-2 border border-gray-300 text-center font-bold text-purple-600 bg-purple-50/50 row-tcons">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center bg-blue-50/50">
+                            <div class="font-bold text-blue-600 row-bcons">0.00000</div>
+                            <div class="row-bcons-ref no-print leading-tight"></div>
+                        </td>
+                        <td class="p-2 border border-gray-300 text-center bg-purple-50/50">
+                            <div class="font-bold text-purple-600 row-tcons">0.00000</div>
+                            <div class="row-tcons-ref no-print leading-tight"></div>
+                        </td>
                         <td class="p-2 border border-gray-300 text-center no-print">
                             <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-700 font-bold">X</button>
                         </td>
@@ -2354,12 +3032,29 @@
             let renderingCount = 0;
             
             historyData.forEach((item, index) => {
+                let currentSlipRange = item.slipNoRange;
+                if (!currentSlipRange && item.items && item.items.length > 0) {
+                    let nums = [];
+                    item.items.forEach(r => {
+                        if (r.slipno && r.slipno.trim() !== '') {
+                            const p = r.slipno.split('-').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+                            p.forEach(n => nums.push(n));
+                        }
+                    });
+                    if (nums.length > 0) {
+                        const min = Math.min(...nums);
+                        const max = Math.max(...nums);
+                        currentSlipRange = (min === max) ? `${min}` : `${min}-${max}`;
+                    }
+                }
+
                 if (searchVal) {
                     const qualityMatch = (item.quality || "").toUpperCase().includes(searchVal);
                     const timeMatch = (item.timestamp || "").toUpperCase().includes(searchVal);
                     const remarksMatch = (item.qualityRemarks || "").toUpperCase().includes(searchVal);
-                    const sizeMatch = item.items && item.items.some(row => (row.size || "").toUpperCase().includes(searchVal));
-                    if (!qualityMatch && !timeMatch && !remarksMatch && !sizeMatch) {
+                    const slipRangeMatch = (currentSlipRange || "").toUpperCase().includes(searchVal);
+                    const sizeMatch = item.items && item.items.some(row => (row.size || "").toUpperCase().includes(searchVal) || (row.slipno || "").toUpperCase().includes(searchVal));
+                    if (!qualityMatch && !timeMatch && !remarksMatch && !sizeMatch && !slipRangeMatch) {
                         return;
                     }
                 }
@@ -2372,7 +3067,7 @@
                 let foldingInfoStr = "";
                 const fGmNum = parseFloat(item.foldingGm) || 0;
                 if (item.foldingName && fGmNum > 0) {
-                    foldingInfoStr = `<span>${item.foldingName}: <span class="text-gray-700">${fGmNum.toFixed(3)}g</span></span>`;
+                    foldingInfoStr = `<span>${item.foldingName}: <span class="text-gray-700">${fGmNum.toFixed(5)}g</span></span>`;
                 }
 
                 let ribInfoStr = "";
@@ -2391,7 +3086,7 @@
 
                 let textileInfoStr = "";
                 if (item.quality.toUpperCase().includes('TEXTILE')) {
-                    textileInfoStr = `<span>Std Meters Cons: <span class="text-gray-700">${item.textileStdCons || '0.000'}</span></span><span>Total Meters: <span class="text-gray-700">${item.textileTotalMeters || '0.000'}m</span></span><span>Meters Mode: <span class="text-gray-700">${item.textileCheckMode ? 'YES' : 'NO'}</span></span>`;
+                    textileInfoStr = `<span>Std Meters Cons: <span class="text-gray-700">${item.textileStdCons || '0.00000'}</span></span><span>Total Meters: <span class="text-gray-700">${item.textileTotalMeters || '0.000'}m</span></span><span>Meters Mode: <span class="text-gray-700">${item.textileCheckMode ? 'YES' : 'NO'}</span></span>`;
                 }
 
                 let adjInfoStr = "";
@@ -2443,6 +3138,8 @@
                     </div>
                     <div class="flex items-center justify-between sm:justify-end gap-3 border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-200 shrink-0 w-full sm:w-auto">
                         <div class="flex gap-4 text-xs font-bold text-gray-700 items-center flex-wrap sm:flex-nowrap">
+                            ${currentSlipRange ? `<div class="text-center"><span class="block text-[10px] font-medium text-gray-400">SLIP NO</span><span class="text-amber-600">${currentSlipRange}</span></div>` : ''}
+                            ${item.totalSlips ? `<div class="text-center"><span class="block text-[10px] font-medium text-gray-400">SLIPS</span><span class="text-indigo-600">${item.totalSlips}</span></div>` : ''}
                             <div class="text-center"><span class="block text-[10px] font-medium text-gray-400">PICS</span><span class="text-blue-600">${item.totalPics}</span></div>
                             <div class="text-center"><span class="block text-[10px] font-medium text-gray-400">
                                 ${item.quality.toUpperCase().includes('TEXTILE') && item.textileCheckMode ? 'MTR TOTAL' : 'WT TOTAL'}
@@ -2466,30 +3163,38 @@
             }
         }
 
-        // Keep existing helper layout operations unmodified
         function addRow() {
             const tbody = document.getElementById('itemRows');
             const tr = document.createElement('tr');
+            tr.dataset.originalIndex = nextRowOriginalId++;
             tr.innerHTML = `
-                <td class="p-2 border border-gray-300"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" oninput="this.value = this.value.toUpperCase()"></td>
-                <td class="p-2 border border-gray-300"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
-                <td class="p-2 border border-gray-300"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                <td class="p-2 border border-gray-300 hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                <td class="p-2 border border-gray-300 text-center"><input type="text" placeholder="SLIP NO" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slipno" oninput="calculateTotals()"></td>
+                <td class="p-2 border border-gray-300 text-center"><input type="text" placeholder="SIZE" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-size" oninput="this.value = this.value.toUpperCase(); calculateTotals();"></td>
+                <td class="p-2 border border-gray-300 text-center"><input type="number" min="0" placeholder="SLIPS" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slips" oninput="calculateTotals(true)" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                <td class="p-2 border border-gray-300 text-center"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
+                <td class="p-2 border border-gray-300 text-center"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                 <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
                 <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
-                <td class="p-2 border border-gray-300 hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                <td class="p-2 border border-gray-300 hidden row-backpocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                <td class="p-2 border border-gray-300 text-center hidden row-backpocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                 <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
                 <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
                 <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
-                <td class="p-2 border border-gray-300 text-center font-bold text-blue-600 bg-blue-50/50 row-bcons">0.000</td>
-                <td class="p-2 border border-gray-300 text-center font-bold text-purple-600 bg-purple-50/50 row-tcons">0.000</td>
+                <td class="p-2 border border-gray-300 text-center bg-blue-50/50">
+                    <div class="font-bold text-blue-600 row-bcons">0.00000</div>
+                    <div class="row-bcons-ref no-print leading-tight"></div>
+                </td>
+                <td class="p-2 border border-gray-300 text-center bg-purple-50/50">
+                    <div class="font-bold text-purple-600 row-tcons">0.00000</div>
+                    <div class="row-tcons-ref no-print leading-tight"></div>
+                </td>
                 <td class="p-2 border border-gray-300 text-center no-print">
                     <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-700 font-bold">X</button>
                 </td>
             `;
             tbody.appendChild(tr);
-            calculateTotals();
+            calculateTotals(true);
         }
 
         function deleteRow(btn) {
@@ -2498,15 +3203,96 @@
             if (tbody.querySelectorAll('tr').length > 1) {
                 row.remove();
             } else {
+                if(row.querySelector('.row-slipno')) row.querySelector('.row-slipno').value = '';
                 row.querySelector('.row-size').value = '';
+                if(row.querySelector('.row-slips')) row.querySelector('.row-slips').value = '';
                 row.querySelector('.row-pics').value = '';
                 row.querySelector('.row-bodywt').value = '';
                 if(row.querySelector('.row-ribwt')) row.querySelector('.row-ribwt').value = '';
                 if(row.querySelector('.row-sidepocket')) row.querySelector('.row-sidepocket').value = '';
                 if(row.querySelector('.row-backpocket')) row.querySelector('.row-backpocket').value = '';
             }
-            calculateTotals();
+            calculateTotals(true);
         }
+
+        /* -------------------------------------------------------------
+           Advanced UI Enhancements: Auto-select & Keyboard Grid Navigation
+        ------------------------------------------------------------- */
+        document.addEventListener('focusin', function(e) {
+            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) {
+                if (e.target.type !== 'checkbox' && e.target.type !== 'file') {
+                    e.target.select();
+                }
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            // Global Shortcuts: Ctrl+S (Submit), Ctrl+Enter (Add Row), Ctrl+P (Download File)
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                submitToHistory();
+                return;
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+                e.preventDefault();
+                downloadDocument();
+                return;
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                addRow();
+                const lastRowInputs = document.querySelectorAll('#itemRows tr:last-child input:not([disabled])');
+                if (lastRowInputs.length > 0) lastRowInputs[0].focus();
+                return;
+            }
+
+            // Excel-style Arrow & Enter Grid Navigation inside itemRows table
+            if (e.target && e.target.closest('#itemRows') && e.target.tagName === 'INPUT') {
+                const currentInput = e.target;
+                const currentRow = currentInput.closest('tr');
+                const tbody = document.getElementById('itemRows');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                const rowIndex = rows.indexOf(currentRow);
+
+                const getVisibleInputs = (row) => Array.from(row.querySelectorAll('input:not([type="hidden"])')).filter(i => {
+                    return !i.disabled && i.offsetParent !== null;
+                });
+
+                const currentInputs = getVisibleInputs(currentRow);
+                const colIndex = currentInputs.indexOf(currentInput);
+
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (colIndex < currentInputs.length - 1) {
+                        currentInputs[colIndex + 1].focus();
+                    } else if (rowIndex < rows.length - 1) {
+                        const nextRowInputs = getVisibleInputs(rows[rowIndex + 1]);
+                        if (nextRowInputs.length > 0) nextRowInputs[0].focus();
+                    } else {
+                        addRow();
+                        setTimeout(() => {
+                            const newRows = Array.from(tbody.querySelectorAll('tr'));
+                            const newInputs = getVisibleInputs(newRows[newRows.length - 1]);
+                            if (newInputs.length > 0) newInputs[0].focus();
+                        }, 50);
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    if (rowIndex < rows.length - 1) {
+                        e.preventDefault();
+                        const nextInputs = getVisibleInputs(rows[rowIndex + 1]);
+                        if (nextInputs[colIndex]) nextInputs[colIndex].focus();
+                        else if (nextInputs.length > 0) nextInputs[nextInputs.length - 1].focus();
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    if (rowIndex > 0) {
+                        e.preventDefault();
+                        const prevInputs = getVisibleInputs(rows[rowIndex - 1]);
+                        if (prevInputs[colIndex]) prevInputs[colIndex].focus();
+                        else if (prevInputs.length > 0) prevInputs[prevInputs.length - 1].focus();
+                    }
+                }
+            }
+        });
     </script>
 </body>
 </html>
