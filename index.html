@@ -484,6 +484,25 @@
         </div>
     </div>
 
+    <!-- Pop up Modal for Show / View Challan Details -->
+    <div id="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 hidden no-print p-2 sm:p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="flex items-center justify-between p-3.5 border-b border-gray-200 bg-gray-50">
+                <h4 class="font-bold text-sm text-gray-800 flex items-center gap-2">
+                    <span>📄 Challan Preview</span>
+                    <span id="showModalQuality" class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-semibold"></span>
+                </h4>
+                <button onclick="closeShowModal()" class="text-gray-400 hover:text-gray-700 text-lg font-bold px-2 py-0.5 rounded">✕</button>
+            </div>
+            <div id="showModalContent" class="p-4 overflow-y-auto space-y-3 flex-1 text-xs">
+                <!-- Modal Body Dynamically Populated -->
+            </div>
+            <div class="p-3 border-t border-gray-200 bg-gray-50 flex justify-end">
+                <button onclick="closeShowModal()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold px-5 py-1.5 rounded text-xs transition">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global object to store consumption mapping for each quality
         const qualityData = {
@@ -1033,6 +1052,215 @@
 
         function closeAdjModal() {
             document.getElementById('adjModal').classList.add('hidden');
+        }
+
+        function openShowModal(index) {
+            const item = historyData[index];
+            if (!item) return;
+
+            const modalQuality = document.getElementById('showModalQuality');
+            if (modalQuality) modalQuality.innerText = item.quality || "";
+
+            const isTextileActive = (item.quality || "").toUpperCase().includes('TEXTILE');
+            const isCheckActive = isTextileActive && item.textileCheckMode;
+            const isPoloActive = (item.quality || "").toUpperCase().includes('POLO');
+            const isPantActive = (item.quality || "").toUpperCase().includes('PANT');
+            const isGrsActive = (item.quality || "").toUpperCase().includes('GRS');
+
+            const fName = item.foldingName || "";
+            const fGm = parseFloat(item.foldingGm) || 0;
+            const isFoldingActive = !isTextileActive && fName.trim() !== "" && fGm > 0;
+
+            const poloHasPocket = isPoloActive && (item.poloHasPocket !== false);
+            const poloHasByPlaket = isPoloActive && (item.poloHasByPlaket !== false);
+            const pantHasSidePocket = isPantActive && (item.pantHasSidePocket !== false);
+            const pantHasBackPocket = isPantActive && (item.pantHasBackPocket !== false);
+
+            const hasRibCol = !isTextileActive && isGrsActive;
+            const hasPktCol = !isTextileActive && isPoloActive;
+            const hasFoldingCol = !isTextileActive && (isFoldingActive || (isPoloActive && poloHasByPlaket));
+            const hasSidePktCol = !isTextileActive && isPantActive && pantHasSidePocket;
+            const hasBackPktCol = !isTextileActive && isPantActive && pantHasBackPocket;
+            const hasCollarCol = !isTextileActive && isPoloActive;
+
+            let metricsHtml = "";
+            if (isTextileActive) {
+                metricsHtml = `
+                    <span>STD MTR CONS: <b>${item.textileStdCons || '0.00000'}</b></span>
+                    <span>TOTAL METERS: <b>${item.textileTotalMeters || '0.000'}</b></span>
+                    <span>METERS MODE: <b>${item.textileCheckMode ? 'YES' : 'NO'}</b></span>
+                `;
+            } else {
+                metricsHtml = `
+                    <span>STD CONS: <b>${item.stdCons || '0.00000'}</b></span>
+                    <span>STD GSM: <b>${item.stdGsm || '0'}</b></span>
+                    <span>FABRIC GSM: <b>${item.fabricGsm || '0'}</b></span>
+                `;
+            }
+
+            if (isFoldingActive) {
+                metricsHtml += `<span>${fName}: <b>${fGm.toFixed(5)}g</b></span>`;
+            }
+
+            let weightsHtml = `<span>WASTAGE WT: <b>${parseFloat(item.globalWastage || 0).toFixed(3)}</b></span>`;
+            if (!isTextileActive) weightsHtml += `<span>MUKPAT WT: <b>${parseFloat(item.globalMukpat || 0).toFixed(3)}</b></span>`;
+            if (isGrsActive && parseFloat(item.globalRibWastage || 0) > 0) weightsHtml += `<span>RIB WASTAGE: <b>${parseFloat(item.globalRibWastage).toFixed(3)}</b></span>`;
+            if (isGrsActive && parseFloat(item.globalRibTotal || 0) > 0) weightsHtml += `<span>RIB WT: <b>${parseFloat(item.globalRibTotal).toFixed(3)}</b></span>`;
+            if (poloHasPocket && parseFloat(item.poloTotalPocket || 0) > 0) weightsHtml += `<span>PKT WT: <b>${parseFloat(item.poloTotalPocket).toFixed(3)}</b></span>`;
+            if (isPoloActive && parseFloat(item.poloTotalPlaket || 0) > 0) weightsHtml += `<span>PLKT WT: <b>${parseFloat(item.poloTotalPlaket).toFixed(3)}</b></span>`;
+            if (poloHasByPlaket && parseFloat(item.poloTotalByPlaket || 0) > 0) weightsHtml += `<span>BY-PLKT WT: <b>${parseFloat(item.poloTotalByPlaket).toFixed(3)}</b></span>`;
+            if (poloHasByPlaket && parseFloat(item.poloTotalByPlaketWastage || 0) > 0) weightsHtml += `<span>BY-PLKT WST: <b>${parseFloat(item.poloTotalByPlaketWastage).toFixed(3)}</b></span>`;
+            if (isPoloActive && parseFloat(item.poloTotalCollarCuff || 0) > 0) weightsHtml += `<span>COLLAR CUFF: <b>${parseFloat(item.poloTotalCollarCuff).toFixed(3)}</b></span>`;
+            if (pantHasSidePocket && parseFloat(item.pantTotalSidePocket || 0) > 0) weightsHtml += `<span>SIDE PKT: <b>${parseFloat(item.pantTotalSidePocket).toFixed(3)}</b></span>`;
+            if (pantHasBackPocket && parseFloat(item.pantTotalBackPocket || 0) > 0) weightsHtml += `<span>BACK PKT: <b>${parseFloat(item.pantTotalBackPocket).toFixed(3)}</b></span>`;
+            if (!isTextileActive && parseFloat(item.adjWeight || 0) > 0) weightsHtml += `<span class="text-blue-700">ADJUST WT: <b>${item.adjAction === 'ADD' ? '+' : '-'}${parseFloat(item.adjWeight).toFixed(3)} KG</b></span>`;
+
+            // Compute row-level numbers dynamically for full item preview
+            let totalPicsSum = 0;
+            if (item.items) {
+                item.items.forEach(it => { totalPicsSum += parseFloat(it.pics) || 0; });
+            }
+
+            let rowsHtml = "";
+            if (item.items && item.items.length > 0) {
+                item.items.forEach(it => {
+                    const pics = parseFloat(it.pics) || 0;
+                    const bodywt = parseFloat(it.bodywt) || 0;
+
+                    let foldingWt = isFoldingActive ? (pics * fGm) : 0;
+                    if (isPoloActive && poloHasByPlaket) {
+                        let byPlk = totalPicsSum > 0 ? (pics / totalPicsSum) * (parseFloat(item.poloTotalByPlaket) || 0) : 0;
+                        foldingWt += byPlk;
+                    }
+
+                    let ribWt = isGrsActive ? (parseFloat(item.globalRibTotal) > 0 ? (totalPicsSum > 0 ? (pics / totalPicsSum) * parseFloat(item.globalRibTotal) : 0) : (parseFloat(it.ribwt) || 0)) : 0;
+                    
+                    let pktPlktWt = 0;
+                    if (isPoloActive) {
+                        let plk = totalPicsSum > 0 ? (pics / totalPicsSum) * (parseFloat(item.poloTotalPlaket) || 0) : 0;
+                        let pkt = (poloHasPocket && totalPicsSum > 0) ? (pics / totalPicsSum) * (parseFloat(item.poloTotalPocket) || 0) : 0;
+                        pktPlktWt = pkt + plk;
+                    }
+
+                    let sidePktWt = (isPantActive && pantHasSidePocket) ? (parseFloat(item.pantTotalSidePocket) > 0 ? (totalPicsSum > 0 ? (pics / totalPicsSum) * parseFloat(item.pantTotalSidePocket) : 0) : (parseFloat(it.sidepocket) || 0)) : 0;
+                    let backPktWt = (isPantActive && pantHasBackPocket) ? (parseFloat(item.pantTotalBackPocket) > 0 ? (totalPicsSum > 0 ? (pics / totalPicsSum) * parseFloat(item.pantTotalBackPocket) : 0) : (parseFloat(it.backpocket) || 0)) : 0;
+                    let collarCuffWt = isPoloActive ? (totalPicsSum > 0 ? (pics / totalPicsSum) * (parseFloat(item.poloTotalCollarCuff) || 0) : 0) : 0;
+
+                    let wstShare = totalPicsSum > 0 ? (pics / totalPicsSum) * ((parseFloat(item.globalWastage) || 0) + (parseFloat(item.poloTotalByPlaketWastage) || 0) + (isGrsActive ? (parseFloat(item.globalRibWastage) || 0) : 0)) : 0;
+                    let mukpatShare = totalPicsSum > 0 ? (pics / totalPicsSum) * (parseFloat(item.globalMukpat) || 0) : 0;
+                    let rowWastage = wstShare + mukpatShare;
+
+                    foldingWt = roundTo50g(foldingWt);
+                    ribWt = roundTo50g(ribWt);
+                    pktPlktWt = roundTo50g(pktPlktWt);
+                    sidePktWt = roundTo50g(sidePktWt);
+                    backPktWt = roundTo50g(backPktWt);
+                    collarCuffWt = roundTo50g(collarCuffWt);
+                    rowWastage = roundTo50g(rowWastage);
+
+                    let rowTotal = bodywt + foldingWt + ribWt + pktPlktWt + sidePktWt + backPktWt + collarCuffWt + rowWastage;
+                    let bCons = pics > 0 ? (bodywt / pics).toFixed(5) : "0.00000";
+                    let mainWstOnly = totalPicsSum > 0 ? (pics / totalPicsSum) * ((parseFloat(item.globalWastage) || 0) + (isGrsActive ? (parseFloat(item.globalRibWastage) || 0) : 0)) : 0;
+                    let mainMukpat = totalPicsSum > 0 ? (pics / totalPicsSum) * (parseFloat(item.globalMukpat) || 0) : 0;
+                    let tCons = pics > 0 ? ((bodywt + pktPlktWt + sidePktWt + backPktWt + roundTo50g(mainWstOnly) + roundTo50g(mainMukpat)) / pics).toFixed(5) : "0.00000";
+
+                    rowsHtml += `
+                        <tr class="hover:bg-gray-50 border-b border-gray-200">
+                            <td class="p-2 border border-gray-300 text-center font-medium">${it.slipno || '-'}</td>
+                            <td class="p-2 border border-gray-300 text-center font-bold">${it.size || '-'}</td>
+                            <td class="p-2 border border-gray-300 text-center">${it.slips || '-'}</td>
+                            <td class="p-2 border border-gray-300 text-center font-semibold text-blue-700">${it.pics || '0'}</td>
+                            <td class="p-2 border border-gray-300 text-center">${bodywt.toFixed(3)}</td>
+                            ${hasRibCol ? `<td class="p-2 border border-gray-300 text-center">${ribWt.toFixed(3)}</td>` : ''}
+                            ${hasPktCol ? `<td class="p-2 border border-gray-300 text-center">${pktPlktWt.toFixed(3)}</td>` : ''}
+                            ${hasFoldingCol ? `<td class="p-2 border border-gray-300 text-center">${foldingWt.toFixed(3)}</td>` : ''}
+                            ${hasSidePktCol ? `<td class="p-2 border border-gray-300 text-center">${sidePktWt.toFixed(3)}</td>` : ''}
+                            ${hasBackPktCol ? `<td class="p-2 border border-gray-300 text-center">${backPktWt.toFixed(3)}</td>` : ''}
+                            ${hasCollarCol ? `<td class="p-2 border border-gray-300 text-center">${collarCuffWt.toFixed(3)}</td>` : ''}
+                            <td class="p-2 border border-gray-300 text-center">${rowWastage.toFixed(3)}</td>
+                            <td class="p-2 border border-gray-300 text-center font-bold text-gray-800">${rowTotal.toFixed(3)}</td>
+                            <td class="p-2 border border-gray-300 text-center bg-blue-50/50 font-bold text-blue-700">${bCons}</td>
+                            <td class="p-2 border border-gray-300 text-center bg-purple-50/50 font-bold text-purple-700">${tCons}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            const bodyColHeader = isCheckActive ? "Body Mtr" : "Body Wt";
+            const wstColHeader = isCheckActive ? "Wastage Mtr" : "Wastage";
+            const totalColHeader = isCheckActive ? "Total Mtr" : "Total";
+            const bConsColHeader = isCheckActive ? "Body Mtr/Pc" : "B.cons";
+            const tConsColHeader = isCheckActive ? "Total Mtr/Pc" : "T.cons";
+
+            const container = document.getElementById('showModalContent');
+            if (container) {
+                container.innerHTML = `
+                    <div class="bg-gray-50 p-2.5 rounded border border-gray-200 flex flex-col gap-1.5">
+                        <div class="flex justify-between items-center text-gray-500 text-[11px] font-medium border-b border-gray-200 pb-1">
+                            <span>Saved Date: <b class="text-gray-700">${item.timestamp}</b></span>
+                            ${item.qualityRemarks ? `<span class="text-amber-700 font-bold">Remarks: ${item.qualityRemarks}</span>` : ''}
+                        </div>
+                        <div class="flex flex-wrap gap-3 text-[11px] font-semibold text-gray-600">
+                            ${metricsHtml}
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-[10px] text-gray-500 pt-1 border-t border-gray-200">
+                            ${weightsHtml}
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto border border-gray-200 rounded">
+                        <table class="w-full text-left border-collapse text-[11px]">
+                            <thead class="bg-gray-100 font-bold text-gray-700">
+                                <tr>
+                                    <th class="p-2 border border-gray-300 text-center">Slip No</th>
+                                    <th class="p-2 border border-gray-300 text-center">Size</th>
+                                    <th class="p-2 border border-gray-300 text-center">Slips</th>
+                                    <th class="p-2 border border-gray-300 text-center">Pics</th>
+                                    <th class="p-2 border border-gray-300 text-center">${bodyColHeader}</th>
+                                    ${hasRibCol ? `<th class="p-2 border border-gray-300 text-center">Rib Wt</th>` : ''}
+                                    ${hasPktCol ? `<th class="p-2 border border-gray-300 text-center">${poloHasPocket ? 'Pkt+Plkt' : 'Plaket'}</th>` : ''}
+                                    ${hasFoldingCol ? `<th class="p-2 border border-gray-300 text-center">${fName || 'Folding'}</th>` : ''}
+                                    ${hasSidePktCol ? `<th class="p-2 border border-gray-300 text-center">Side Pkt</th>` : ''}
+                                    ${hasBackPktCol ? `<th class="p-2 border border-gray-300 text-center">Back Pkt</th>` : ''}
+                                    ${hasCollarCol ? `<th class="p-2 border border-gray-300 text-center">Collar Cuff</th>` : ''}
+                                    <th class="p-2 border border-gray-300 text-center">${wstColHeader}</th>
+                                    <th class="p-2 border border-gray-300 text-center">${totalColHeader}</th>
+                                    <th class="p-2 border border-gray-300 text-center bg-blue-50 text-blue-900">${bConsColHeader}</th>
+                                    <th class="p-2 border border-gray-300 text-center bg-purple-50 text-purple-900">${tConsColHeader}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                            </tbody>
+                            <tfoot class="bg-gray-100 font-bold border-t-2 border-gray-300">
+                                <tr>
+                                    <td class="p-2 border border-gray-300 text-center">TOTAL</td>
+                                    <td class="p-2 border border-gray-300 text-center">-</td>
+                                    <td class="p-2 border border-gray-300 text-center text-indigo-700">${item.totalSlips || '0'}</td>
+                                    <td class="p-2 border border-gray-300 text-center text-blue-700">${item.totalPics || '0'}</td>
+                                    <td class="p-2 border border-gray-300 text-center">${item.totalBodyWt || '0.000'}</td>
+                                    ${hasRibCol ? `<td class="p-2 border border-gray-300 text-center">${item.totalRibWt || '0.000'}</td>` : ''}
+                                    ${hasPktCol ? `<td class="p-2 border border-gray-300 text-center">-</td>` : ''}
+                                    ${hasFoldingCol ? `<td class="p-2 border border-gray-300 text-center">-</td>` : ''}
+                                    ${hasSidePktCol ? `<td class="p-2 border border-gray-300 text-center">-</td>` : ''}
+                                    ${hasBackPktCol ? `<td class="p-2 border border-gray-300 text-center">-</td>` : ''}
+                                    ${hasCollarCol ? `<td class="p-2 border border-gray-300 text-center">-</td>` : ''}
+                                    <td class="p-2 border border-gray-300 text-center">${item.totalWastage || '0.000'}</td>
+                                    <td class="p-2 border border-gray-300 text-center text-purple-700 font-black">${item.totalWeight || '0.000'}</td>
+                                    <td class="p-2 border border-gray-300 text-center font-bold text-blue-700 bg-blue-50/50">${item.totalBCons || '0.00000'}</td>
+                                    <td class="p-2 border border-gray-300 text-center font-bold text-purple-700 bg-purple-50/50">${item.totalTCons || '0.00000'}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                `;
+            }
+
+            document.getElementById('showModal').classList.remove('hidden');
+        }
+
+        function closeShowModal() {
+            document.getElementById('showModal').classList.add('hidden');
         }
 
         function loadConsumption() {
@@ -3150,6 +3378,7 @@
                             ${item.consVarianceText ? `<div class="text-center min-w-[90px]"><span class="block text-[10px] font-medium text-gray-400">VARIANCE</span><span class="${item.consVarianceClass}">${item.consVarianceText}</span></div>` : ''}
                         </div>
                         <div class="flex gap-2 shrink-0 ml-auto sm:ml-2">
+                            <button onclick="openShowModal(${index})" class="text-emerald-600 hover:text-emerald-800 font-bold text-xs p-1">Show</button>
                             <button onclick="loadHistoryItem(${index})" class="text-blue-500 hover:text-blue-700 font-bold text-xs p-1">Edit</button>
                             <button onclick="deleteHistoryItem(${index})" class="text-red-500 hover:text-red-700 font-bold text-xs p-1">Delete</button>
                         </div>
