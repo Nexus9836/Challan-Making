@@ -111,7 +111,7 @@
         <div class="flex flex-wrap justify-end gap-2 no-print mb-4 border-b border-gray-100 pb-2">
             <button onclick="exportData()" class="bg-purple-500 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-purple-600 shadow-sm transition">Export</button>
             <button onclick="triggerImport()" class="bg-amber-500 text-white px-2.5 py-1.5 rounded text-xs font-medium hover:bg-amber-600 shadow-sm transition">Import</button>
-            <input type="file" id="importFile" class="hidden" accept=".txt,.json" onchange="importData(event)">
+            <input type="file" id="importFile" class="hidden" accept=".txt,.json,.html,.htm" onchange="importData(event)">
             <button onclick="downloadDocument()" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-indigo-700 shadow-sm transition flex items-center gap-1.5">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -238,6 +238,10 @@
                     <div id="globalTotalRibDiv" class="flex flex-col items-center gap-1 flex-1 min-w-0" style="display: none;">
                         <span class="font-bold text-gray-600 text-[10px] tracking-wide text-center block h-6 flex items-center justify-center">RIB WT</span>
                         <input type="number" step="0.001" min="0" id="globalTotalRibInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();">
+                    </div>
+                    <div id="globalRopeDiv" class="flex flex-col items-center gap-1 flex-1 min-w-0" style="display: none;">
+                        <span class="font-bold text-gray-600 text-[10px] tracking-wide text-center block h-6 flex items-center justify-center">ROPE WT</span>
+                        <input type="number" step="0.001" min="0" id="globalRopeInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();">
                     </div>
                 </div>
 
@@ -381,6 +385,7 @@
                     <col class="c-extra">
                     <col class="c-extra">
                     <col class="c-extra">
+                    <col class="c-extra">
                     <col class="c-waste">
                     <col class="c-total">
                     <col class="c-bcons">
@@ -395,6 +400,7 @@
                         <th class="p-3 border border-gray-300 text-center w-24">Pics</th>
                         <th id="bodyWtHeaderTh" class="p-3 border border-gray-300 text-center w-28">Body Wt</th>
                         <th id="ribHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Rib Wt</th>
+                        <th id="ropeHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Rope Wt</th>
                         <th id="pocketHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Pocket Wt</th>
                         <th id="foldingHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Folding</th>
                         <th id="sidePocketHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Side Pkt Wt</th>
@@ -415,6 +421,7 @@
                         <td class="p-2 border border-gray-300 text-center"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                         <td class="p-2 border border-gray-300 text-center"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-ropewt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ropewt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
                         <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
@@ -444,6 +451,7 @@
                         <td id="totalPicsDisplay" class="p-2 border border-gray-300 text-center text-gray-800">0</td>
                         <td id="totalBodyWtDisplay" class="p-2 border border-gray-300 text-center text-gray-800">0.000</td>
                         <td id="totalRibWtDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
+                        <td id="totalRopeWtDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
                         <td id="totalPocketDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
                         <td id="totalFoldingDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
                         <td id="totalSidePocketDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
@@ -551,7 +559,7 @@
 
     <!-- Pop up Modal for Show / View Challan Details -->
     <div id="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 hidden no-print p-2 sm:p-4">
-        <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+        <div class="bg-white rounded-lg shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
             <div class="flex items-center justify-between p-3.5 border-b border-gray-200 bg-gray-50">
                 <h4 class="font-bold text-sm text-gray-800 flex items-center gap-2">
                     <span>📄 Challan Preview</span>
@@ -666,30 +674,61 @@
 
         // Distribute a global weight in 50g steps while guaranteeing that
         // the sum of all displayed rows is exactly the requested global weight.
-        function allocateRoundedShares(total, weights) {
+        // Rank of a size so that bigger sizes sort higher: XS < S < M < L < XL < 2XL < 3XL ...
+        // Plain numbers (28, 30, 75 ...) rank by their value. Unknown names keep row order.
+        function sizeRank(size, fallbackIndex) {
+            const s = String(size || '').toUpperCase().replace(/[\s\-_.]/g, '');
+            const fb = 500 + (fallbackIndex || 0);
+            if (!s) return fb;
+            const fixed = { S: 2, SM: 2, SMALL: 2, M: 3, MD: 3, MEDIUM: 3, L: 4, LG: 4, LARGE: 4, XS: 1 };
+            if (fixed[s] !== undefined) return fixed[s];
+            let m = s.match(/^(\d+)XL$/); if (m) return 4 + parseInt(m[1], 10);
+            m = s.match(/^(\d+)XS$/); if (m) return 2 - parseInt(m[1], 10);
+            m = s.match(/^(X+)L$/); if (m) return 4 + m[1].length;
+            m = s.match(/^(X+)S$/); if (m) return 2 - m[1].length;
+            m = s.match(/^(\d+(?:\.\d+)?)/); if (m) return 1000 + parseFloat(m[1]);
+            return fb;
+        }
+
+        // Splits `total` (in 50g units) between rows in proportion to `weights` (pics).
+        // Every row first gets its whole units. The units that are left over are then
+        // given one-by-one to the BIGGEST sizes first (when `sizes` is supplied), so the
+        // small sizes get the lower weight. A row whose ideal share is below half a unit
+        // only receives a leftover unit when no better row is available.
+        function allocateRoundedShares(total, weights, sizes) {
             const n = weights.length;
             if (!n || total <= 0) return Array(n).fill(0);
             const safeWeights = weights.map(v => Math.max(0, Number(v) || 0));
             const weightSum = safeWeights.reduce((a, b) => a + b, 0);
             if (weightSum <= 0) return Array(n).fill(0);
 
-            // 50g is the display/calculation unit. Exact reconciliation is
-            // possible when the global value is itself a 50g multiple.
             const targetUnits = Math.round(total * 20);
             const rawUnits = safeWeights.map(w => (w / weightSum) * targetUnits);
             const units = rawUnits.map(Math.floor);
             let remaining = targetUnits - units.reduce((a, b) => a + b, 0);
 
-            const order = rawUnits.map((v, i) => ({ i, frac: v - Math.floor(v) }))
-                .sort((a, b) => b.frac - a.frac);
-            for (let k = 0; k < remaining; k++) units[order[k % n].i]++;
+            if (remaining > 0 && Array.isArray(sizes) && sizes.length === n) {
+                const cands = rawUnits
+                    .map((v, i) => ({ i, v, frac: v - Math.floor(v), rank: sizeRank(sizes[i], i) }))
+                    .filter(o => safeWeights[o.i] > 0);
+                const bySize = (a, b) => (b.rank - a.rank) || (b.i - a.i);
+                const pool = cands.filter(o => o.v >= 0.5).sort(bySize);
+                const used = new Set();
+                for (let k = 0; k < pool.length && remaining > 0; k++) { units[pool[k].i]++; used.add(pool[k].i); remaining--; }
+                if (remaining > 0) {
+                    const rest = cands.filter(o => !used.has(o.i)).sort((a, b) => (b.frac - a.frac) || bySize(a, b));
+                    for (let k = 0; k < rest.length && remaining > 0; k++) { units[rest[k].i]++; remaining--; }
+                }
+                const all = cands.slice().sort(bySize);
+                for (let k = 0; remaining > 0 && all.length; k++, remaining--) units[all[k % all.length].i]++;
+            } else {
+                const order = rawUnits.map((v, i) => ({ i, frac: v - Math.floor(v) }))
+                    .sort((a, b) => b.frac - a.frac);
+                for (let k = 0; k < remaining; k++) units[order[k % n].i]++;
+            }
 
             return units.map(u => parseFloat((u / 20).toFixed(3)));
         }
-
-        // Distribute a value exactly at the requested decimal precision while
-        // keeping the sum of all rows exactly equal to the target. Used for
-        // Textile meters, where 0.001 m is the display precision.
         function allocateExactShares(total, weights, decimals = 3) {
             const n = weights.length;
             if (!n || total <= 0) return Array(n).fill(0);
@@ -1095,6 +1134,7 @@
             if (localStorage.getItem('challan_globalMukpat')) document.getElementById('globalMukpatInput').value = localStorage.getItem('challan_globalMukpat');
             if (localStorage.getItem('challan_globalRibWastage')) document.getElementById('globalRibWastageInput').value = localStorage.getItem('challan_globalRibWastage');
             if (localStorage.getItem('challan_globalRibTotal')) document.getElementById('globalTotalRibInput').value = localStorage.getItem('challan_globalRibTotal');
+            if (localStorage.getItem('challan_globalRope')) document.getElementById('globalRopeInput').value = localStorage.getItem('challan_globalRope');
             if (localStorage.getItem('challan_textileStdCons')) document.getElementById('textileStdConsInput').value = localStorage.getItem('challan_textileStdCons');
             if (localStorage.getItem('challan_textileTotalMeters')) document.getElementById('textileTotalMetersInput').value = localStorage.getItem('challan_textileTotalMeters');
             if (localStorage.getItem('challan_textileCheckMode')) document.getElementById('textileCheckMode').checked = localStorage.getItem('challan_textileCheckMode') === 'true';
@@ -1124,6 +1164,7 @@
                             <td class="p-2 border border-gray-300 text-center"><input type="number" value="${item.pics || ''}" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                             <td class="p-2 border border-gray-300 text-center"><input type="number" value="${item.bodywt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                             <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" value="${item.ribwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                            <td class="p-2 border border-gray-300 text-center hidden row-ropewt-td"><input type="number" value="${item.ropewt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ropewt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                             <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
                             <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
                             <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" value="${item.sidepocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
@@ -1212,6 +1253,7 @@
             localStorage.setItem('challan_globalMukpat', getGlobalVal('globalMukpatInput'));
             localStorage.setItem('challan_globalRibWastage', getGlobalVal('globalRibWastageInput'));
             localStorage.setItem('challan_globalRibTotal', getGlobalVal('globalTotalRibInput'));
+            localStorage.setItem('challan_globalRope', getGlobalVal('globalRopeInput'));
             localStorage.setItem('challan_textileStdCons', document.getElementById('textileStdConsInput').value);
             localStorage.setItem('challan_textileTotalMeters', document.getElementById('textileTotalMetersInput').value);
             localStorage.setItem('challan_textileCheckMode', document.getElementById('textileCheckMode').checked);
@@ -1231,6 +1273,7 @@
                     pics: row.querySelector('.row-pics').value,
                     bodywt: bodyWtInput.dataset.origBodyWt !== undefined ? bodyWtInput.dataset.origBodyWt : (bodyWtInput.dataset.weight !== undefined ? bodyWtInput.dataset.weight : bodyWtInput.value),
                     ribwt: row.querySelector('.row-ribwt') ? row.querySelector('.row-ribwt').value : '',
+                    ropewt: getRopeRowValue(row),
                     sidepocket: row.querySelector('.row-sidepocket') ? row.querySelector('.row-sidepocket').value : '',
                     backpocket: row.querySelector('.row-backpocket') ? row.querySelector('.row-backpocket').value : ''
                 });
@@ -1354,7 +1397,60 @@
         }
 
         function getAdjustmentAvailableParts(quality) {
+            if ((quality || '').toUpperCase().includes('TEXTILE')) {
+                const textileParts = [
+                    { key: 'body', label: 'Body Wt', always: true },
+                    { key: 'wastage', label: 'Wastage Wt', always: true }
+                ];
+                // Textile Pajama has a Rope column, so Rope Wt can be adjusted too.
+                if (/PAJAMA|PYJAMA/.test((quality || '').toUpperCase())) {
+                    textileParts.splice(1, 0, { key: 'rope', label: 'Rope Wt', always: true });
+                }
+                return textileParts;
+            }
             return getTConsAvailableParts(quality);
+        }
+
+        // Textile weight-mode adjustment (Body + Wastage only). Shared by the live
+        // table, the Show popup and the history Download so all three always agree.
+        function applyTextileAdjustment(bodyList, globalWastage, adjWeight, adjAction, chkBody, chkWastage, ropeList, chkRope) {
+            ropeList = Array.isArray(ropeList) ? ropeList : [];
+            chkRope = !!chkRope && ropeList.length > 0;
+            const result = { bodyList: bodyList.slice(), globalWastage: globalWastage, ropeList: ropeList.slice(), factor: 0 };
+            adjWeight = parseFloat(adjWeight) || 0;
+            if (!(adjWeight > 0)) return result;
+            const bodySum = bodyList.reduce((a, b) => a + b, 0);
+            const ropeSum = ropeList.reduce((a, b) => a + b, 0);
+            const baseSum = (chkBody ? bodySum : 0) + (chkWastage ? globalWastage : 0) + (chkRope ? ropeSum : 0);
+            if (!(baseSum > 0)) return result;
+            const sign = (adjAction === 'SUB') ? -1 : 1;
+            const factor = adjWeight / baseSum;
+            result.factor = factor;
+            let newBody = bodyList.slice();
+            let newRope = ropeList.slice();
+            let newWastage = globalWastage;
+            if (chkBody) newBody = bodyList.map(b => roundTo50g(b + b * factor * sign));
+            if (chkRope) newRope = ropeList.map(r => Math.max(0, roundTo50g(r + r * factor * sign)));
+            if (chkWastage && globalWastage > 0) newWastage = Math.max(0, roundTo50g(globalWastage + globalWastage * factor * sign));
+            // Exact reconciliation: the net change must equal the requested amount.
+            // The leftover is put on the biggest Body row (or the biggest Rope row if Body is not selected).
+            const recList = chkBody ? newBody : (chkRope ? newRope : null);
+            if (recList && recList.length) {
+                const expectedTotal = roundTo50g(baseSum) + sign * roundTo50g(adjWeight);
+                const actualTotal = (chkBody ? newBody.reduce((a, b) => a + b, 0) : 0)
+                    + (chkRope ? newRope.reduce((a, b) => a + b, 0) : 0)
+                    + (chkWastage ? newWastage : 0);
+                const diff = parseFloat((expectedTotal - actualTotal).toFixed(3));
+                if (Math.abs(diff) > 0.0004) {
+                    let idx = -1, best = -1;
+                    recList.forEach((v, i) => { if (v + diff >= 0 && v >= best) { best = v; idx = i; } });
+                    if (idx >= 0) recList[idx] = parseFloat((recList[idx] + diff).toFixed(3));
+                }
+            }
+            result.bodyList = newBody.map(v => parseFloat(v.toFixed(3)));
+            result.ropeList = newRope.map(v => parseFloat(v.toFixed(3)));
+            result.globalWastage = parseFloat(newWastage.toFixed(3));
+            return result;
         }
 
         function getAdjustmentParts(quality) {
@@ -1429,341 +1525,6 @@
             calculateTotals();
         }
 
-        function openShowModal(index) {
-            const item = normalizeHistoryEntry(historyData[index]);
-            if (!item) return;
-
-    const modalQuality = document.getElementById('showModalQuality');
-    if (modalQuality) modalQuality.innerText = item.quality || "";
-
-    const isTextileActive = (item.quality || "").toUpperCase().includes('TEXTILE');
-    const isCheckActive = isTextileActive && item.textileCheckMode;
-    const isPoloActive = (item.quality || "").toUpperCase().includes('POLO');
-    const isPantActive = (item.quality || "").toUpperCase().includes('PANT');
-    const isGrsActive = ((item.quality || "").toUpperCase().includes('GRS') || (item.quality || "").toUpperCase().includes('SWEAT SHIRT'));
-
-    const fName = item.foldingName || "";
-    const fGm = parseFloat(item.foldingGm) || 0;
-    const isFoldingActive = !isTextileActive && fName.trim() !== "" && fGm > 0;
-
-    const poloHasPocket = isPoloActive && (item.poloHasPocket !== false);
-    const poloHasByPlaket = isPoloActive && (item.poloHasByPlaket !== false);
-    const pantHasSidePocket = isPantActive && (item.pantHasSidePocket !== false);
-    const pantHasBackPocket = isPantActive && (item.pantHasBackPocket !== false);
-
-    const hasRibCol = !isTextileActive && isGrsActive;
-    const hasPktCol = !isTextileActive && isPoloActive;
-    const hasFoldingCol = !isTextileActive && (isFoldingActive || (isPoloActive && poloHasByPlaket));
-    const hasSidePktCol = !isTextileActive && isPantActive && pantHasSidePocket;
-    const hasBackPktCol = !isTextileActive && isPantActive && pantHasBackPocket;
-    const hasCollarCol = !isTextileActive && isPoloActive;
-
-    let metricsHtml = "";
-    if (isTextileActive) {
-        metricsHtml = `
-            <span>STD MTR CONS: <b>${item.textileStdCons || '0.00000'}</b></span>
-            <span>TOTAL METERS: <b>${item.textileTotalMeters || '0.000'}</b></span>
-            <span>METERS MODE: <b>${item.textileCheckMode ? 'YES' : 'NO'}</b></span>
-        `;
-    } else {
-        metricsHtml = `
-            <span>STD CONS: <b>${item.stdCons || '0.00000'}</b></span>
-            <span>STD GSM: <b>${item.stdGsm || '0'}</b></span>
-            <span>FABRIC GSM: <b>${item.fabricGsm || '0'}</b></span>
-        `;
-    }
-
-    if (isFoldingActive) {
-        metricsHtml += `<span>${fName}: <b>${fGm.toFixed(5)}g</b></span>`;
-    }
-
-    let weightsHtml = `<span>WASTAGE WT: <b>${parseFloat(item.globalWastage || 0).toFixed(3)}</b></span>`;
-    if (!isTextileActive) weightsHtml += `<span>MUKPAT WT: <b>${parseFloat(item.globalMukpat || 0).toFixed(3)}</b></span>`;
-    if (isGrsActive && parseFloat(item.globalRibWastage || 0) > 0) weightsHtml += `<span>RIB WASTAGE: <b>${parseFloat(item.globalRibWastage).toFixed(3)}</b></span>`;
-    if (isGrsActive && parseFloat(item.globalRibTotal || 0) > 0) weightsHtml += `<span>RIB WT: <b>${parseFloat(item.globalRibTotal).toFixed(3)}</b></span>`;
-    if (poloHasPocket && parseFloat(item.poloTotalPocket || 0) > 0) weightsHtml += `<span>PKT WT: <b>${parseFloat(item.poloTotalPocket).toFixed(3)}</b></span>`;
-    if (isPoloActive && parseFloat(item.poloTotalPlaket || 0) > 0) weightsHtml += `<span>PLKT WT: <b>${parseFloat(item.poloTotalPlaket).toFixed(3)}</b></span>`;
-    if (poloHasByPlaket && parseFloat(item.poloTotalByPlaket || 0) > 0) weightsHtml += `<span>BY-PLKT WT: <b>${parseFloat(item.poloTotalByPlaket).toFixed(3)}</b></span>`;
-    if (poloHasByPlaket && parseFloat(item.poloTotalByPlaketWastage || 0) > 0) weightsHtml += `<span>BY-PLKT WST: <b>${parseFloat(item.poloTotalByPlaketWastage).toFixed(3)}</b></span>`;
-    if (isPoloActive && parseFloat(item.poloTotalCollarCuff || 0) > 0) weightsHtml += `<span>COLLAR CUFF: <b>${parseFloat(item.poloTotalCollarCuff).toFixed(3)}</b></span>`;
-    if (pantHasSidePocket && parseFloat(item.pantTotalSidePocket || 0) > 0) weightsHtml += `<span>SIDE PKT: <b>${parseFloat(item.pantTotalSidePocket).toFixed(3)}</b></span>`;
-    if (pantHasBackPocket && parseFloat(item.pantTotalBackPocket || 0) > 0) weightsHtml += `<span>BACK PKT: <b>${parseFloat(item.pantTotalBackPocket).toFixed(3)}</b></span>`;
-    if (!isTextileActive && parseFloat(item.adjWeight || 0) > 0) weightsHtml += `<span class="text-blue-700">ADJUST WT: <b>${item.adjAction === 'ADD' ? '+' : '-'}${parseFloat(item.adjWeight).toFixed(3)} KG</b></span>`;
-
-    let totalPicsSum = 0;
-    if (item.items) {
-        item.items.forEach(it => { totalPicsSum += parseFloat(it.pics) || 0; });
-    }
-
-    const globalWastage = parseFloat(item.globalWastage) || 0;
-    const globalMukpat = parseFloat(item.globalMukpat) || 0;
-    const globalByPlaketWastage = (isPoloActive && poloHasByPlaket) ? (parseFloat(item.poloTotalByPlaketWastage) || 0) : 0;
-    const globalRibWastage = isGrsActive ? (parseFloat(item.globalRibWastage) || 0) : 0;
-    const globalRibTotal = isGrsActive ? (parseFloat(item.globalRibTotal) || 0) : 0;
-    const totalPocketGlobal = (isPoloActive && poloHasPocket) ? (parseFloat(item.poloTotalPocket) || 0) : 0;
-    const totalPlaketGlobal = isPoloActive ? (parseFloat(item.poloTotalPlaket) || 0) : 0;
-    const totalByPlaketGlobal = (isPoloActive && poloHasByPlaket) ? (parseFloat(item.poloTotalByPlaket) || 0) : 0;
-    const totalCollarCuffGlobal = isPoloActive ? (parseFloat(item.poloTotalCollarCuff) || 0) : 0;
-    const totalSidePocketGlobal = (isPantActive && pantHasSidePocket) ? (parseFloat(item.pantTotalSidePocket) || 0) : 0;
-    const totalBackPocketGlobal = (isPantActive && pantHasBackPocket) ? (parseFloat(item.pantTotalBackPocket) || 0) : 0;
-
-    let adjWeightValue = parseFloat(item.adjWeight) || 0;
-    let adjAction = item.adjAction || "ADD";
-    let adjFactor = 0;
-    let adjSign = (adjAction === 'ADD') ? 1 : -1;
-
-    let chkBody = item.adjTargetBodyWt !== false;
-    let chkWastage = item.adjTargetWastage !== false;
-    let chkRibWastage = item.adjTargetRibWastage === true;
-    let chkMukpat = item.adjTargetMukpat === true;
-    let chkRib = item.adjTargetRib === true;
-    let chkPocket = item.adjTargetPocket === true;
-    let chkSidePkt = item.adjTargetSidePocket === true;
-    let chkBackPkt = item.adjTargetBackPocket === true;
-    let chkCollar = item.adjTargetCollar === true;
-
-    if (!isTextileActive && adjWeightValue > 0 && totalPicsSum > 0) {
-        let baseSum = 0;
-        if (item.items) {
-            item.items.forEach(it => {
-                const pics = parseFloat(it.pics) || 0;
-                let bodywt = parseFloat(it.bodywt) || 0;
-
-                if (chkBody) baseSum += bodywt;
-                if (chkWastage) {
-                    let rowWastageShare = totalPicsSum > 0 ? (pics / totalPicsSum) * (globalWastage + globalByPlaketWastage) : 0;
-                    baseSum += rowWastageShare;
-                }
-                if (chkRibWastage && isGrsActive) {
-                    let rowRibWastageShare = totalPicsSum > 0 ? (pics / totalPicsSum) * globalRibWastage : 0;
-                    baseSum += rowRibWastageShare;
-                }
-                if (chkMukpat) {
-                    let rowMukpatShare = totalPicsSum > 0 ? (pics / totalPicsSum) * globalMukpat : 0;
-                    baseSum += rowMukpatShare;
-                }
-                if (chkRib && isGrsActive) {
-                    let ribWt = globalRibTotal > 0 ? (totalPicsSum > 0 ? (pics / totalPicsSum) * globalRibTotal : 0) : (parseFloat(it.ribwt) || 0);
-                    baseSum += ribWt;
-                }
-                if (chkPocket && isPoloActive) {
-                    let plaketWt = totalPicsSum > 0 ? (pics / totalPicsSum) * totalPlaketGlobal : 0;
-                    let pocketOnlyWt = (poloHasPocket && totalPicsSum > 0) ? (pics / totalPicsSum) * totalPocketGlobal : 0;
-                    baseSum += (pocketOnlyWt + plaketWt);
-                }
-                if (chkSidePkt && isPantActive && pantHasSidePocket) {
-                    let sidePocketWt = totalSidePocketGlobal > 0 ? (totalPicsSum > 0 ? (pics / totalPicsSum) * totalSidePocketGlobal : 0) : (parseFloat(it.sidepocket) || 0);
-                    baseSum += sidePocketWt;
-                }
-                if (chkBackPkt && isPantActive && pantHasBackPocket) {
-                    let backPocketWt = totalBackPocketGlobal > 0 ? (totalPicsSum > 0 ? (pics / totalPicsSum) * totalBackPocketGlobal : 0) : (parseFloat(it.backpocket) || 0);
-                    baseSum += backPocketWt;
-                }
-                if (chkCollar && isPoloActive) {
-                    let collarCuffWt = totalPicsSum > 0 ? (pics / totalPicsSum) * totalCollarCuffGlobal : 0;
-                    baseSum += collarCuffWt;
-                }
-            });
-        }
-
-        if (baseSum > 0) {
-            adjFactor = adjWeightValue / baseSum;
-        }
-    }
-
-    let rowsHtml = "";
-    if (item.items && item.items.length > 0) {
-        item.items.forEach(it => {
-            const pics = parseFloat(it.pics) || 0;
-            let bodywt = parseFloat(it.bodywt) || 0;
-
-            let foldingOnlyWt = isFoldingActive ? (pics * fGm) : 0;
-            let byPlaketWt = (isPoloActive && poloHasByPlaket)
-                ? (totalPicsSum > 0 ? (pics / totalPicsSum) * totalByPlaketGlobal : 0) : 0;
-            let foldingWt = foldingOnlyWt + byPlaketWt;
-
-            let ribWt = isGrsActive ? (globalRibTotal > 0 ? (totalPicsSum > 0 ? (pics / totalPicsSum) * globalRibTotal : 0) : (parseFloat(it.ribwt) || 0)) : 0;
-
-            let pocketOnlyWt = 0;
-            let plaketWt = 0;
-            let pktPlktWt = 0;
-            if (isPoloActive) {
-                plaketWt = totalPicsSum > 0 ? (pics / totalPicsSum) * totalPlaketGlobal : 0;
-                pocketOnlyWt = (poloHasPocket && totalPicsSum > 0) ? (pics / totalPicsSum) * totalPocketGlobal : 0;
-                pktPlktWt = pocketOnlyWt + plaketWt;
-            }
-
-            let sidePktWt = (isPantActive && pantHasSidePocket) ? (totalSidePocketGlobal > 0 ? (totalPicsSum > 0 ? (pics / totalPicsSum) * totalSidePocketGlobal : 0) : (parseFloat(it.sidepocket) || 0)) : 0;
-            let backPktWt = (isPantActive && pantHasBackPocket) ? (totalBackPocketGlobal > 0 ? (totalPicsSum > 0 ? (pics / totalPicsSum) * totalBackPocketGlobal : 0) : (parseFloat(it.backpocket) || 0)) : 0;
-            let collarCuffWt = isPoloActive ? (totalPicsSum > 0 ? (pics / totalPicsSum) * totalCollarCuffGlobal : 0) : 0;
-
-            let rowWastagePart = totalPicsSum > 0 ? (pics / totalPicsSum) * (globalWastage + globalByPlaketWastage + globalRibWastage) : 0;
-            let rowMukpatPart = totalPicsSum > 0 ? (pics / totalPicsSum) * globalMukpat : 0;
-
-            let mainWastageOnlyPart = totalPicsSum > 0 ? (pics / totalPicsSum) * (globalWastage + globalRibWastage) : 0;
-            let byPlaketWastageWt = (isPoloActive && poloHasByPlaket && totalPicsSum > 0) ? (pics / totalPicsSum) * globalByPlaketWastage : 0;
-            let mainMukpatPart = totalPicsSum > 0 ? (pics / totalPicsSum) * globalMukpat : 0;
-
-            if (!isTextileActive && adjWeightValue > 0 && adjFactor > 0) {
-                if (chkBody) {
-                    bodywt = roundTo50g(bodywt + bodywt * adjFactor * adjSign);
-                }
-                if (chkWastage) {
-                    let wstShare = totalPicsSum > 0 ? (pics / totalPicsSum) * (globalWastage + globalByPlaketWastage) : 0;
-                    rowWastagePart += wstShare * adjFactor * adjSign;
-                    mainWastageOnlyPart += wstShare * adjFactor * adjSign;
-                }
-                if (chkRibWastage && isGrsActive) {
-                    let rWstShare = totalPicsSum > 0 ? (pics / totalPicsSum) * globalRibWastage : 0;
-                    rowWastagePart += rWstShare * adjFactor * adjSign;
-                    mainWastageOnlyPart += rWstShare * adjFactor * adjSign;
-                }
-                if (chkMukpat) {
-                    rowMukpatPart += rowMukpatPart * adjFactor * adjSign;
-                    mainMukpatPart += mainMukpatPart * adjFactor * adjSign;
-                }
-                if (chkRib && isGrsActive) {
-                    ribWt += ribWt * adjFactor * adjSign;
-                }
-                if (chkPocket && isPoloActive) pktPlktWt += pktPlktWt * adjFactor * adjSign;
-                if (chkSidePkt && isPantActive && pantHasSidePocket) {
-                    sidePktWt += sidePktWt * adjFactor * adjSign;
-                }
-                if (chkBackPkt && isPantActive && pantHasBackPocket) {
-                    backPktWt += backPktWt * adjFactor * adjSign;
-                }
-                if (chkCollar && isPoloActive) collarCuffWt += collarCuffWt * adjFactor * adjSign;
-            }
-
-            foldingWt = roundTo50g(foldingWt);
-            if (globalRibTotal > 0 || isGrsActive) ribWt = roundTo50g(ribWt);
-            pktPlktWt = roundTo50g(pktPlktWt);
-            if (totalSidePocketGlobal > 0 || (isPantActive && pantHasSidePocket)) sidePktWt = roundTo50g(sidePktWt);
-            if (totalBackPocketGlobal > 0 || (isPantActive && pantHasBackPocket)) backPocketWt = roundTo50g(backPocketWt);
-            collarCuffWt = roundTo50g(collarCuffWt);
-            rowWastagePart = roundTo50g(rowWastagePart);
-            rowMukpatPart = roundTo50g(rowMukpatPart);
-            mainWastageOnlyPart = roundTo50g(mainWastageOnlyPart);
-            mainMukpatPart = roundTo50g(mainMukpatPart);
-
-            let rowWastage = rowWastagePart + rowMukpatPart;
-            let rowTotal = bodywt + foldingWt + ribWt + pktPlktWt + sidePktWt + backPktWt + collarCuffWt + rowWastage;
-            let bCons = pics > 0 ? (bodywt / pics).toFixed(5) : "0.00000";
-            let mainWastageShare = mainWastageOnlyPart + mainMukpatPart;
-            const tConsParts = (item.tConsParts && typeof item.tConsParts === 'object')
-                ? item.tConsParts
-                : getTConsParts(item.quality || '');
-            const tConsWeight = calculateTConsWeight(tConsParts, {
-                body: bodywt,
-                rib: ribWt,
-                pocket: pocketOnlyWt,
-                plaket: plaketWt,
-                byPlaket: byPlaketWt,
-                byPlaketWastage: byPlaketWastageWt,
-                folding: foldingOnlyWt,
-                sidePocket: sidePktWt,
-                backPocket: backPocketWt,
-                collar: collarCuffWt,
-                wastage: mainWastageOnlyPart,
-                ribWastage: (totalPicsSum > 0 ? (pics / totalPicsSum) * globalRibWastage : 0),
-                mukpat: mainMukpatPart
-            });
-            let tCons = pics > 0 ? (tConsWeight / pics).toFixed(5) : "0.00000";
-
-            rowsHtml += `
-                <tr class="hover:bg-gray-50 border-b border-gray-200">
-                    <td class="p-2 border border-gray-300 text-center font-medium">${it.slipno || '-'}</td>
-                    <td class="p-2 border border-gray-300 text-center font-bold">${it.size || '-'}</td>
-                    <td class="p-2 border border-gray-300 text-center">${it.slips || '-'}</td>
-                    <td class="p-2 border border-gray-300 text-center font-semibold text-blue-700">${it.pics || '0'}</td>
-                    <td class="p-2 border border-gray-300 text-center">${bodywt.toFixed(3)}</td>
-                    ${hasRibCol ? `<td class="p-2 border border-gray-300 text-center">${ribWt.toFixed(3)}</td>` : ''}
-                    ${hasPktCol ? `<td class="p-2 border border-gray-300 text-center">${pktPlktWt.toFixed(3)}</td>` : ''}
-                    ${hasFoldingCol ? `<td class="p-2 border border-gray-300 text-center">${foldingWt.toFixed(3)}</td>` : ''}
-                    ${hasSidePktCol ? `<td class="p-2 border border-gray-300 text-center">${sidePktWt.toFixed(3)}</td>` : ''}
-                    ${hasBackPktCol ? `<td class="p-2 border border-gray-300 text-center">${backPktWt.toFixed(3)}</td>` : ''}
-                    ${hasCollarCol ? `<td class="p-2 border border-gray-300 text-center">${collarCuffWt.toFixed(3)}</td>` : ''}
-                    <td class="p-2 border border-gray-300 text-center">${rowWastage.toFixed(3)}</td>
-                    <td class="p-2 border border-gray-300 text-center font-bold text-gray-800">${rowTotal.toFixed(3)}</td>
-                    <td class="p-2 border border-gray-300 text-center bg-blue-50/50 font-bold text-blue-700">${bCons}</td>
-                    <td class="p-2 border border-gray-300 text-center bg-purple-50/50 font-bold text-purple-700">${tCons}</td>
-                </tr>
-            `;
-        });
-    }
-
-    const bodyColHeader = isCheckActive ? "Body Mtr" : "Body Wt";
-    const wstColHeader = isCheckActive ? "Wastage Mtr" : "Wastage";
-    const totalColHeader = isCheckActive ? "Total Mtr" : "Total";
-    const bConsColHeader = isCheckActive ? "Body Mtr/Pc" : "B.cons";
-    const tConsColHeader = isCheckActive ? "Total Mtr/Pc" : "T.cons";
-
-    const container = document.getElementById('showModalContent');
-    if (container) {
-        container.innerHTML = `
-            <div class="bg-gray-50 p-2.5 rounded border border-gray-200 flex flex-col gap-1.5">
-                <div class="flex justify-between items-center text-gray-500 text-[11px] font-medium border-b border-gray-200 pb-1">
-                    <span>Saved Date: <b class="text-gray-700">${item.timestamp}</b></span>
-                    ${item.qualityRemarks ? `<span class="text-amber-700 font-bold">Remarks: ${item.qualityRemarks}</span>` : ''}
-                </div>
-                <div class="flex flex-wrap gap-3 text-[11px] font-semibold text-gray-600">
-                    ${metricsHtml}
-                </div>
-                <div class="flex flex-wrap gap-2 text-[10px] text-gray-500 pt-1 border-t border-gray-200">
-                    ${weightsHtml}
-                </div>
-            </div>
-
-            <div class="overflow-x-auto border border-gray-200 rounded">
-                <table class="w-full text-left border-collapse text-[11px]">
-                    <thead class="bg-gray-100 font-bold text-gray-700">
-                        <tr>
-                            <th class="p-2 border border-gray-300 text-center">Slip No</th>
-                            <th class="p-2 border border-gray-300 text-center">Size</th>
-                            <th class="p-2 border border-gray-300 text-center">Slips</th>
-                            <th class="p-2 border border-gray-300 text-center">Pics</th>
-                            <th class="p-2 border border-gray-300 text-center">${bodyColHeader}</th>
-                            ${hasRibCol ? `<th class="p-2 border border-gray-300 text-center">Rib Wt</th>` : ''}
-                            ${hasPktCol ? `<th class="p-2 border border-gray-300 text-center">${poloHasPocket ? 'Pkt+Plkt' : 'Plaket'}</th>` : ''}
-                            ${hasFoldingCol ? `<th class="p-2 border border-gray-300 text-center">${fName || 'Folding'}</th>` : ''}
-                            ${hasSidePktCol ? `<th class="p-2 border border-gray-300 text-center">Side Pkt</th>` : ''}
-                            ${hasBackPktCol ? `<th class="p-2 border border-gray-300 text-center">Back Pkt</th>` : ''}
-                            ${hasCollarCol ? `<th class="p-2 border border-gray-300 text-center">Collar Cuff</th>` : ''}
-                            <th class="p-2 border border-gray-300 text-center">${wstColHeader}</th>
-                            <th class="p-2 border border-gray-300 text-center">${totalColHeader}</th>
-                            <th class="p-2 border border-gray-300 text-center bg-blue-50 text-blue-900">${bConsColHeader}</th>
-                            <th class="p-2 border border-gray-300 text-center bg-purple-50 text-purple-900">${tConsColHeader}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rowsHtml}
-                    </tbody>
-                    <tfoot class="bg-gray-100 font-bold border-t-2 border-gray-300">
-                        <tr>
-                            <td class="p-2 border border-gray-300 text-center">TOTAL</td>
-                            <td class="p-2 border border-gray-300 text-center">-</td>
-                            <td class="p-2 border border-gray-300 text-center text-indigo-700">${item.totalSlips || '0'}</td>
-                            <td class="p-2 border border-gray-300 text-center text-blue-700">${item.totalPics || '0'}</td>
-                            <td class="p-2 border border-gray-300 text-center">${item.totalBodyWt || '0.000'}</td>
-                            ${hasRibCol ? `<td class="p-2 border border-gray-300 text-center">${item.totalRibWt || '0.000'}</td>` : ''}
-                            ${hasPktCol ? `<td class="p-2 border border-gray-300 text-center">-</td>` : ''}
-                            ${hasFoldingCol ? `<td class="p-2 border border-gray-300 text-center">-</td>` : ''}
-                            ${hasSidePktCol ? `<td class="p-2 border border-gray-300 text-center">-</td>` : ''}
-                            ${hasBackPktCol ? `<td class="p-2 border border-gray-300 text-center">-</td>` : ''}
-                            ${hasCollarCol ? `<td class="p-2 border border-gray-300 text-center">-</td>` : ''}
-                            <td class="p-2 border border-gray-300 text-center">${item.totalWastage || '0.000'}</td>
-                            <td class="p-2 border border-gray-300 text-center text-purple-700 font-black">${item.totalWeight || '0.000'}</td>
-                            <td class="p-2 border border-gray-300 text-center font-bold text-blue-700 bg-blue-50/50">${item.totalBCons || '0.00000'}</td>
-                            <td class="p-2 border border-gray-300 text-center font-bold text-purple-700 bg-purple-50/50">${item.totalTCons || '0.00000'}</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        `;
-    }
-
-    document.getElementById('showModal').classList.remove('hidden');
-}
         function closeShowModal() {
             document.getElementById('showModal').classList.add('hidden');
         }
@@ -1959,13 +1720,13 @@
             actionFocusInput = null;
         }
 
-        function syncMainTableLayout({ isTextileActive, isGrsActive, isPoloActive, isPantActive, isFoldingActive, poloHasByPlaket, pantHasSidePocket, pantHasBackPocket }) {
+        function syncMainTableLayout({ isTextileActive, isPajamaActive, isGrsActive, isPoloActive, isPantActive, isFoldingActive, poloHasByPlaket, pantHasSidePocket, pantHasBackPocket }) {
             const table = document.getElementById('challanMainTable');
             if (!table) return;
             const cols = table.querySelectorAll('colgroup col');
-            if (cols.length !== 16) return;
+            if (cols.length !== 17) return;
 
-            const baseWidths = [120, 90, 80, 90, 120, 120, 120, 120, 120, 120, 120, 120, 120, 140, 140, 70];
+            const baseWidths = [120, 90, 80, 90, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 140, 140, 70];
             const active = [
                 true,
                 true,
@@ -1973,11 +1734,13 @@
                 true,
                 true,
                 !isTextileActive && isGrsActive,
+                !!isPajamaActive,
                 !isTextileActive && isPoloActive,
                 !isTextileActive && (isFoldingActive || (isPoloActive && poloHasByPlaket)),
                 !isTextileActive && isPantActive && pantHasSidePocket,
                 !isTextileActive && isPantActive && pantHasBackPocket,
                 !isTextileActive && isPoloActive,
+                true,
                 true,
                 true,
                 true,
@@ -2018,13 +1781,18 @@
                     bodyWtInput.value = bodyWtInput.dataset.origBodyWt;
                     bodyWtInput.removeAttribute('data-origBodyWt');
                 }
+                const ropeWtInput0 = row.querySelector('.row-ropewt');
+                if (ropeWtInput0 && ropeWtInput0.dataset.origRopeWt !== undefined) {
+                    ropeWtInput0.value = ropeWtInput0.dataset.origRopeWt;
+                    delete ropeWtInput0.dataset.origRopeWt;
+                }
             });
 
             const globalInputIds = [
                 'globalWastageInput', 'globalMukpatInput', 'poloTotalByPlaketWastageInput', 
                 'globalRibWastageInput', 'globalTotalRibInput', 'poloTotalPocketInput', 
                 'poloTotalPlaketInput', 'poloTotalByPlaketInput', 'poloTotalCollarCuffInput', 
-                'pantTotalSidePocketInput', 'pantTotalBackPocketInput'
+                'pantTotalSidePocketInput', 'pantTotalBackPocketInput', 'globalRopeInput'
             ];
             globalInputIds.forEach(id => {
                 const el = document.getElementById(id);
@@ -2091,6 +1859,7 @@
             let totalPicsSum = 0;
             let totalFoldingSum = 0;
             let totalRibWtSum = 0;
+            let totalRopeSum = 0;
             let totalPocketSum = 0;
             let totalSidePocketSum = 0;
             let totalBackPocketSum = 0;
@@ -2116,6 +1885,8 @@
             const isPoloActive = currentQuality.toUpperCase().includes('POLO');
             const isPantActive = currentQuality.toUpperCase().includes('PANT');
             const isTextileActive = currentQuality.toUpperCase().includes('TEXTILE');
+            // Textile Pajama = Textile quality with a Rope column + Rope global box
+            const isPajamaActive = isTextileActive && /PAJAMA|PYJAMA/.test(currentQuality.toUpperCase());
             
             const standardMetricsRow = document.getElementById('standardMetricsRow');
             const textileMetricsRow = document.getElementById('textileMetricsRow');
@@ -2149,6 +1920,9 @@
                 }
             }
             
+            const ropeHeaderEl = document.getElementById('ropeHeaderTh');
+            if (ropeHeaderEl) ropeHeaderEl.innerText = isCheckActive ? 'Rope Mtr' : 'Rope Wt';
+
             const foldingOptionsRow = document.getElementById('foldingOptionsRow');
             if (foldingOptionsRow) {
                 foldingOptionsRow.style.display = isTextileActive ? 'none' : 'flex';
@@ -2161,7 +1935,7 @@
 
             const weightAdjustmentRow = document.getElementById('weightAdjustmentRow');
             if (weightAdjustmentRow) {
-                weightAdjustmentRow.style.display = isTextileActive ? 'none' : 'flex';
+                weightAdjustmentRow.style.display = 'flex';
             }
 
             // Global weight box order:
@@ -2198,6 +1972,7 @@
             // sliding left when quality-specific columns change.
             syncMainTableLayout({
                 isTextileActive,
+                isPajamaActive,
                 isGrsActive,
                 isPoloActive,
                 isPantActive,
@@ -2246,6 +2021,12 @@
                 globalTotalRibDiv.style.display = (!isTextileActive && isGrsActive) ? 'flex' : 'none';
             }
 
+            const globalRopeDiv = document.getElementById('globalRopeDiv');
+            if (globalRopeDiv) {
+                globalRopeDiv.style.display = isPajamaActive ? 'flex' : 'none';
+                globalRopeDiv.style.order = '3';
+            }
+
             // Dynamically manage standard headers labels visibility bounds
             const th = document.getElementById('foldingHeaderTh');
             if (th) {
@@ -2273,6 +2054,9 @@
                     ribTh.classList.add('hidden');
                 }
             }
+
+            const ropeTh = document.getElementById('ropeHeaderTh');
+            if (ropeTh) ropeTh.classList.toggle('hidden', !isPajamaActive);
 
             const pocketTh = document.getElementById('pocketHeaderTh');
             const sidePocketTh = document.getElementById('sidePocketHeaderTh');
@@ -2309,6 +2093,9 @@
                 }
             }
 
+            const ropeTfootTd = document.getElementById('totalRopeWtDisplay');
+            if (ropeTfootTd) ropeTfootTd.classList.toggle('hidden', !isPajamaActive);
+
             const pocketTfootTd = document.getElementById('totalPocketDisplay');
             const sidePocketTfootTd = document.getElementById('totalSidePocketDisplay');
             const backPocketTfootTd = document.getElementById('totalBackPocketDisplay');
@@ -2340,6 +2127,7 @@
             let globalByPlaketWastage = isPoloActive && poloHasByPlaket ? (parseFloat(document.getElementById('poloTotalByPlaketWastageInput').value) || 0) : 0;
             let globalRibWastage = isGrsActive ? (parseFloat(document.getElementById('globalRibWastageInput').value) || 0) : 0;
             let globalRibTotal = isGrsActive ? (parseFloat(document.getElementById('globalTotalRibInput').value) || 0) : 0;
+            let globalRope = isPajamaActive ? (parseFloat(document.getElementById('globalRopeInput').value) || 0) : 0;
 
             // Pre-loop pass to sum up total pieces required for proportional sharing calculation
             let tempTotalPicsSum = 0;
@@ -2357,6 +2145,25 @@
                     bodyWtInput.disabled = false;
                     bodyWtInput.classList.remove('bg-gray-100');
                 }
+
+                // Rope column (Textile Pajama only)
+                const ropeTdEl = row.querySelector('.row-ropewt-td');
+                if (ropeTdEl) ropeTdEl.classList.toggle('hidden', !isPajamaActive);
+                const ropeInEl = row.querySelector('.row-ropewt');
+                if (ropeInEl) {
+                    if (!isPajamaActive) {
+                        if (ropeInEl.value !== '') ropeInEl.value = '';
+                        delete ropeInEl.dataset.weight;
+                        delete ropeInEl.dataset.autoRope;
+                        ropeInEl.disabled = false;
+                        ropeInEl.classList.remove('bg-gray-100');
+                    } else if (!isCheckActive && ropeInEl.dataset.weight !== undefined) {
+                        ropeInEl.value = ropeInEl.dataset.weight;
+                        delete ropeInEl.dataset.weight;
+                        ropeInEl.disabled = false;
+                        ropeInEl.classList.remove('bg-gray-100');
+                    }
+                }
             });
 
             let tempTotalWeightSum = 0;
@@ -2364,11 +2171,82 @@
             let textileBodyMetersByRow = [];
             let textileWastageMetersByRow = [];
             let textileWastageWeightByRow = [];
+            let textileRopeMetersByRow = [];
+            let textileRopeWeightByRow = [];
             // Keep Textile wastage allocation outside the preparation block because
             // it is also consumed by the main row-rendering block below.
             let textileAllocatedWastage = [];
+            let textileCheckAdjBody = null; // adjusted body weights used for meter conversion
+            let textileCheckAdjRope = null; // adjusted manual rope weights used for meter conversion
             const textileTotalMeters = parseFloat(document.getElementById('textileTotalMetersInput').value) || 0;
             const textileStdCons = parseFloat(document.getElementById('textileStdConsInput').value) || 0;
+
+            // Textile Weight Adjustment. Works in weight mode AND meter mode:
+            // in meter mode the ADJUSTED weights are what get converted into meters.
+            if (isTextileActive) {
+                const tAdjWeight = parseFloat(document.getElementById('adjWeightInput').value) || 0;
+                if (tAdjWeight > 0) {
+                    const tAdjAction = document.getElementById('adjActionSelect').value;
+                    const tSel = getAdjustmentSelection(currentQuality);
+                    const tRows = Array.from(rows);
+                    // In meter mode the row input shows meters; the real weight is kept in data-weight.
+                    const tBodyOrig = tRows.map(r => {
+                        const inp = r.querySelector('.row-bodywt');
+                        return parseFloat(isCheckActive && inp.dataset.weight !== undefined ? inp.dataset.weight : inp.value) || 0;
+                    });
+                    // Rope (Textile Pajama): adjust the global Rope box if it is filled, otherwise the manual row values.
+                    const tRopeOn = isPajamaActive && !!tSel.rope;
+                    let tRopeOrig = [];
+                    if (tRopeOn) {
+                        if (globalRope > 0) {
+                            tRopeOrig = [globalRope];
+                        } else {
+                            tRopeOrig = tRows.map(r => {
+                                const inp = r.querySelector('.row-ropewt');
+                                if (!inp || inp.dataset.autoRope === '1') return 0;
+                                return parseFloat(isCheckActive && inp.dataset.weight !== undefined ? inp.dataset.weight : inp.value) || 0;
+                            });
+                        }
+                    }
+                    const tRes = applyTextileAdjustment(tBodyOrig, globalWastage, tAdjWeight, tAdjAction, !!tSel.body, !!tSel.wastage, tRopeOrig, tRopeOn);
+                    if (tRes.factor > 0) {
+                        if (tRopeOn) {
+                            if (globalRope > 0) {
+                                const gRopeEl = document.getElementById('globalRopeInput');
+                                if (gRopeEl.dataset.origValue === undefined) gRopeEl.dataset.origValue = gRopeEl.value;
+                                gRopeEl.value = tRes.ropeList[0].toFixed(3);
+                                globalRope = tRes.ropeList[0];
+                            } else if (isCheckActive) {
+                                textileCheckAdjRope = tRes.ropeList.slice();
+                            } else {
+                                tRows.forEach((r, i) => {
+                                    const inp = r.querySelector('.row-ropewt');
+                                    if (!inp) return;
+                                    if (inp.dataset.origRopeWt === undefined) inp.dataset.origRopeWt = inp.value === '' ? '0' : inp.value;
+                                    inp.value = tRes.ropeList[i].toFixed(3);
+                                });
+                            }
+                        }
+                        if (tSel.body) {
+                            if (isCheckActive) {
+                                textileCheckAdjBody = tRes.bodyList.slice();
+                            } else {
+                                tRows.forEach((r, i) => {
+                                    const inp = r.querySelector('.row-bodywt');
+                                    if (inp.dataset.origBodyWt === undefined) inp.dataset.origBodyWt = inp.value === '' ? '0' : inp.value;
+                                    inp.value = tRes.bodyList[i].toFixed(3);
+                                });
+                            }
+                        }
+                        if (tSel.wastage && globalWastage > 0) {
+                            const wEl = document.getElementById('globalWastageInput');
+                            if (wEl.dataset.origValue === undefined) wEl.dataset.origValue = wEl.value;
+                            wEl.value = tRes.globalWastage.toFixed(3);
+                            globalWastage = tRes.globalWastage;
+                        }
+                    }
+                }
+            }
 
             if (isTextileActive) {
                 const textileBodyWeights = [];
@@ -2378,8 +2256,17 @@
                 // after row distribution instead of becoming 100.550 kg.
                 textileAllocatedWastage = allocateRoundedShares(
                     globalWastage,
-                    Array.from(rows).map(row => parseFloat(row.querySelector('.row-pics').value) || 0)
+                    Array.from(rows).map(row => parseFloat(row.querySelector('.row-pics').value) || 0),
+                    Array.from(rows).map(row => row.querySelector('.row-size').value)
                 );
+
+                const textileRopeWeights = [];
+                // Rope: global box is split by pics (size-ordered 50g units); otherwise manual row values.
+                const textileAllocatedRope = globalRope > 0 ? allocateRoundedShares(
+                    globalRope,
+                    Array.from(rows).map(row => parseFloat(row.querySelector('.row-pics').value) || 0),
+                    Array.from(rows).map(row => row.querySelector('.row-size').value)
+                ) : [];
 
                 rows.forEach((row, rowIndex) => {
                     const bodyWtInput = row.querySelector('.row-bodywt');
@@ -2388,7 +2275,9 @@
                         if (bodyWtInput.dataset.weight === undefined) {
                             bodyWtInput.dataset.weight = bodyWtInput.value;
                         }
-                        bodywt = parseFloat(bodyWtInput.dataset.weight) || 0;
+                        bodywt = (textileCheckAdjBody && textileCheckAdjBody[rowIndex] !== undefined)
+                            ? textileCheckAdjBody[rowIndex]
+                            : (parseFloat(bodyWtInput.dataset.weight) || 0);
                         bodyWtInput.disabled = true;
                         bodyWtInput.classList.add('bg-gray-100');
                     } else {
@@ -2397,7 +2286,31 @@
 
                     const pics = parseFloat(row.querySelector('.row-pics').value) || 0;
                     const rowWastage = textileAllocatedWastage[rowIndex] || 0;
-                    const rowTotalWeight = bodywt + rowWastage;
+
+                    let ropeW = 0;
+                    const ropeIn = row.querySelector('.row-ropewt');
+                    if (isPajamaActive && ropeIn) {
+                        if (isCheckActive) {
+                            if (ropeIn.dataset.weight === undefined) ropeIn.dataset.weight = ropeIn.value;
+                            ropeIn.disabled = true;
+                            ropeIn.classList.add('bg-gray-100');
+                            ropeW = globalRope > 0 ? (textileAllocatedRope[rowIndex] || 0) : ((textileCheckAdjRope && textileCheckAdjRope[rowIndex] !== undefined) ? textileCheckAdjRope[rowIndex] : (parseFloat(ropeIn.dataset.weight) || 0));
+                        } else if (globalRope > 0) {
+                            ropeW = textileAllocatedRope[rowIndex] || 0;
+                            ropeIn.value = ropeW.toFixed(3);
+                            ropeIn.disabled = true;
+                            ropeIn.classList.add('bg-gray-100');
+                            ropeIn.dataset.autoRope = '1';
+                        } else {
+                            if (ropeIn.dataset.autoRope === '1') { ropeIn.value = ''; delete ropeIn.dataset.autoRope; }
+                            ropeIn.disabled = false;
+                            ropeIn.classList.remove('bg-gray-100');
+                            ropeW = parseFloat(ropeIn.value) || 0;
+                        }
+                    }
+                    textileRopeWeights.push(ropeW);
+                    textileRopeWeightByRow.push(ropeW);
+                    const rowTotalWeight = bodywt + ropeW + rowWastage;
 
                     textileBodyWeights.push(bodywt);
                     textileWastageWeights.push(rowWastage);
@@ -2414,13 +2327,17 @@
                 if (isCheckActive && textileTotalMeters > 0 && tempTotalWeightSum > 0) {
                     const totalBodyWeight = textileBodyWeights.reduce((a, b) => a + b, 0);
                     const totalWastageWeight = textileWastageWeights.reduce((a, b) => a + b, 0);
+                    const totalRopeWeight = textileRopeWeights.reduce((a, b) => a + b, 0);
                     const bodyMetersTotal = textileTotalMeters * (totalBodyWeight / tempTotalWeightSum);
-                    const wastageMetersTotal = textileTotalMeters - bodyMetersTotal;
+                    const ropeMetersTotal = textileTotalMeters * (totalRopeWeight / tempTotalWeightSum);
+                    const wastageMetersTotal = textileTotalMeters - bodyMetersTotal - ropeMetersTotal;
 
                     textileBodyMetersByRow = allocateExactShares(bodyMetersTotal, textileBodyWeights, 3);
+                    textileRopeMetersByRow = allocateExactShares(ropeMetersTotal, textileRopeWeights, 3);
                     textileWastageMetersByRow = allocateExactShares(wastageMetersTotal, textileWastageWeights, 3);
                 } else {
                     textileBodyMetersByRow = rows.length ? Array(rows.length).fill(0) : [];
+                    textileRopeMetersByRow = rows.length ? Array(rows.length).fill(0) : [];
                     textileWastageMetersByRow = rows.length ? Array(rows.length).fill(0) : [];
                 }
             }
@@ -2470,7 +2387,8 @@
                     'poloTotalByPlaketInput',
                     'pantTotalSidePocketInput',
                     'pantTotalBackPocketInput',
-                    'poloTotalCollarCuffInput'
+                    'poloTotalCollarCuffInput',
+                    'globalRopeInput'
                 ].forEach(id => {
                     const el = document.getElementById(id);
                     if (el && el.dataset.origValue !== undefined) {
@@ -2588,13 +2506,14 @@
                 ? (parseFloat(document.getElementById('pantTotalBackPocketInput').value) || 0) : 0;
 
             const allocationWeights = Array.from(rows).map(row => parseFloat(row.querySelector('.row-pics').value) || 0);
+            const allocationSizes = Array.from(rows).map(row => row.querySelector('.row-size').value);
 
             // Keep every global component separate. This is important for Weight
             // Adjustment: Rib Wastage must NOT be treated as ordinary Wastage when
             // the Rib Wastage checkbox is not selected.
-            const allocatedMainWastage = allocateRoundedShares(globalWastage, allocationWeights);
-            const allocatedByPlaketWastage = allocateRoundedShares(globalByPlaketWastage, allocationWeights);
-            const allocatedRibWastage = allocateRoundedShares(globalRibWastage, allocationWeights);
+            const allocatedMainWastage = allocateRoundedShares(globalWastage, allocationWeights, allocationSizes);
+            const allocatedByPlaketWastage = allocateRoundedShares(globalByPlaketWastage, allocationWeights, allocationSizes);
+            const allocatedRibWastage = allocateRoundedShares(globalRibWastage, allocationWeights, allocationSizes);
             const allocatedWastage = allocationWeights.map((_, i) =>
                 parseFloat((
                     (allocatedMainWastage[i] || 0) +
@@ -2602,14 +2521,14 @@
                     (allocatedRibWastage[i] || 0)
                 ).toFixed(3))
             );
-            const allocatedMukpat = allocateRoundedShares(globalMukpat, allocationWeights);
-            const allocatedRib = allocateRoundedShares(globalRibTotal, allocationWeights);
-            const allocatedPocket = allocateRoundedShares(totalPocketGlobal, allocationWeights);
-            const allocatedPlaket = allocateRoundedShares(totalPlaketGlobal, allocationWeights);
-            const allocatedByPlaket = allocateRoundedShares(totalByPlaketGlobal, allocationWeights);
-            const allocatedCollarCuff = allocateRoundedShares(totalCollarCuffGlobal, allocationWeights);
-            const allocatedSidePocket = allocateRoundedShares(totalSidePocketGlobal, allocationWeights);
-            const allocatedBackPocket = allocateRoundedShares(totalBackPocketGlobal, allocationWeights);
+            const allocatedMukpat = allocateRoundedShares(globalMukpat, allocationWeights, allocationSizes);
+            const allocatedRib = allocateRoundedShares(globalRibTotal, allocationWeights, allocationSizes);
+            const allocatedPocket = allocateRoundedShares(totalPocketGlobal, allocationWeights, allocationSizes);
+            const allocatedPlaket = allocateRoundedShares(totalPlaketGlobal, allocationWeights, allocationSizes);
+            const allocatedByPlaket = allocateRoundedShares(totalByPlaketGlobal, allocationWeights, allocationSizes);
+            const allocatedCollarCuff = allocateRoundedShares(totalCollarCuffGlobal, allocationWeights, allocationSizes);
+            const allocatedSidePocket = allocateRoundedShares(totalSidePocketGlobal, allocationWeights, allocationSizes);
+            const allocatedBackPocket = allocateRoundedShares(totalBackPocketGlobal, allocationWeights, allocationSizes);
 
             // Weight Adjustment exact-reconciliation setup. The requested adjustment
             // is treated as a 50g-unit amount, and the final selected total is
@@ -2657,9 +2576,12 @@
                     if (isCheckActive) {
                         const rowBodyMtr = textileBodyMetersByRow[rowIndex] || 0;
                         const rowWastageMtr = textileWastageMetersByRow[rowIndex] || 0;
-                        const rowTotalMtr = parseFloat((rowBodyMtr + rowWastageMtr).toFixed(3));
+                        const rowRopeMtr = textileRopeMetersByRow[rowIndex] || 0;
+                        const rowTotalMtr = parseFloat((rowBodyMtr + rowRopeMtr + rowWastageMtr).toFixed(3));
 
                         bodyWtInput.value = rowBodyMtr.toFixed(3);
+                        if (isPajamaActive && row.querySelector('.row-ropewt')) row.querySelector('.row-ropewt').value = rowRopeMtr.toFixed(3);
+                        totalRopeSum += rowRopeMtr;
                         row.querySelector('.row-wastage').innerText = rowWastageMtr.toFixed(3);
                         row.querySelector('.row-total').innerText = rowTotalMtr.toFixed(3);
 
@@ -2676,7 +2598,9 @@
                     } else {
                         rowWastage = roundTo50g(rowWastage);
                         const rowWastageRounded = parseFloat(rowWastage.toFixed(3));
-                        const rowTotalWeightRounded = parseFloat(bodywt.toFixed(3)) + rowWastageRounded;
+                        const rowRopeRounded = parseFloat((textileRopeWeightByRow[rowIndex] || 0).toFixed(3));
+                        const rowTotalWeightRounded = parseFloat((parseFloat(bodywt.toFixed(3)) + rowRopeRounded + rowWastageRounded).toFixed(3));
+                        totalRopeSum += rowRopeRounded;
 
                         row.querySelector('.row-wastage').innerText = rowWastageRounded.toFixed(3);
                         row.querySelector('.row-total').innerText = rowTotalWeightRounded.toFixed(3);
@@ -3143,6 +3067,7 @@
             // Bind the grand footer averages text indicators dynamically
             if (document.getElementById('totalFoldingDisplay')) document.getElementById('totalFoldingDisplay').innerText = totalFoldingSum.toFixed(3);
             if (document.getElementById('totalRibWtDisplay')) document.getElementById('totalRibWtDisplay').innerText = totalRibWtSum.toFixed(3);
+            if (document.getElementById('totalRopeWtDisplay')) document.getElementById('totalRopeWtDisplay').innerText = totalRopeSum.toFixed(3);
             if (document.getElementById('totalPocketDisplay')) document.getElementById('totalPocketDisplay').innerText = totalPocketSum.toFixed(3);
             if (document.getElementById('totalSidePocketDisplay')) document.getElementById('totalSidePocketDisplay').innerText = totalSidePocketSum.toFixed(3);
             if (document.getElementById('totalBackPocketDisplay')) document.getElementById('totalBackPocketDisplay').innerText = totalBackPocketSum.toFixed(3);
@@ -3152,642 +3077,6 @@
         }
 
         // Direct Download of Standalone Responsive Document File
-        function downloadDocument() {
-            const select = document.getElementById('globalQuality');
-            const currentQuality = select.value || "QUALITY";
-            const remarks = (qualityRemarksData[currentQuality] || document.getElementById('qualityRemarksInput').value || "").trim();
-
-            const fName = qualityFoldingNameData[currentQuality] || "";
-            const fGm = parseFloat(qualityFoldingGmData[currentQuality]) || 0;
-            const isFoldingActive = fName.trim() !== "" && fGm > 0;
-            const isTextileActive = currentQuality.toUpperCase().includes('TEXTILE');
-            const isGrsActive = (currentQuality.toUpperCase().includes('GRS') || currentQuality.toUpperCase().includes('SWEAT SHIRT'));
-            const isPoloActive = currentQuality.toUpperCase().includes('POLO');
-            const isPantActive = currentQuality.toUpperCase().includes('PANT');
-
-            const getCleanVal = (id) => {
-                const el = document.getElementById(id);
-                return el ? (parseFloat(el.value) || 0) : 0;
-            };
-
-            const wst = getCleanVal('globalWastageInput');
-            const mkpt = getCleanVal('globalMukpatInput');
-            const ribWst = getCleanVal('globalRibWastageInput');
-            const ribWt = getCleanVal('globalTotalRibInput');
-            const pkt = getCleanVal('poloTotalPocketInput');
-            const plkt = getCleanVal('poloTotalPlaketInput');
-            const byPlkt = getCleanVal('poloTotalByPlaketInput');
-            const byPlktWst = getCleanVal('poloTotalByPlaketWastageInput');
-            const collar = getCleanVal('poloTotalCollarCuffInput');
-            const sidePkt = getCleanVal('pantTotalSidePocketInput');
-            const backPkt = getCleanVal('pantTotalBackPocketInput');
-            const adj = getCleanVal('adjWeightInput');
-            const adjAction = document.getElementById('adjActionSelect').value;
-
-            // Extract table headers that are currently visible
-            let ths = [];
-            document.querySelectorAll('table thead th').forEach(th => {
-                if (!th.classList.contains('no-print') && !th.classList.contains('hidden') && th.offsetParent !== null) {
-                    ths.push(th.innerText.trim());
-                }
-            });
-
-            // Extract table row values
-            let rowsHtml = "";
-            document.querySelectorAll('#itemRows tr').forEach(tr => {
-                let tdsHtml = "";
-                tr.querySelectorAll('td').forEach(td => {
-                    if (!td.classList.contains('no-print') && !td.classList.contains('hidden') && td.offsetParent !== null) {
-                        const input = td.querySelector('input');
-                        let val = "";
-                        if (input) {
-                            val = input.value.trim() || "-";
-                        } else {
-                            // Extract main text (ignoring sub-references)
-                            const bCons = td.querySelector('.row-bcons');
-                            const tCons = td.querySelector('.row-tcons');
-                            if (bCons) val = bCons.innerText.trim();
-                            else if (tCons) val = tCons.innerText.trim();
-                            else val = td.innerText.trim() || "-";
-                        }
-                        tdsHtml += `<td style="border: 1px solid #cbd5e1; padding: 4px 3px; text-align: center;">${val}</td>`;
-                    }
-                });
-                rowsHtml += `<tr>${tdsHtml}</tr>`;
-            });
-
-            // Extract table footer values
-            let tfootHtml = "";
-            document.querySelectorAll('table tfoot td').forEach(td => {
-                if (!td.classList.contains('no-print') && !td.classList.contains('hidden') && td.offsetParent !== null) {
-                    const totalTCons = td.querySelector('#totalTCons');
-                    let val = totalTCons ? totalTCons.innerText.trim() : td.innerText.trim();
-                    tfootHtml += `<td style="border: 1px solid #94a3b8; padding: 4px 3px; text-align: center; font-weight: bold; background: #e2e8f0;">${val}</td>`;
-                }
-            });
-
-            // Build metrics overview html
-            let metricsDetails = "";
-            if (isTextileActive) {
-                metricsDetails = `
-                    <span>STD MTR CONS: <b>${document.getElementById('textileStdConsInput').value || '0.00000'}</b></span>
-                    <span>TOTAL METERS: <b>${document.getElementById('textileTotalMetersInput').value || '0.000'}</b></span>
-                    <span>METERS MODE: <b>${document.getElementById('textileCheckMode').checked ? 'YES' : 'NO'}</b></span>
-                `;
-            } else {
-                metricsDetails = `
-                    <span>STD CONS: <b>${qualityData[currentQuality] || '0.00000'}</b></span>
-                    <span>STD GSM: <b>${qualityGsmData[currentQuality] || '0'}</b></span>
-                    <span>FABRIC GSM: <b>${document.getElementById('fabricGsmInput').value || '0'}</b></span>
-                    <span>CALC CONS: <b style="color: #1d4ed8;">${document.getElementById('headerCalculatedCons').innerText || '0.00000'}</b></span>
-                `;
-            }
-
-            if (!isTextileActive && isFoldingActive) {
-                metricsDetails += `<span>${fName} (GM/PC): <b>${fGm.toFixed(5)}</b></span>`;
-            }
-
-            let extraWeightsHtml = `<span>WASTAGE WT: <b>${wst.toFixed(3)}</b></span>`;
-            if (!isTextileActive) extraWeightsHtml += `<span>MUKPAT WT: <b>${mkpt.toFixed(3)}</b></span>`;
-            if (isGrsActive && ribWst > 0) extraWeightsHtml += `<span>RIB WASTAGE: <b>${ribWst.toFixed(3)}</b></span>`;
-            if (isGrsActive && ribWt > 0) extraWeightsHtml += `<span>RIB WT: <b>${ribWt.toFixed(3)}</b></span>`;
-            if (isPoloActive && pkt > 0) extraWeightsHtml += `<span>PKT WT: <b>${pkt.toFixed(3)}</b></span>`;
-            if (isPoloActive && plkt > 0) extraWeightsHtml += `<span>PLKT WT: <b>${plkt.toFixed(3)}</b></span>`;
-            if (isPoloActive && byPlkt > 0) extraWeightsHtml += `<span>BY-PLKT WT: <b>${byPlkt.toFixed(3)}</b></span>`;
-            if (isPoloActive && byPlktWst > 0) extraWeightsHtml += `<span>BY-PLKT WST: <b>${byPlktWst.toFixed(3)}</b></span>`;
-            if (isPoloActive && collar > 0) extraWeightsHtml += `<span>COLLAR CUFF: <b>${collar.toFixed(3)}</b></span>`;
-            if (isPantActive && sidePkt > 0) extraWeightsHtml += `<span>SIDE PKT: <b>${sidePkt.toFixed(3)}</b></span>`;
-            if (isPantActive && backPkt > 0) extraWeightsHtml += `<span>BACK PKT: <b>${backPkt.toFixed(3)}</b></span>`;
-            if (!isTextileActive && adj > 0) extraWeightsHtml += `<span style="color: #1d4ed8;">ADJUST WT: <b>${adjAction === 'ADD' ? '+' : '-'}${adj.toFixed(3)} KG</b></span>`;
-
-            // Build dynamic filename from Quality Remarks or auto fallback
-            let finalFileName = "";
-            const cleanRemarks = remarks.replace(/[/\\?%*:|"<>]/g, '_').trim();
-            const cleanQuality = currentQuality.replace(/[/\\?%*:|"<>]/g, '_').trim();
-            const dateStr = new Date().toISOString().slice(0,10);
-
-            if (cleanRemarks !== "") {
-                finalFileName = cleanRemarks;
-            } else {
-                finalFileName = `${cleanQuality}_Challan_${dateStr}`;
-            }
-
-            const documentContent = `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>${finalFileName}</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 12px; margin: 0; background: #fff; color: #1e293b; font-size: 11px; }
-        .container { max-width: 100%; margin: 0 auto; }
-        .header { text-align: center; border-bottom: 2px solid #334155; padding-bottom: 8px; margin-bottom: 12px; }
-        .title { font-size: 16px; font-weight: 900; letter-spacing: 1px; }
-        .sub-header { font-size: 11px; font-weight: bold; margin-top: 4px; color: #334155; }
-        .info-card { border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 4px; padding: 6px 10px; margin-bottom: 12px; }
-        .metrics-row { display: flex; flex-wrap: wrap; gap: 12px; font-weight: 600; font-size: 10px; }
-        .weights-row { display: flex; flex-wrap: wrap; gap: 10px; font-size: 9.5px; border-top: 1px solid #e2e8f0; margin-top: 5px; padding-top: 5px; color: #475569; }
-        table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 8px; table-layout: auto; }
-        th { background: #e2e8f0; color: #0f172a; font-weight: bold; border: 1px solid #cbd5e1; padding: 5px 3px; text-align: center; }
-        tr:nth-child(even) { background-color: #f8fafc; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div class="title">CUTTING CHALLAN REPORT</div>
-            <div class="sub-header">QUALITY: <span>${currentQuality}</span> | REMARKS: <span>${remarks || "-"}</span></div>
-        </div>
-        <div class="info-card">
-            <div class="metrics-row">${metricsDetails}</div>
-            <div class="weights-row">${extraWeightsHtml}</div>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    ${ths.map(h => `<th>${h}</th>`).join('')}
-                </tr>
-            </thead>
-            <tbody>
-                ${rowsHtml}
-            </tbody>
-            <tfoot>
-                <tr>
-                    ${tfootHtml}
-                </tr>
-            </tfoot>
-        </table>
-    </div>
-</body>
-</html>`;
-
-            const blob = new Blob([documentContent], { type: 'text/html;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${finalFileName}.html`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => { try { URL.revokeObjectURL(url); } catch (_) {} }, 1500);
-        }
-
-        function downloadHistoryItem(index) {
-            const item = historyData[index];
-            if (!item) return;
-
-            const currentQuality = item.quality || "QUALITY";
-            const remarks = (item.qualityRemarks || "").trim();
-
-            const stdCons = parseFloat(item.stdCons) || 0;
-            const stdGsm = parseFloat(item.stdGsm) || 0;
-            const fabricGsm = parseFloat(item.fabricGsm) || 0;
-
-            const fName = item.foldingName || "";
-            const fGm = parseFloat(item.foldingGm) || 0;
-            const isFoldingActive = fName.trim() !== "" && fGm > 0;
-            const isTextileActive = currentQuality.toUpperCase().includes('TEXTILE');
-            const isCheckActive = isTextileActive && item.textileCheckMode;
-            const isGrsActive = (currentQuality.toUpperCase().includes('GRS') || currentQuality.toUpperCase().includes('SWEAT SHIRT'));
-            const isPoloActive = currentQuality.toUpperCase().includes('POLO');
-            const isPantActive = currentQuality.toUpperCase().includes('PANT');
-
-            const poloHasPocket = isPoloActive && (item.poloHasPocket !== false);
-            const poloHasByPlaket = isPoloActive && (item.poloHasByPlaket !== false);
-            const pantHasSidePocket = isPantActive && (item.pantHasSidePocket !== false);
-            const pantHasBackPocket = isPantActive && (item.pantHasBackPocket !== false);
-
-            const hasRibCol = !isTextileActive && isGrsActive;
-            const hasPktCol = !isTextileActive && isPoloActive;
-            const hasFoldingCol = !isTextileActive && (isFoldingActive || (isPoloActive && poloHasByPlaket));
-            const hasSidePktCol = !isTextileActive && isPantActive && pantHasSidePocket;
-            const hasBackPktCol = !isTextileActive && isPantActive && pantHasBackPocket;
-            const hasCollarCol = !isTextileActive && isPoloActive;
-
-            let totalPicsSum = 0;
-            if (item.items) {
-                item.items.forEach(it => { totalPicsSum += parseFloat(it.pics) || 0; });
-            }
-
-            const globalWastage = parseFloat(item.globalWastage) || 0;
-            const globalMukpat = parseFloat(item.globalMukpat) || 0;
-            const globalByPlaketWastage = (isPoloActive && poloHasByPlaket) ? (parseFloat(item.poloTotalByPlaketWastage) || 0) : 0;
-            const globalRibWastage = isGrsActive ? (parseFloat(item.globalRibWastage) || 0) : 0;
-            const globalRibTotal = isGrsActive ? (parseFloat(item.globalRibTotal) || 0) : 0;
-            const totalPocketGlobal = (isPoloActive && poloHasPocket) ? (parseFloat(item.poloTotalPocket) || 0) : 0;
-            const totalPlaketGlobal = isPoloActive ? (parseFloat(item.poloTotalPlaket) || 0) : 0;
-            const totalByPlaketGlobal = (isPoloActive && poloHasByPlaket) ? (parseFloat(item.poloTotalByPlaket) || 0) : 0;
-            const totalCollarCuffGlobal = isPoloActive ? (parseFloat(item.poloTotalCollarCuff) || 0) : 0;
-            const totalSidePocketGlobal = (isPantActive && pantHasSidePocket) ? (parseFloat(item.pantTotalSidePocket) || 0) : 0;
-            const totalBackPocketGlobal = (isPantActive && pantHasBackPocket) ? (parseFloat(item.pantTotalBackPocket) || 0) : 0;
-
-            let adjWeightValue = parseFloat(item.adjWeight) || 0;
-            let adjAction = item.adjAction || "ADD";
-            let adjFactor = 0;
-            let adjSign = (adjAction === 'ADD') ? 1 : -1;
-
-            let chkBody = item.adjTargetBodyWt !== false;
-            let chkWastage = item.adjTargetWastage !== false;
-            let chkRibWastage = item.adjTargetRibWastage === true;
-            let chkMukpat = item.adjTargetMukpat === true;
-            let chkRib = item.adjTargetRib === true;
-            let chkPocket = item.adjTargetPocket === true;
-            let chkSidePkt = item.adjTargetSidePocket === true;
-            let chkBackPkt = item.adjTargetBackPocket === true;
-            let chkCollar = item.adjTargetCollar === true;
-
-            if (!isTextileActive && adjWeightValue > 0 && totalPicsSum > 0) {
-                let baseSum = 0;
-                if (item.items) {
-                    item.items.forEach(it => {
-                        const pics = parseFloat(it.pics) || 0;
-                        let bodywt = parseFloat(it.bodywt) || 0;
-                        if (chkBody) baseSum += bodywt;
-                        if (chkWastage) baseSum += (pics / totalPicsSum) * (globalWastage + globalByPlaketWastage);
-                        if (chkRibWastage && isGrsActive) baseSum += (pics / totalPicsSum) * globalRibWastage;
-                        if (chkMukpat) baseSum += (pics / totalPicsSum) * globalMukpat;
-                        if (chkRib && isGrsActive) baseSum += (globalRibTotal > 0 ? (pics / totalPicsSum) * globalRibTotal : (parseFloat(it.ribwt) || 0));
-                        if (chkPocket && isPoloActive) baseSum += ((poloHasPocket ? (pics / totalPicsSum) * totalPocketGlobal : 0) + (pics / totalPicsSum) * totalPlaketGlobal);
-                        if (chkSidePkt && isPantActive && pantHasSidePocket) baseSum += (totalSidePocketGlobal > 0 ? (pics / totalPicsSum) * totalSidePocketGlobal : (parseFloat(it.sidepocket) || 0));
-                        if (chkBackPkt && isPantActive && pantHasBackPocket) baseSum += (totalBackPocketGlobal > 0 ? (pics / totalPicsSum) * totalBackPocketGlobal : (parseFloat(it.backpocket) || 0));
-                        if (chkCollar && isPoloActive) baseSum += (pics / totalPicsSum) * totalCollarCuffGlobal;
-                    });
-                }
-                if (baseSum > 0) adjFactor = adjWeightValue / baseSum;
-            }
-
-            let adjWst = globalWastage;
-            let adjMkpt = globalMukpat;
-            let adjByPlktWst = globalByPlaketWastage;
-            let adjRibWst = globalRibWastage;
-            let adjRibTotal = globalRibTotal;
-            let adjPkt = totalPocketGlobal;
-            let adjPlkt = totalPlaketGlobal;
-            let adjByPlkt = totalByPlaketGlobal;
-            let adjCollar = totalCollarCuffGlobal;
-            let adjSidePkt = totalSidePocketGlobal;
-            let adjBackPkt = totalBackPocketGlobal;
-
-            if (!isTextileActive && adjWeightValue > 0 && adjFactor > 0) {
-                if (chkWastage) {
-                    adjWst = roundTo50g(globalWastage + globalWastage * adjFactor * adjSign);
-                    adjByPlktWst = roundTo50g(globalByPlaketWastage + globalByPlaketWastage * adjFactor * adjSign);
-                }
-                if (chkMukpat) {
-                    adjMkpt = roundTo50g(globalMukpat + globalMukpat * adjFactor * adjSign);
-                }
-                if (chkRibWastage && isGrsActive) {
-                    adjRibWst = roundTo50g(globalRibWastage + globalRibWastage * adjFactor * adjSign);
-                }
-                if (chkRib && isGrsActive && globalRibTotal > 0) {
-                    adjRibTotal = roundTo50g(globalRibTotal + globalRibTotal * adjFactor * adjSign);
-                }
-                if (chkPocket && isPoloActive) {
-                    adjPkt = roundTo50g(totalPocketGlobal + totalPocketGlobal * adjFactor * adjSign);
-                    adjPlkt = roundTo50g(totalPlaketGlobal + totalPlaketGlobal * adjFactor * adjSign);
-                }
-                if (chkCollar && isPoloActive) {
-                    adjCollar = roundTo50g(totalCollarCuffGlobal + totalCollarCuffGlobal * adjFactor * adjSign);
-                }
-                if (chkSidePkt && isPantActive && pantHasSidePocket && totalSidePocketGlobal > 0) {
-                    adjSidePkt = roundTo50g(totalSidePocketGlobal + totalSidePocketGlobal * adjFactor * adjSign);
-                }
-                if (chkBackPkt && isPantActive && pantHasBackPocket && totalBackPocketGlobal > 0) {
-                    adjBackPkt = roundTo50g(totalBackPocketGlobal + totalBackPocketGlobal * adjFactor * adjSign);
-                }
-            }
-
-            let tempTotalWeightSum = 0;
-            let textileFactor = 0;
-            let textileBodyMetersByRow = [];
-            let textileWastageMetersByRow = [];
-            const textileTotalMeters = parseFloat(item.textileTotalMeters) || 0;
-            const textileStdCons = parseFloat(item.textileStdCons) || 0;
-
-            if (isTextileActive && item.items) {
-                const bodyWeights = [];
-                const wastageWeights = [];
-                const historyAllocatedWastage = allocateRoundedShares(
-                    globalWastage,
-                    item.items.map(it => parseFloat(it.pics) || 0)
-                );
-                item.items.forEach((it, historyRowIndex) => {
-                    const bodywt = parseFloat(it.bodywt) || 0;
-                    const pics = parseFloat(it.pics) || 0;
-                    const rowWastage = historyAllocatedWastage[historyRowIndex] || 0;
-                    bodyWeights.push(bodywt);
-                    wastageWeights.push(rowWastage);
-                    tempTotalWeightSum += (bodywt + rowWastage);
-                });
-                textileFactor = tempTotalWeightSum > 0 ? textileTotalMeters / tempTotalWeightSum : 0;
-
-                if (isCheckActive && textileTotalMeters > 0 && tempTotalWeightSum > 0) {
-                    const totalBodyWeight = bodyWeights.reduce((a, b) => a + b, 0);
-                    const bodyMetersTotal = textileTotalMeters * (totalBodyWeight / tempTotalWeightSum);
-                    const wastageMetersTotal = textileTotalMeters - bodyMetersTotal;
-                    textileBodyMetersByRow = allocateExactShares(bodyMetersTotal, bodyWeights, 3);
-                    textileWastageMetersByRow = allocateExactShares(wastageMetersTotal, wastageWeights, 3);
-                }
-            }
-
-            let totalBodyWtSum = 0;
-            let totalWastageSum = 0;
-            let totalWeightSum = 0;
-            let totalFoldingSum = 0;
-            let totalRibWtSum = 0;
-            let totalPocketSum = 0;
-            let totalSidePocketSum = 0;
-            let totalBackPocketSum = 0;
-            let totalCollarCuffSum = 0;
-            let totalMainFabricSum = 0;
-
-            let rowsHtml = "";
-            if (item.items && item.items.length > 0) {
-                item.items.forEach((it, itemRowIndex) => {
-                    const pics = parseFloat(it.pics) || 0;
-                    let bodywt = parseFloat(it.bodywt) || 0;
-
-                    let rowTds = [];
-                    rowTds.push(it.slipno || '-');
-                    rowTds.push(it.size || '-');
-                    rowTds.push(it.slips || '-');
-                    rowTds.push(pics || '0');
-
-                    if (isTextileActive) {
-                        let rowWastage = historyAllocatedWastage[itemRowIndex] || 0;
-                        if (isCheckActive) {
-                            const rowBodyMtr = textileBodyMetersByRow[itemRowIndex] || 0;
-                            const rowWastageMtr = textileWastageMetersByRow[itemRowIndex] || 0;
-                            const rowTotalMtr = parseFloat((rowBodyMtr + rowWastageMtr).toFixed(3));
-                            const rowBodyMtrPerPc = pics > 0 ? rowBodyMtr / pics : 0;
-                            const rowTotalMtrPerPc = pics > 0 ? rowTotalMtr / pics : 0;
-
-                            rowTds.push(rowBodyMtr.toFixed(3));
-                            rowTds.push(rowWastageMtr.toFixed(3));
-                            rowTds.push(rowTotalMtr.toFixed(3));
-                            rowTds.push(rowBodyMtrPerPc.toFixed(5));
-                            rowTds.push(rowTotalMtrPerPc.toFixed(5));
-
-                            totalBodyWtSum += rowBodyMtr;
-                            totalWastageSum += rowWastageMtr;
-                            totalWeightSum += rowTotalMtr;
-                        } else {
-                            rowWastage = roundTo50g(rowWastage);
-                            const rowWastageRounded = parseFloat(rowWastage.toFixed(3));
-                            const rowTotalWeightRounded = parseFloat(bodywt.toFixed(3)) + rowWastageRounded;
-                            const grandBCons = pics > 0 ? bodywt / pics : 0;
-                            const grandTCons = pics > 0 ? rowTotalWeightRounded / pics : 0;
-
-                            rowTds.push(parseFloat(bodywt.toFixed(3)).toFixed(3));
-                            rowTds.push(rowWastageRounded.toFixed(3));
-                            rowTds.push(rowTotalWeightRounded.toFixed(3));
-                            rowTds.push(grandBCons.toFixed(5));
-                            rowTds.push(grandTCons.toFixed(5));
-
-                            totalBodyWtSum += parseFloat(bodywt.toFixed(3));
-                            totalWastageSum += rowWastageRounded;
-                            totalWeightSum += rowTotalWeightRounded;
-                        }
-                    } else {
-                        let foldingOnlyWt = isFoldingActive ? (pics * fGm) : 0;
-                        let byPlaketWt = (isPoloActive && poloHasByPlaket)
-                            ? (totalPicsSum > 0 ? (pics / totalPicsSum) * totalByPlaketGlobal : 0) : 0;
-                        let foldingWt = foldingOnlyWt + byPlaketWt;
-
-                        let ribWt = isGrsActive ? (globalRibTotal > 0 ? (totalPicsSum > 0 ? (pics / totalPicsSum) * globalRibTotal : 0) : (parseFloat(it.ribwt) || 0)) : 0;
-                        let plaketWt = isPoloActive && totalPicsSum > 0 ? (pics / totalPicsSum) * totalPlaketGlobal : 0;
-                        let pocketOnlyWt = (isPoloActive && poloHasPocket && totalPicsSum > 0) ? (pics / totalPicsSum) * totalPocketGlobal : 0;
-                        let pktPlktWt = pocketOnlyWt + plaketWt;
-                        let sidePktWt = (isPantActive && pantHasSidePocket) ? (totalSidePocketGlobal > 0 ? (totalPicsSum > 0 ? (pics / totalPicsSum) * totalSidePocketGlobal : 0) : (parseFloat(it.sidepocket) || 0)) : 0;
-                        let backPktWt = (isPantActive && pantHasBackPocket) ? (totalBackPocketGlobal > 0 ? (totalPicsSum > 0 ? (pics / totalPicsSum) * totalBackPocketGlobal : 0) : (parseFloat(it.backpocket) || 0)) : 0;
-                        let collarCuffWt = isPoloActive ? (totalPicsSum > 0 ? (pics / totalPicsSum) * totalCollarCuffGlobal : 0) : 0;
-
-                        let rowWastagePart = totalPicsSum > 0 ? (pics / totalPicsSum) * (globalWastage + globalByPlaketWastage + globalRibWastage) : 0;
-                        let rowMukpatPart = totalPicsSum > 0 ? (pics / totalPicsSum) * globalMukpat : 0;
-                        let mainWastageOnlyPart = totalPicsSum > 0 ? (pics / totalPicsSum) * (globalWastage + globalRibWastage) : 0;
-                        let mainMukpatPart = totalPicsSum > 0 ? (pics / totalPicsSum) * globalMukpat : 0;
-
-                        if (adjWeightValue > 0 && adjFactor > 0) {
-                            if (chkBody) bodywt = roundTo50g(bodywt + bodywt * adjFactor * adjSign);
-                            if (chkWastage) {
-                                let wstShare = totalPicsSum > 0 ? (pics / totalPicsSum) * (globalWastage + globalByPlaketWastage) : 0;
-                                rowWastagePart += wstShare * adjFactor * adjSign;
-                                mainWastageOnlyPart += wstShare * adjFactor * adjSign;
-                            }
-                            if (chkRibWastage && isGrsActive) {
-                                let rWstShare = totalPicsSum > 0 ? (pics / totalPicsSum) * globalRibWastage : 0;
-                                rowWastagePart += rWstShare * adjFactor * adjSign;
-                                mainWastageOnlyPart += rWstShare * adjFactor * adjSign;
-                            }
-                            if (chkMukpat) {
-                                rowMukpatPart += rowMukpatPart * adjFactor * adjSign;
-                                mainMukpatPart += mainMukpatPart * adjFactor * adjSign;
-                            }
-                            if (chkRib && isGrsActive) ribWt += ribWt * adjFactor * adjSign;
-                            if (chkPocket && isPoloActive) pktPlktWt += pktPlktWt * adjFactor * adjSign;
-                            if (chkSidePkt && isPantActive && pantHasSidePocket) sidePocketWt += sidePocketWt * adjFactor * adjSign;
-                            if (chkBackPkt && isPantActive && pantHasBackPocket) backPktWt += backPktWt * adjFactor * adjSign;
-                            if (chkCollar && isPoloActive) collarCuffWt += collarCuffWt * adjFactor * adjSign;
-                        }
-
-                        foldingWt = roundTo50g(foldingWt);
-                        if (globalRibTotal > 0 || isGrsActive) ribWt = roundTo50g(ribWt);
-                        pktPlktWt = roundTo50g(pktPlktWt);
-                        if (totalSidePocketGlobal > 0 || (isPantActive && pantHasSidePocket)) sidePktWt = roundTo50g(sidePktWt);
-                        if (totalBackPocketGlobal > 0 || (isPantActive && pantHasBackPocket)) backPktWt = roundTo50g(backPktWt);
-                        collarCuffWt = roundTo50g(collarCuffWt);
-                        rowWastagePart = roundTo50g(rowWastagePart);
-                        rowMukpatPart = roundTo50g(rowMukpatPart);
-                        mainWastageOnlyPart = roundTo50g(mainWastageOnlyPart);
-                        mainMukpatPart = roundTo50g(mainMukpatPart);
-
-                        let rowWastage = rowWastagePart + rowMukpatPart;
-                        let rowTotal = bodywt + foldingWt + ribWt + pktPlktWt + sidePktWt + backPktWt + collarCuffWt + rowWastage;
-                        let bCons = pics > 0 ? (bodywt / pics).toFixed(5) : "0.00000";
-                        let mainWastageShare = mainWastageOnlyPart + mainMukpatPart;
-                        const tConsPartsExport = (item.tConsParts && typeof item.tConsParts === 'object')
-                            ? item.tConsParts
-                            : getTConsParts(currentQuality);
-                        const tConsWeightExport = calculateTConsWeight(tConsPartsExport, {
-                            body: bodywt, rib: ribWt, pocket: pocketOnlyWt, plaket: plaketWt, byPlaket: byPlaketWt, folding: foldingOnlyWt,
-                            sidePocket: sidePktWt, backPocket: backPktWt, collar: collarCuffWt,
-                            wastage: mainWastageOnlyPart, byPlaketWastage: byPlaketWastageWt, ribWastage: (globalRibWastage > 0 ? (totalPicsSum > 0 ? (pics / totalPicsSum) * globalRibWastage : 0) : 0),
-                            mukpat: mainMukpatPart
-                        });
-                        let tCons = pics > 0 ? (tConsWeightExport / pics).toFixed(5) : "0.00000";
-
-                        rowTds.push(bodywt.toFixed(3));
-                        if (hasRibCol) rowTds.push(ribWt.toFixed(3));
-                        if (hasPktCol) rowTds.push(pktPlktWt.toFixed(3));
-                        if (hasFoldingCol) rowTds.push(foldingWt.toFixed(3));
-                        if (hasSidePktCol) rowTds.push(sidePktWt.toFixed(3));
-                        if (hasBackPktCol) rowTds.push(backPktWt.toFixed(3));
-                        if (hasCollarCol) rowTds.push(collarCuffWt.toFixed(3));
-                        rowTds.push(rowWastage.toFixed(3));
-                        rowTds.push(rowTotal.toFixed(3));
-                        rowTds.push(bCons);
-                        rowTds.push(tCons);
-
-                        totalBodyWtSum += bodywt;
-                        totalRibWtSum += ribWt;
-                        totalPocketSum += pktPlktWt;
-                        totalFoldingSum += foldingWt;
-                        totalSidePocketSum += sidePktWt;
-                        totalBackPocketSum += backPktWt;
-                        totalCollarCuffSum += collarCuffWt;
-                        totalWastageSum += rowWastage;
-                        totalWeightSum += rowTotal;
-                        totalMainFabricSum += tConsWeightExport;
-                    }
-
-                    rowsHtml += `<tr>${rowTds.map(v => `<td style="border: 1px solid #cbd5e1; padding: 4px 3px; text-align: center;">${v}</td>`).join('')}</tr>`;
-                });
-            }
-
-            let ths = ["Slip No", "Size", "Slips", "Pics"];
-            const bodyColHeader = isTextileActive && isCheckActive ? "Body Mtr" : "Body Wt";
-            const wstColHeader = isTextileActive && isCheckActive ? "Wastage Mtr" : "Wastage";
-            const totalColHeader = isTextileActive && isCheckActive ? "Total Mtr" : "Total";
-            const bConsColHeader = isTextileActive && isCheckActive ? "Body Mtr/Pc" : "B.cons";
-            const tConsColHeader = isTextileActive && isCheckActive ? "Total Mtr/Pc" : "T.cons";
-
-            ths.push(bodyColHeader);
-            if (hasRibCol) ths.push("Rib Wt");
-            if (hasPktCol) ths.push(poloHasPocket ? "Pkt + Plkt Wt" : "Plaket Wt");
-            if (hasFoldingCol) ths.push((isFoldingActive && poloHasByPlaket) ? (fName || "Folding") + " + By-Plkt" : (isPoloActive && poloHasByPlaket ? "By-Plaket Wt" : fName));
-            if (hasSidePktCol) ths.push("Side Pkt Wt");
-            if (hasBackPktCol) ths.push("Back Pkt Wt");
-            if (hasCollarCol) ths.push("Collar Cuff");
-            ths.push(wstColHeader);
-            ths.push(totalColHeader);
-            ths.push(bConsColHeader);
-            ths.push(tConsColHeader);
-
-            let tfootCells = ["TOTAL:", "-", item.totalSlips || "0", totalPicsSum.toString(), totalBodyWtSum.toFixed(3)];
-            if (hasRibCol) tfootCells.push(totalRibWtSum.toFixed(3));
-            if (hasPktCol) tfootCells.push(totalPocketSum.toFixed(3));
-            if (hasFoldingCol) tfootCells.push(totalFoldingSum.toFixed(3));
-            if (hasSidePktCol) tfootCells.push(totalSidePocketSum.toFixed(3));
-            if (hasBackPktCol) tfootCells.push(totalBackPocketSum.toFixed(3));
-            if (hasCollarCol) tfootCells.push(totalCollarCuffSum.toFixed(3));
-            tfootCells.push(totalWastageSum.toFixed(3));
-            tfootCells.push(totalWeightSum.toFixed(3));
-
-            if (isTextileActive) {
-                const avgBody = totalPicsSum > 0 ? (totalBodyWtSum / totalPicsSum).toFixed(5) : "0.00000";
-                const avgTotal = totalPicsSum > 0 ? (totalWeightSum / totalPicsSum).toFixed(5) : "0.00000";
-                tfootCells.push(avgBody);
-                tfootCells.push(avgTotal);
-            } else {
-                const grandBCons = totalPicsSum > 0 ? (totalBodyWtSum / totalPicsSum).toFixed(5) : "0.00000";
-                const grandTCons = totalPicsSum > 0 ? (totalMainFabricSum / totalPicsSum).toFixed(5) : "0.00000";
-                tfootCells.push(grandBCons);
-                tfootCells.push(grandTCons);
-            }
-
-            let tfootHtml = `<tr>${tfootCells.map(v => `<td style="border: 1px solid #94a3b8; padding: 4px 3px; text-align: center; font-weight: bold; background: #e2e8f0;">${v}</td>`).join('')}</tr>`;
-
-            let metricsDetails = "";
-            if (isTextileActive) {
-                metricsDetails = `
-                    <span>STD MTR CONS: <b>${item.textileStdCons || '0.00000'}</b></span>
-                    <span>TOTAL METERS: <b>${item.textileTotalMeters || '0.000'}</b></span>
-                    <span>METERS MODE: <b>${item.textileCheckMode ? 'YES' : 'NO'}</b></span>
-                `;
-            } else {
-                let singleCalculatedCons = stdGsm > 0 ? ((stdCons / stdGsm) * fabricGsm).toFixed(5) : "0.00000";
-                metricsDetails = `
-                    <span>STD CONS: <b>${item.stdCons || '0.00000'}</b></span>
-                    <span>STD GSM: <b>${item.stdGsm || '0'}</b></span>
-                    <span>FABRIC GSM: <b>${item.fabricGsm || '0'}</b></span>
-                    <span>CALC CONS: <b style="color: #1d4ed8;">${singleCalculatedCons}</b></span>
-                `;
-            }
-
-            if (!isTextileActive && isFoldingActive) {
-                metricsDetails += `<span>${fName} (GM/PC): <b>${fGm.toFixed(5)}</b></span>`;
-            }
-
-            let extraWeightsHtml = `<span>WASTAGE WT: <b>${adjWst.toFixed(3)}</b></span>`;
-            if (!isTextileActive) extraWeightsHtml += `<span>MUKPAT WT: <b>${adjMkpt.toFixed(3)}</b></span>`;
-            if (isGrsActive && adjRibWst > 0) extraWeightsHtml += `<span>RIB WASTAGE: <b>${adjRibWst.toFixed(3)}</b></span>`;
-            if (isGrsActive && adjRibTotal > 0) extraWeightsHtml += `<span>RIB WT: <b>${adjRibTotal.toFixed(3)}</b></span>`;
-            if (isPoloActive && adjPkt > 0) extraWeightsHtml += `<span>PKT WT: <b>${adjPkt.toFixed(3)}</b></span>`;
-            if (isPoloActive && adjPlkt > 0) extraWeightsHtml += `<span>PLKT WT: <b>${adjPlkt.toFixed(3)}</b></span>`;
-            if (isPoloActive && adjByPlkt > 0) extraWeightsHtml += `<span>BY-PLKT WT: <b>${adjByPlkt.toFixed(3)}</b></span>`;
-            if (isPoloActive && adjByPlktWst > 0) extraWeightsHtml += `<span>BY-PLKT WST: <b>${adjByPlktWst.toFixed(3)}</b></span>`;
-            if (isPoloActive && adjCollar > 0) extraWeightsHtml += `<span>COLLAR CUFF: <b>${adjCollar.toFixed(3)}</b></span>`;
-            if (isPantActive && adjSidePkt > 0) extraWeightsHtml += `<span>SIDE PKT: <b>${adjSidePkt.toFixed(3)}</b></span>`;
-            if (isPantActive && adjBackPkt > 0) extraWeightsHtml += `<span>BACK PKT: <b>${adjBackPkt.toFixed(3)}</b></span>`;
-            if (!isTextileActive && adjWeightValue > 0) extraWeightsHtml += `<span style="color: #1d4ed8;">ADJUST WT: <b>${adjAction === 'ADD' ? '+' : '-'}${adjWeightValue.toFixed(3)} KG</b></span>`;
-
-            let finalFileName = "";
-            const cleanRemarks = remarks.replace(/[/\\?%*:|"<>]/g, '_').trim();
-            const cleanQuality = currentQuality.replace(/[/\\?%*:|"<>]/g, '_').trim();
-            const dateStr = new Date().toISOString().slice(0,10);
-
-            if (cleanRemarks !== "") {
-                finalFileName = cleanRemarks;
-            } else {
-                finalFileName = `${cleanQuality}_Challan_${dateStr}`;
-            }
-
-            const documentContent = `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>${finalFileName}</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 12px; margin: 0; background: #fff; color: #1e293b; font-size: 11px; }
-        .container { max-width: 100%; margin: 0 auto; }
-        .header { text-align: center; border-bottom: 2px solid #334155; padding-bottom: 8px; margin-bottom: 12px; }
-        .title { font-size: 16px; font-weight: 900; letter-spacing: 1px; }
-        .sub-header { font-size: 11px; font-weight: bold; margin-top: 4px; color: #334155; }
-        .info-card { border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 4px; padding: 6px 10px; margin-bottom: 12px; }
-        .metrics-row { display: flex; flex-wrap: wrap; gap: 12px; font-weight: 600; font-size: 10px; }
-        .weights-row { display: flex; flex-wrap: wrap; gap: 10px; font-size: 9.5px; border-top: 1px solid #e2e8f0; margin-top: 5px; padding-top: 5px; color: #475569; }
-        table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 8px; table-layout: auto; }
-        th { background: #e2e8f0; color: #0f172a; font-weight: bold; border: 1px solid #cbd5e1; padding: 5px 3px; text-align: center; }
-        tr:nth-child(even) { background-color: #f8fafc; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div class="title">CUTTING CHALLAN REPORT</div>
-            <div class="sub-header">QUALITY: <span>${currentQuality}</span> | REMARKS: <span>${remarks || "-"}</span></div>
-        </div>
-        <div class="info-card">
-            <div class="metrics-row">${metricsDetails}</div>
-            <div class="weights-row">${extraWeightsHtml}</div>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    ${ths.map(h => `<th>${h}</th>`).join('')}
-                </tr>
-            </thead>
-            <tbody>
-                ${rowsHtml}
-            </tbody>
-            <tfoot>
-                ${tfootHtml}
-            </tfoot>
-        </table>
-    </div>
-</body>
-</html>`;
-
-            const blob = new Blob([documentContent], { type: 'text/html;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${finalFileName}.html`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => { try { URL.revokeObjectURL(url); } catch (_) {} }, 1500);
-        }
-
         // Export Data to JSON File
         function exportData() {
             const rows = document.querySelectorAll('#itemRows tr');
@@ -3802,6 +3091,7 @@
                     pics: row.querySelector('.row-pics').value,
                     bodywt: bodyWtInput.dataset.origBodyWt !== undefined ? bodyWtInput.dataset.origBodyWt : (bodyWtInput.dataset.weight !== undefined ? bodyWtInput.dataset.weight : bodyWtInput.value),
                     ribwt: row.querySelector('.row-ribwt') ? row.querySelector('.row-ribwt').value : '',
+                    ropewt: getRopeRowValue(row),
                     sidepocket: row.querySelector('.row-sidepocket') ? row.querySelector('.row-sidepocket').value : '',
                     backpocket: row.querySelector('.row-backpocket') ? row.querySelector('.row-backpocket').value : ''
                 });
@@ -3837,13 +3127,14 @@
                 globalMukpat: getGlobalVal('globalMukpatInput'),
                 globalRibWastage: getGlobalVal('globalRibWastageInput'),
                 globalRibTotal: isGrsActive ? getGlobalVal('globalTotalRibInput') : "",
+                globalRope: isPajamaQuality(document.getElementById('globalQuality').value) ? getGlobalVal('globalRopeInput') : "",
                 textileStdCons: isTextileActive ? document.getElementById('textileStdConsInput').value : "",
                 textileTotalMeters: isTextileActive ? document.getElementById('textileTotalMetersInput').value : "",
                 textileCheckMode: isTextileActive && document.getElementById('textileCheckMode').checked,
-                adjWeight: isTextileActive ? "" : document.getElementById('adjWeightInput').value,
-                adjAction: isTextileActive ? "" : document.getElementById('adjActionSelect').value,
-                adjTargetBodyWt: isTextileActive ? false : !!currentAdjustmentSelection.body,
-                adjTargetWastage: isTextileActive ? false : !!currentAdjustmentSelection.wastage,
+                adjWeight: document.getElementById('adjWeightInput').value,
+                adjAction: document.getElementById('adjActionSelect').value,
+                adjTargetBodyWt: !!currentAdjustmentSelection.body,
+                adjTargetWastage: !!currentAdjustmentSelection.wastage,
                 adjTargetRibWastage: isTextileActive ? false : !!currentAdjustmentSelection.ribWastage,
                 adjTargetMukpat: isTextileActive ? false : !!currentAdjustmentSelection.mukpat,
                 adjTargetRib: isTextileActive ? false : !!currentAdjustmentSelection.rib,
@@ -3878,9 +3169,41 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const importedObj = JSON.parse(e.target.result);
+                    const rawText = String(e.target.result || '');
+
+                    // Downloaded HTML challan (from another person or from this app)
+                    if (/^\s*<(!doctype|html)/i.test(rawText) || /\.html?$/i.test(file.name)) {
+                        const htmlDoc = new DOMParser().parseFromString(rawText, 'text/html');
+                        const dataTag = htmlDoc.getElementById('challan-entry-data');
+                        if (dataTag) {
+                            mergeImportedEntry(JSON.parse(dataTag.textContent));
+                            return;
+                        }
+                        const legacy = parseLegacyChallanHtml(rawText);
+                        if (legacy && legacy.error === 'METER_MODE') {
+                            alert("Ei purono file ta Textile meter mode e chilo. Purono format theke meter data import kora jay na. Je manush file ta pathiyeche take notun version theke abar Download korte bolun.");
+                            return;
+                        }
+                        if (legacy) {
+                            mergeImportedEntry({ entry: legacy });
+                            return;
+                        }
+                        alert("Ei HTML file theke challan data pawa jay nai.");
+                        return;
+                    }
+
+                    const importedObj = JSON.parse(rawText);
+
+                    // Single shared entry saved as JSON
+                    if (importedObj && importedObj.type === 'challan-entry') {
+                        mergeImportedEntry(importedObj);
+                        return;
+                    }
                     
                     if (importedObj.qualityData && importedObj.qualityGsmData && importedObj.items) {
+                        if (!confirm("Eta ekta full backup file. Import korle apnar ekhon er shob data (quality, table, history) replace hoye jabe. Continue korben?")) {
+                            return;
+                        }
                         for (let key in qualityData) delete qualityData[key];
                         for (let key in qualityGsmData) delete qualityGsmData[key];
                         for (let key in qualityFoldingNameData) delete qualityFoldingNameData[key];
@@ -3918,6 +3241,7 @@
                         if (importedObj.globalMukpat !== undefined) document.getElementById('globalMukpatInput').value = importedObj.globalMukpat;
                         if (importedObj.globalRibWastage !== undefined) document.getElementById('globalRibWastageInput').value = importedObj.globalRibWastage;
                         if (importedObj.globalRibTotal !== undefined) document.getElementById('globalTotalRibInput').value = importedObj.globalRibTotal;
+                        if (importedObj.globalRope !== undefined) document.getElementById('globalRopeInput').value = importedObj.globalRope;
                         if (importedObj.textileStdCons !== undefined) document.getElementById('textileStdConsInput').value = importedObj.textileStdCons;
                         if (importedObj.textileTotalMeters !== undefined) document.getElementById('textileTotalMetersInput').value = importedObj.textileTotalMeters;
                         if (importedObj.textileCheckMode !== undefined) document.getElementById('textileCheckMode').checked = importedObj.textileCheckMode === true;
@@ -3953,6 +3277,7 @@
                                 <td class="p-2 border border-gray-300 text-center"><input type="number" value="${item.pics || ''}" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                                 <td class="p-2 border border-gray-300 text-center"><input type="number" value="${item.bodywt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                                 <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" value="${item.ribwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                                <td class="p-2 border border-gray-300 text-center hidden row-ropewt-td"><input type="number" value="${item.ropewt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ropewt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                                 <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
                                 <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
                                 <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" value="${item.sidepocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
@@ -4044,6 +3369,8 @@
                 document.getElementById('globalMukpatInput').value = "";
                 document.getElementById('globalRibWastageInput').value = "";
                 document.getElementById('globalTotalRibInput').value = "";
+            document.getElementById('globalRopeInput').value = "";
+                document.getElementById('globalRopeInput').value = "";
                 document.getElementById('qualityRemarksInput').value = "";
                 document.getElementById('textileStdConsInput').value = "";
                 document.getElementById('textileTotalMetersInput').value = "";
@@ -4076,6 +3403,7 @@
                         <td class="p-2 border border-gray-300 text-center"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                         <td class="p-2 border border-gray-300 text-center"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-ropewt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ropewt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
                         <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
@@ -4112,7 +3440,7 @@
                 'globalWastageInput', 'globalMukpatInput', 'poloTotalByPlaketWastageInput', 
                 'globalRibWastageInput', 'globalTotalRibInput', 'poloTotalPocketInput', 
                 'poloTotalPlaketInput', 'poloTotalByPlaketInput', 'poloTotalCollarCuffInput', 
-                'pantTotalSidePocketInput', 'pantTotalBackPocketInput'
+                'pantTotalSidePocketInput', 'pantTotalBackPocketInput', 'globalRopeInput'
             ];
             globalInputIds.forEach(id => {
                 const el = document.getElementById(id);
@@ -4129,6 +3457,7 @@
             document.getElementById('globalMukpatInput').value = "";
             document.getElementById('globalRibWastageInput').value = "";
             document.getElementById('globalTotalRibInput').value = "";
+            document.getElementById('globalRopeInput').value = "";
             document.getElementById('fabricGsmInput').value = "";
             document.getElementById('qualityRemarksInput').value = "";
             const currentQuality = document.getElementById('globalQuality').value;
@@ -4150,6 +3479,7 @@
                     <td class="p-2 border border-gray-300 text-center"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                     <td class="p-2 border border-gray-300 text-center"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                     <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                    <td class="p-2 border border-gray-300 text-center hidden row-ropewt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ropewt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                     <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
                     <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
                     <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
@@ -4209,7 +3539,7 @@
             let hasAnyInput = false;
             const checkGlobalIds = [
                 'fabricGsmInput', 'globalWastageInput', 'globalMukpatInput',
-                'poloTotalByPlaketWastageInput', 'globalRibWastageInput', 'globalTotalRibInput',
+                'poloTotalByPlaketWastageInput', 'globalRibWastageInput', 'globalTotalRibInput', 'globalRopeInput',
                 'poloTotalPocketInput', 'poloTotalPlaketInput', 'poloTotalByPlaketInput',
                 'poloTotalCollarCuffInput', 'pantTotalSidePocketInput', 'pantTotalBackPocketInput',
                 'textileStdConsInput', 'textileTotalMetersInput', 'qualityRemarksInput'
@@ -4278,6 +3608,7 @@
                         pics: picsEl.value,
                         bodywt: bodywtEl.dataset.origBodyWt !== undefined ? bodywtEl.dataset.origBodyWt : (bodywtEl.dataset.weight !== undefined ? bodywtEl.dataset.weight : bodywtEl.value),
                         ribwt: ribwtEl ? ribwtEl.value : '',
+                        ropewt: getRopeRowValue(row),
                         sidepocket: sidepocketEl ? sidepocketEl.value : '',
                         backpocket: backpocketEl ? backpocketEl.value : ''
                     });
@@ -4297,6 +3628,8 @@
             const isTextileActive = quality.toUpperCase().includes('TEXTILE');
             const isGrsActive = (quality.toUpperCase().includes('GRS') || quality.toUpperCase().includes('SWEAT SHIRT'));
             const historyAdjustmentSelection = getAdjustmentParts(quality);
+            calculateTotals();
+            const entryView = captureView();
             const logEntry = {
                 timestamp,
                 quality,
@@ -4326,6 +3659,7 @@
                 globalMukpat: isTextileActive ? "" : getGlobalVal('globalMukpatInput'),
                 globalRibWastage: isGrsActive ? getGlobalVal('globalRibWastageInput') : "",
                 globalRibTotal: isGrsActive ? getGlobalVal('globalTotalRibInput') : "",
+                globalRope: isPajamaQuality(quality) ? getGlobalVal('globalRopeInput') : "",
                 textileStdCons: isTextileActive ? document.getElementById('textileStdConsInput').value : "",
                 textileTotalMeters: isTextileActive ? document.getElementById('textileTotalMetersInput').value : "",
                 textileCheckMode: isTextileActive && document.getElementById('textileCheckMode').checked,
@@ -4351,6 +3685,7 @@
                 // Older history records may not have this field; consumers fall back to
                 // the current quality defaults only for those legacy records.
                 tConsParts: getTConsParts(quality),
+                view: entryView,
                 items: items
             };
             
@@ -4379,23 +3714,16 @@
             calculateTotals();
         }
 
-        function loadHistoryItem(index) {
-            const item = historyData[index];
-            if (!item) return;
-
-            editIndex = index;
-
-            const submitBtn = document.getElementById('submitBtn');
-            const clearBtn = document.getElementById('clearBtn');
-            if (submitBtn) {
-                submitBtn.innerText = "Update";
-                submitBtn.className = "bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 shadow transition";
-            }
-            if (clearBtn) {
-                clearBtn.innerText = "Cancel";
-                clearBtn.className = "bg-gray-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-600 shadow transition";
-            }
-
+        // Puts a saved entry into the table and global inputs (no edit-mode side effects).
+        function applyEntryToUI(item) {
+            // Forget any adjusted-state markers of the table that was on screen, otherwise
+            // calculateTotals() would restore those old numbers over this record's values.
+            ['globalWastageInput','globalMukpatInput','poloTotalByPlaketWastageInput','globalRibWastageInput','globalTotalRibInput',
+             'poloTotalPocketInput','poloTotalPlaketInput','poloTotalByPlaketInput','poloTotalCollarCuffInput',
+             'pantTotalSidePocketInput','pantTotalBackPocketInput','globalRopeInput'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) delete el.dataset.origValue;
+            });
             const select = document.getElementById('globalQuality');
             if (select) {
                 let exists = false;
@@ -4449,6 +3777,7 @@
             document.getElementById('globalMukpatInput').value = item.globalMukpat || "";
             document.getElementById('globalRibWastageInput').value = item.globalRibWastage || "";
             document.getElementById('globalTotalRibInput').value = item.globalRibTotal || "";
+            document.getElementById('globalRopeInput').value = item.globalRope || "";
             
             qualityRemarksData[item.quality] = item.qualityRemarks || "";
             document.getElementById('qualityRemarksInput').value = item.qualityRemarks || "";
@@ -4492,6 +3821,7 @@
                         <td class="p-2 border border-gray-300 text-center"><input type="number" value="${rowItem.pics || ''}" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                         <td class="p-2 border border-gray-300 text-center"><input type="number" value="${rowItem.bodywt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" value="${rowItem.ribwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-ropewt-td"><input type="number" value="${rowItem.ropewt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ropewt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
                         <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" value="${rowItem.sidepocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
@@ -4516,6 +3846,26 @@
             }
 
             loadConsumption();
+        }
+
+        function loadHistoryItem(index) {
+            const item = historyData[index];
+            if (!item) return;
+
+            editIndex = index;
+
+            const submitBtn = document.getElementById('submitBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            if (submitBtn) {
+                submitBtn.innerText = "Update";
+                submitBtn.className = "bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 shadow transition";
+            }
+            if (clearBtn) {
+                clearBtn.innerText = "Cancel";
+                clearBtn.className = "bg-gray-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-600 shadow transition";
+            }
+
+            applyEntryToUI(item);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -4595,6 +3945,7 @@
                 logCard.className = "bg-gray-50 border border-gray-200 rounded-lg p-3 relative shadow-sm hover:shadow transition flex flex-col sm:flex-row justify-between sm:items-center gap-3";
                 const historyQuality = String(item.quality ?? 'UNKNOWN QUALITY');
                 const isHistoryTextile = historyQuality.toUpperCase().includes('TEXTILE');
+                const vg = (item.view && item.view.globals) ? item.view.globals : null;
                 
                 let foldingInfoStr = "";
                 const fGmNum = parseFloat(item.foldingGm) || 0;
@@ -4608,10 +3959,12 @@
                 }
 
                 let wastageInfoStr = "";
-                const totalWst = parseFloat(item.globalWastage) || 0;
-                const totalMkpt = parseFloat(item.globalMukpat) || 0;
-                const totalByPlktWst = parseFloat(item.poloTotalByPlaketWastage) || 0;
-                const totalRibWst = parseFloat(item.globalRibWastage) || 0;
+                const totalWst = vg ? vg.wst : (parseFloat(item.globalWastage) || 0);
+                const totalMkpt = vg ? vg.mkpt : (parseFloat(item.globalMukpat) || 0);
+                const totalByPlktWst = vg ? vg.byPlktWst : (parseFloat(item.poloTotalByPlaketWastage) || 0);
+                const totalRibWst = vg ? vg.ribWst : (parseFloat(item.globalRibWastage) || 0);
+                // The saved view already holds the numbers exactly as the table showed them (adjusted)
+                const totalWstShown = totalWst;
                 if (!isHistoryTextile && (totalWst > 0 || totalMkpt > 0 || totalByPlktWst > 0 || totalRibWst > 0)) {
                     wastageInfoStr = `<span>Wst/Mkpt/By-Plkt Wst/Rib Wst: <span class="text-gray-700">${(totalWst + totalMkpt + totalByPlktWst + totalRibWst).toFixed(3)}kg</span></span>`;
                 }
@@ -4621,6 +3974,8 @@
                     textileInfoStr = `<span>Std Meters Cons: <span class="text-gray-700">${item.textileStdCons || '0.00000'}</span></span><span>Total Meters: <span class="text-gray-700">${item.textileTotalMeters || '0.000'}m</span></span><span>Meters Mode: <span class="text-gray-700">${item.textileCheckMode ? 'YES' : 'NO'}</span></span>`;
                 }
 
+                if (isHistoryTextile && vg && vg.rope > 0) textileInfoStr += `<span>Rope: <span class="text-gray-700">${vg.rope.toFixed(3)}kg</span></span>`;
+
                 let adjInfoStr = "";
                 if (item.adjWeight && parseFloat(item.adjWeight) > 0) {
                     adjInfoStr = `<span>Adj: <span class="text-blue-600 font-bold">${item.adjAction === 'ADD' ? '+' : '-'}${parseFloat(item.adjWeight).toFixed(3)}kg</span></span>`;
@@ -4628,20 +3983,20 @@
 
                 let poloInfoStr = "";
                 if (!isHistoryTextile && historyQuality.toUpperCase().includes('POLO')) {
-                    let pocketStr = item.poloHasPocket !== false ? `<span>Pkt: <span class="text-gray-700">${item.poloTotalPocket || '0.000'}</span></span>` : '';
-                    let byPlaketStr = item.poloHasByPlaket !== false ? `<span>By-Plkt: <span class="text-gray-700">${item.poloTotalByPlaket || '0.000'}</span></span>` : '';
+                    let pocketStr = item.poloHasPocket !== false ? `<span>Pkt: <span class="text-gray-700">${vg ? vg.pkt.toFixed(3) : (item.poloTotalPocket || '0.000')}</span></span>` : '';
+                    let byPlaketStr = item.poloHasByPlaket !== false ? `<span>By-Plkt: <span class="text-gray-700">${vg ? vg.byPlkt.toFixed(3) : (item.poloTotalByPlaket || '0.000')}</span></span>` : '';
                     poloInfoStr = `
                         ${pocketStr}
-                        <span>Plkt: <span class="text-gray-700">${item.poloTotalPlaket || '0.000'}</span></span>
+                        <span>Plkt: <span class="text-gray-700">${vg ? vg.plkt.toFixed(3) : (item.poloTotalPlaket || '0.000')}</span></span>
                         ${byPlaketStr}
-                        <span>Collar: <span class="text-gray-700">${item.poloTotalCollarCuff || '0.000'}</span></span>
+                        <span>Collar: <span class="text-gray-700">${vg ? vg.collar.toFixed(3) : (item.poloTotalCollarCuff || '0.000')}</span></span>
                     `;
                 }
 
                 let pantInfoStr = "";
                 if (!isHistoryTextile && historyQuality.toUpperCase().includes('PANT')) {
-                    let pSideStr = item.pantHasSidePocket !== false ? `<span>Side Pkt: <span class="text-gray-700">${item.pantTotalSidePocket || '0.000'}</span></span>` : '';
-                    let pBackStr = item.pantHasBackPocket !== false ? `<span>Back Pkt: <span class="text-gray-700">${item.pantTotalBackPocket || '0.000'}</span></span>` : '';
+                    let pSideStr = item.pantHasSidePocket !== false ? `<span>Side Pkt: <span class="text-gray-700">${vg ? vg.sidePkt.toFixed(3) : (item.pantTotalSidePocket || '0.000')}</span></span>` : '';
+                    let pBackStr = item.pantHasBackPocket !== false ? `<span>Back Pkt: <span class="text-gray-700">${vg ? vg.backPkt.toFixed(3) : (item.pantTotalBackPocket || '0.000')}</span></span>` : '';
                     if (pSideStr || pBackStr) {
                         pantInfoStr = `
                             ${pSideStr}
@@ -4658,7 +4013,7 @@
                         <span class="text-[10px] text-gray-400 font-medium">${String(item.timestamp ?? '')}</span>
                         ${remarksInfoStr}
                         <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-500 mt-1 font-semibold">
-                            ${!isHistoryTextile ? `<span>Std Cons: <span class="text-gray-700">${item.stdCons}</span></span><span>Std GSM: <span class="text-gray-700">${item.stdGsm}</span></span><span>Fab GSM: <span class="text-gray-700">${item.fabricGsm}</span></span>${foldingInfoStr}${ribInfoStr}${wastageInfoStr}${adjInfoStr}${poloInfoStr}${pantInfoStr}` : `${textileInfoStr}${totalWst > 0 ? `<span>Wastage: <span class="text-gray-700">${totalWst.toFixed(3)}kg</span></span>` : ''}`}
+                            ${!isHistoryTextile ? `<span>Std Cons: <span class="text-gray-700">${item.stdCons}</span></span><span>Std GSM: <span class="text-gray-700">${item.stdGsm}</span></span><span>Fab GSM: <span class="text-gray-700">${item.fabricGsm}</span></span>${foldingInfoStr}${ribInfoStr}${wastageInfoStr}${adjInfoStr}${poloInfoStr}${pantInfoStr}` : `${textileInfoStr}${totalWstShown > 0 ? `<span>Wastage: <span class="text-gray-700">${totalWstShown.toFixed(3)}kg</span></span>` : ''}${adjInfoStr}`}
                         </div>
                     </div>
                     <div class="flex items-center justify-between sm:justify-end gap-3 border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-200 shrink-0 w-full sm:w-auto">
@@ -4711,6 +4066,7 @@
                 <td class="p-2 border border-gray-300 text-center"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                 <td class="p-2 border border-gray-300 text-center"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                 <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                <td class="p-2 border border-gray-300 text-center hidden row-ropewt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ropewt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                 <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
                 <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
                 <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
@@ -4762,6 +4118,7 @@
                 row.querySelector('.row-pics').value = '';
                 row.querySelector('.row-bodywt').value = '';
                 if(row.querySelector('.row-ribwt')) row.querySelector('.row-ribwt').value = '';
+                if(row.querySelector('.row-ropewt')) { row.querySelector('.row-ropewt').value = ''; delete row.querySelector('.row-ropewt').dataset.weight; delete row.querySelector('.row-ropewt').dataset.autoRope; }
                 if(row.querySelector('.row-sidepocket')) row.querySelector('.row-sidepocket').value = '';
                 if(row.querySelector('.row-backpocket')) row.querySelector('.row-backpocket').value = '';
             }
@@ -4912,6 +4269,641 @@
 
         // Reliable file download helper for Android/mobile browsers.
         // Keeps the existing UI and generated file content unchanged.
+
+        // ================= Shared entry import / embedded data =================
+        // Every downloaded HTML challan now carries a machine-readable copy of its
+        // data. Another person can send that file and it can be imported here
+        // without touching the receiver's own qualities or history.
+        function getQualitySettingsSnapshot(quality) {
+            return {
+                stdCons: qualityData[quality] ?? "0.00000",
+                stdGsm: qualityGsmData[quality] ?? "0",
+                foldingName: qualityFoldingNameData[quality] ?? "",
+                foldingGm: qualityFoldingGmData[quality] ?? "0.00000",
+                remarks: qualityRemarksData[quality] ?? "",
+                textileStdCons: qualityTextileStdConsData[quality] ?? "",
+                textileTotalMeters: qualityTextileTotalMetersData[quality] ?? "",
+                poloHasPocket: qualityPoloPocketData[quality] !== false,
+                poloHasByPlaket: qualityPoloByPlaketData[quality] !== false,
+                pantHasSidePocket: qualityPantSidePocketData[quality] !== false,
+                pantHasBackPocket: qualityPantBackPocketData[quality] !== false,
+                tConsParts: qualityTConsPartsData[quality] || null,
+                adjustmentParts: qualityAdjustmentPartsData[quality] || null
+            };
+        }
+
+        function buildEmbeddedEntryTag(entry) {
+            try {
+                const payload = {
+                    type: 'challan-entry',
+                    version: 1,
+                    exportedAt: new Date().toISOString(),
+                    quality: entry.quality,
+                    settings: getQualitySettingsSnapshot(entry.quality),
+                    entry: entry
+                };
+                const json = JSON.stringify(payload).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+                return `<script type="application/json" id="challan-entry-data">${json}<` + `/script>`;
+            } catch (err) {
+                console.warn('Could not embed challan data:', err);
+                return '';
+            }
+        }
+
+        // Build a history-style entry from the live table (no validation / no alerts).
+        function buildCurrentEntrySnapshot() {
+            const quality = document.getElementById('globalQuality').value;
+            const q = quality.toUpperCase();
+            const isPolo = q.includes('POLO');
+            const isPant = q.includes('PANT');
+            const isTextile = q.includes('TEXTILE');
+            const isGrs = q.includes('GRS') || q.includes('SWEAT SHIRT');
+            const isCheck = isTextile && document.getElementById('textileCheckMode').checked;
+            const gv = (id) => {
+                const el = document.getElementById(id);
+                return el && el.dataset.origValue !== undefined ? el.dataset.origValue : (el ? el.value : "");
+            };
+            const items = [];
+            const slipNums = [];
+            document.querySelectorAll('#itemRows tr').forEach(row => {
+                const g = sel => row.querySelector(sel);
+                const body = g('.row-bodywt');
+                if (!g('.row-size') || !g('.row-pics') || !body) return;
+                const slipVal = g('.row-slipno') ? g('.row-slipno').value.trim() : '';
+                if (slipVal) slipVal.split('-').map(p => parseInt(p.trim())).filter(p => !isNaN(p)).forEach(n => slipNums.push(n));
+                items.push({
+                    origIndex: row.dataset.originalIndex,
+                    slipno: slipVal,
+                    size: g('.row-size').value,
+                    slips: g('.row-slips') ? g('.row-slips').value : '',
+                    pics: g('.row-pics').value,
+                    bodywt: body.dataset.origBodyWt !== undefined ? body.dataset.origBodyWt : (body.dataset.weight !== undefined ? body.dataset.weight : body.value),
+                    ribwt: g('.row-ribwt') ? g('.row-ribwt').value : '',
+                    ropewt: getRopeRowValue(row),
+                    sidepocket: g('.row-sidepocket') ? g('.row-sidepocket').value : '',
+                    backpocket: g('.row-backpocket') ? g('.row-backpocket').value : ''
+                });
+            });
+            let slipNoRange = "";
+            if (slipNums.length) {
+                const mn = Math.min(...slipNums), mx = Math.max(...slipNums);
+                slipNoRange = mn === mx ? `${mn}` : `${mn}-${mx}`;
+            }
+            const sel = getAdjustmentParts(quality);
+            const varianceEl = document.getElementById('consVariance');
+            const txt = id => document.getElementById(id) ? document.getElementById(id).innerText : "";
+            return {
+                timestamp: new Date().toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                quality,
+                stdCons: isTextile ? "" : document.getElementById('consumptionInput').value,
+                stdGsm: isTextile ? "" : document.getElementById('gsmInput').value,
+                fabricGsm: isTextile ? "" : (document.getElementById('fabricGsmInput').value || "0"),
+                foldingName: isTextile ? "" : (qualityFoldingNameData[quality] || ""),
+                foldingGm: isTextile ? "0.00000" : (qualityFoldingGmData[quality] || "0.00000"),
+                qualityRemarks: String(qualityRemarksData[quality] || "").toUpperCase(),
+                totalSlips: txt('totalSlipsDisplay') || "0",
+                slipNoRange,
+                totalPics: txt('totalPicsDisplay'),
+                totalBodyWt: txt('totalBodyWtDisplay'),
+                totalWastage: txt('totalWastageDisplay'),
+                totalWeight: txt('totalWeightDisplay'),
+                totalBCons: txt('totalBCons'),
+                totalTCons: txt('totalTCons'),
+                totalRibWt: isTextile ? "" : txt('totalRibWtDisplay'),
+                poloTotalPocket: isPolo ? gv('poloTotalPocketInput') : "",
+                poloTotalPlaket: isPolo ? gv('poloTotalPlaketInput') : "",
+                poloTotalByPlaket: isPolo ? gv('poloTotalByPlaketInput') : "",
+                poloTotalByPlaketWastage: isPolo ? gv('poloTotalByPlaketWastageInput') : "",
+                poloTotalCollarCuff: isPolo ? gv('poloTotalCollarCuffInput') : "",
+                pantTotalSidePocket: isPant ? gv('pantTotalSidePocketInput') : "",
+                pantTotalBackPocket: isPant ? gv('pantTotalBackPocketInput') : "",
+                globalWastage: gv('globalWastageInput'),
+                globalMukpat: isTextile ? "" : gv('globalMukpatInput'),
+                globalRibWastage: isGrs ? gv('globalRibWastageInput') : "",
+                globalRibTotal: isGrs ? gv('globalTotalRibInput') : "",
+                globalRope: isPajamaQuality(quality) ? gv('globalRopeInput') : "",
+                textileStdCons: isTextile ? document.getElementById('textileStdConsInput').value : "",
+                textileTotalMeters: isTextile ? document.getElementById('textileTotalMetersInput').value : "",
+                textileCheckMode: isCheck,
+                adjWeight: document.getElementById('adjWeightInput').value,
+                adjAction: document.getElementById('adjActionSelect').value,
+                adjustmentParts: { ...sel },
+                adjTargetBodyWt: !!sel.body,
+                adjTargetWastage: !!sel.wastage,
+                adjTargetRibWastage: !!sel.ribWastage,
+                adjTargetMukpat: !!sel.mukpat,
+                adjTargetRib: !!sel.rib,
+                adjTargetPocket: !!sel.pocket,
+                adjTargetSidePocket: !!sel.sidePocket,
+                adjTargetBackPocket: !!sel.backPocket,
+                adjTargetCollar: !!sel.collar,
+                poloHasPocket: isPolo ? (qualityPoloPocketData[quality] !== false) : false,
+                poloHasByPlaket: isPolo ? (qualityPoloByPlaketData[quality] !== false) : false,
+                pantHasSidePocket: isPant ? (qualityPantSidePocketData[quality] !== false) : false,
+                pantHasBackPocket: isPant ? (qualityPantBackPocketData[quality] !== false) : false,
+                consVarianceText: varianceEl ? varianceEl.innerText : "",
+                consVarianceClass: varianceEl ? varianceEl.className : "",
+                tConsParts: getTConsParts(quality),
+                view: captureView(),
+                items
+            };
+        }
+
+        // Best-effort reader for OLD downloaded HTML files that have no embedded data.
+        // Old files only contain the final (already adjusted) numbers, so the
+        // adjustment is cleared on import and the shown numbers are kept as-is.
+        function parseLegacyChallanHtml(htmlText) {
+            const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+            const sub = doc.querySelector('.sub-header');
+            const table = doc.querySelector('table');
+            if (!sub || !table) return null;
+            const subText = sub.textContent.replace(/\s+/g, ' ').trim();
+            const qm = subText.match(/QUALITY:\s*(.*?)\s*\|\s*REMARKS:\s*(.*)$/i);
+            if (!qm) return null;
+            const quality = qm[1].trim().toUpperCase();
+            let remarks = (qm[2] || '').trim();
+            if (remarks === '-') remarks = '';
+
+            const chips = {};
+            doc.querySelectorAll('.metrics-row span, .weights-row span').forEach(sp => {
+                const t = sp.textContent.replace(/\s+/g, ' ').trim();
+                const i = t.lastIndexOf(':');
+                if (i > 0) chips[t.slice(0, i).trim().toUpperCase()] = t.slice(i + 1).trim();
+            });
+            const num = k => { const v = parseFloat(String(chips[k] ?? '').replace(/[^0-9.\-]/g, '')); return isNaN(v) ? '' : String(v); };
+            const isTextile = quality.includes('TEXTILE');
+            if (isTextile && /YES/i.test(chips['METERS MODE'] || '')) return { error: 'METER_MODE' };
+
+            const heads = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim().toLowerCase());
+            const fieldOf = h => {
+                if (/^slip\s*no/.test(h)) return 'slipno';
+                if (/^size/.test(h)) return 'size';
+                if (/^slips$/.test(h)) return 'slips';
+                if (/^pics/.test(h)) return 'pics';
+                if (/^body\s*(wt|mtr)$/.test(h)) return 'bodywt';
+                if (/^rib\s*wt$/.test(h)) return 'ribwt';
+                if (/^rope\s*(wt|mtr)$/.test(h)) return 'ropewt';
+                if (/^side\s*pkt/.test(h)) return 'sidepocket';
+                if (/^back\s*pkt/.test(h)) return 'backpocket';
+                return null;
+            };
+            const fields = heads.map(fieldOf);
+            const clean = v => { v = String(v ?? '').trim(); return v === '-' ? '' : v; };
+            const items = [];
+            let idx = 0;
+            table.querySelectorAll('tbody tr').forEach(tr => {
+                const cells = Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim());
+                const it = { origIndex: idx++, slipno: '', size: '', slips: '', pics: '', bodywt: '', ribwt: '', ropewt: '', sidepocket: '', backpocket: '' };
+                fields.forEach((f, i) => { if (f && cells[i] !== undefined) it[f] = clean(cells[i]); });
+                if (it.size || it.pics) items.push(it);
+            });
+            if (!items.length) return null;
+
+            const foot = Array.from(table.querySelectorAll('tfoot td')).map(td => td.textContent.trim());
+            const footOf = (re) => { const i = heads.findIndex(h => re.test(h)); return i >= 0 && foot[i] !== undefined ? foot[i] : ''; };
+
+            let foldingName = '', foldingGm = '0.00000';
+            Object.keys(chips).forEach(k => {
+                const m = k.match(/^(.*)\s\(GM\/PC\)$/);
+                if (m) { foldingName = m[1].trim(); foldingGm = String(parseFloat(chips[k]) || 0); }
+            });
+
+            return {
+                legacy: true,
+                timestamp: new Date().toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                quality,
+                stdCons: isTextile ? '' : (chips['STD CONS'] || ''),
+                stdGsm: isTextile ? '' : (chips['STD GSM'] || ''),
+                fabricGsm: isTextile ? '' : (chips['FABRIC GSM'] || '0'),
+                foldingName: isTextile ? '' : foldingName,
+                foldingGm: isTextile ? '0.00000' : foldingGm,
+                qualityRemarks: remarks.toUpperCase(),
+                totalSlips: footOf(/^slips$/) || '0',
+                slipNoRange: '',
+                totalPics: footOf(/^pics/) || '0',
+                totalBodyWt: footOf(/^body/) || '0.000',
+                totalWastage: footOf(/^wastage/) || '0.000',
+                totalWeight: footOf(/^total(\s*mtr)?$/) || '0.000',
+                totalBCons: footOf(/^b\.?\s*cons|^body\s*mtr\/pc/) || '0.00000',
+                totalTCons: footOf(/^t\.?\s*cons|^total\s*mtr\/pc/) || '0.00000',
+                totalRibWt: isTextile ? '' : (footOf(/^rib\s*wt$/) || ''),
+                poloTotalPocket: num('PKT WT'),
+                poloTotalPlaket: num('PLKT WT'),
+                poloTotalByPlaket: num('BY-PLKT WT'),
+                poloTotalByPlaketWastage: num('BY-PLKT WST'),
+                poloTotalCollarCuff: num('COLLAR CUFF'),
+                pantTotalSidePocket: num('SIDE PKT'),
+                pantTotalBackPocket: num('BACK PKT'),
+                globalWastage: num('WASTAGE WT'),
+                globalMukpat: isTextile ? '' : num('MUKPAT WT'),
+                globalRibWastage: num('RIB WASTAGE'),
+                globalRibTotal: num('RIB WT'),
+                textileStdCons: isTextile ? (chips['STD MTR CONS'] || '') : '',
+                textileTotalMeters: isTextile ? (chips['TOTAL METERS'] || '') : '',
+                textileCheckMode: false,
+                adjWeight: '',
+                adjAction: 'ADD',
+                consVarianceText: '',
+                consVarianceClass: '',
+                tConsParts: null,
+                items
+            };
+        }
+
+        function mergeImportedEntry(payload) {
+            const entry = normalizeHistoryEntry(payload && payload.entry);
+            if (!entry || !entry.items.length) {
+                alert("Ei file e kono valid challan data paoa jay nai.");
+                return false;
+            }
+            const quality = String(entry.quality || '').toUpperCase().trim();
+            if (!quality) { alert("File e quality name nai."); return false; }
+            entry.quality = quality;
+
+            const dup = historyData.some(h => h && h.quality === quality && h.timestamp === entry.timestamp &&
+                String(h.totalPics) === String(entry.totalPics) && String(h.totalWeight) === String(entry.totalWeight) &&
+                (h.items || []).length === entry.items.length);
+            if (dup && !confirm("Ei entry ta agei history te ache. Abar import korben?")) return false;
+
+            let qualityAdded = false;
+            if (qualityData[quality] === undefined) {
+                const st = (payload && payload.settings) || {};
+                qualityData[quality] = String(st.stdCons ?? entry.stdCons ?? "0.00000") || "0.00000";
+                qualityGsmData[quality] = String(st.stdGsm ?? entry.stdGsm ?? "0") || "0";
+                qualityFoldingNameData[quality] = st.foldingName ?? entry.foldingName ?? "";
+                qualityFoldingGmData[quality] = String(st.foldingGm ?? entry.foldingGm ?? "0.00000") || "0.00000";
+                qualityRemarksData[quality] = st.remarks ?? entry.qualityRemarks ?? "";
+                qualityTextileStdConsData[quality] = st.textileStdCons ?? entry.textileStdCons ?? "";
+                qualityTextileTotalMetersData[quality] = st.textileTotalMeters ?? entry.textileTotalMeters ?? "";
+                qualityPoloPocketData[quality] = (st.poloHasPocket ?? entry.poloHasPocket) !== false;
+                qualityPoloByPlaketData[quality] = (st.poloHasByPlaket ?? entry.poloHasByPlaket) !== false;
+                qualityPantSidePocketData[quality] = (st.pantHasSidePocket ?? entry.pantHasSidePocket) !== false;
+                qualityPantBackPocketData[quality] = (st.pantHasBackPocket ?? entry.pantHasBackPocket) !== false;
+                if (st.tConsParts && typeof st.tConsParts === 'object') qualityTConsPartsData[quality] = st.tConsParts;
+                else if (entry.tConsParts && typeof entry.tConsParts === 'object') qualityTConsPartsData[quality] = entry.tConsParts;
+                if (st.adjustmentParts && typeof st.adjustmentParts === 'object') qualityAdjustmentPartsData[quality] = st.adjustmentParts;
+                try { localStorage.setItem('challan_qualityAdjustmentPartsData', JSON.stringify(qualityAdjustmentPartsData)); } catch (_) {}
+                qualityAdded = true;
+            }
+
+            historyData.push(entry);
+            const newIndex = historyData.length - 1;
+            ensureEntryView(newIndex);
+            saveHistoryToStorage();
+            renderQualityDropdown();
+            renderHistory();
+            saveState();
+
+            let msg = `Import hoyeche: ${quality}` + (qualityAdded ? " (notun quality add hoyeche)" : "") +
+                `\nSlip: ${entry.slipNoRange || '-'} | Rows: ${entry.items.length} | Pics: ${entry.totalPics || '-'}\nHistory te save kora hoyeche.`;
+            if (entry.legacy) msg += "\n\nNote: Eta purono format er file, tai file e jei final number chilo (adjust kora hoile adjust howa number) sei number i import hoyeche.";
+            alert(msg);
+            if (confirm("Ekhon ei entry ta table e load korben? (Apnar current table er data replace hobe)")) {
+                loadHistoryItem(newIndex);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            return true;
+        }
+
+
+        // =====================================================================
+        // ONE SOURCE OF TRUTH
+        // The main table is calculated by calculateTotals(). Whatever it shows is
+        // captured once as a "view" (headers, rows, footer, header numbers). The
+        // history record stores that view, and History card, Show popup, Table
+        // Download and History Download all draw from it - so every place shows
+        // exactly the same numbers.
+        // =====================================================================
+        function escHtml(v) {
+            return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function captureView() {
+            const sel = document.getElementById('globalQuality');
+            const q = (sel && sel.value) || 'QUALITY';
+            const U = q.toUpperCase();
+            const isTextile = U.includes('TEXTILE');
+            const isGrs = U.includes('GRS') || U.includes('SWEAT SHIRT');
+            const isPolo = U.includes('POLO');
+            const isPant = U.includes('PANT');
+            const isCheck = isTextile && document.getElementById('textileCheckMode').checked;
+            const fName = qualityFoldingNameData[q] || '';
+            const fGm = parseFloat(qualityFoldingGmData[q]) || 0;
+            const isFolding = fName.trim() !== '' && fGm > 0;
+            const shown = el => !el.classList.contains('hidden') && !el.classList.contains('no-print') && el.style.display !== 'none';
+            const gv = id => { const el = document.getElementById(id); return el ? (parseFloat(el.value) || 0) : 0; };
+
+            const g = {
+                wst: gv('globalWastageInput'), mkpt: gv('globalMukpatInput'),
+                ribWst: gv('globalRibWastageInput'), ribWt: gv('globalTotalRibInput'), rope: gv('globalRopeInput'),
+                pkt: gv('poloTotalPocketInput'), plkt: gv('poloTotalPlaketInput'),
+                byPlkt: gv('poloTotalByPlaketInput'), byPlktWst: gv('poloTotalByPlaketWastageInput'),
+                collar: gv('poloTotalCollarCuffInput'), sidePkt: gv('pantTotalSidePocketInput'), backPkt: gv('pantTotalBackPocketInput')
+            };
+            const adj = gv('adjWeightInput');
+            const adjAction = document.getElementById('adjActionSelect').value;
+
+            const metrics = [];
+            if (isTextile) {
+                metrics.push({ l: 'STD MTR CONS', v: document.getElementById('textileStdConsInput').value || '0.00000' });
+                metrics.push({ l: 'TOTAL METERS', v: document.getElementById('textileTotalMetersInput').value || '0.000' });
+                metrics.push({ l: 'METERS MODE', v: isCheck ? 'YES' : 'NO' });
+            } else {
+                metrics.push({ l: 'STD CONS', v: qualityData[q] || '0.00000' });
+                metrics.push({ l: 'STD GSM', v: qualityGsmData[q] || '0' });
+                metrics.push({ l: 'FABRIC GSM', v: document.getElementById('fabricGsmInput').value || '0' });
+                metrics.push({ l: 'CALC CONS', v: document.getElementById('headerCalculatedCons').innerText || '0.00000', accent: true });
+                if (isFolding) metrics.push({ l: `${fName} (GM/PC)`, v: fGm.toFixed(5) });
+            }
+
+            const weights = [{ l: 'WASTAGE WT', v: g.wst.toFixed(3) }];
+            if (!isTextile) weights.push({ l: 'MUKPAT WT', v: g.mkpt.toFixed(3) });
+            if (isGrs && g.ribWst > 0) weights.push({ l: 'RIB WASTAGE', v: g.ribWst.toFixed(3) });
+            if (isGrs && g.ribWt > 0) weights.push({ l: 'RIB WT', v: g.ribWt.toFixed(3) });
+            if (isTextile && /PAJAMA|PYJAMA/.test(U) && g.rope > 0) weights.push({ l: 'ROPE WT', v: g.rope.toFixed(3) });
+            if (isPolo && g.pkt > 0) weights.push({ l: 'PKT WT', v: g.pkt.toFixed(3) });
+            if (isPolo && g.plkt > 0) weights.push({ l: 'PLKT WT', v: g.plkt.toFixed(3) });
+            if (isPolo && g.byPlkt > 0) weights.push({ l: 'BY-PLKT WT', v: g.byPlkt.toFixed(3) });
+            if (isPolo && g.byPlktWst > 0) weights.push({ l: 'BY-PLKT WST', v: g.byPlktWst.toFixed(3) });
+            if (isPolo && g.collar > 0) weights.push({ l: 'COLLAR CUFF', v: g.collar.toFixed(3) });
+            if (isPant && g.sidePkt > 0) weights.push({ l: 'SIDE PKT', v: g.sidePkt.toFixed(3) });
+            if (isPant && g.backPkt > 0) weights.push({ l: 'BACK PKT', v: g.backPkt.toFixed(3) });
+            if (adj > 0) weights.push({ l: 'ADJUST WT', v: `${adjAction === 'ADD' ? '+' : '-'}${adj.toFixed(3)} KG`, accent: true });
+
+            // Only the MAIN table (not the Show popup or any other table on the page).
+            const mainTbody = document.getElementById('itemRows');
+            const mainTable = mainTbody.closest('table');
+            const ths = [];
+            mainTable.querySelectorAll('thead th').forEach(th => { if (shown(th)) ths.push(th.innerText.trim()); });
+
+            const rows = [];
+            document.querySelectorAll('#itemRows tr').forEach(tr => {
+                const cells = [];
+                tr.querySelectorAll('td').forEach(td => {
+                    if (!shown(td)) return;
+                    const input = td.querySelector('input');
+                    let val = '';
+                    if (input) val = input.value.trim() || '-';
+                    else {
+                        const bC = td.querySelector('.row-bcons'), tC = td.querySelector('.row-tcons');
+                        if (bC) val = bC.innerText.trim();
+                        else if (tC) val = tC.innerText.trim();
+                        else val = td.innerText.trim() || '-';
+                    }
+                    cells.push(val);
+                });
+                rows.push(cells);
+            });
+
+            const foot = [];
+            mainTable.querySelectorAll('tfoot td').forEach(td => {
+                if (!shown(td)) return;
+                const tt = td.querySelector('#totalTCons');
+                foot.push(tt ? tt.innerText.trim() : td.innerText.trim());
+            });
+
+            const remarksInput = document.getElementById('qualityRemarksInput');
+            const remarks = String(qualityRemarksData[q] || (remarksInput ? remarksInput.value : '') || '').trim();
+            return { version: 1, quality: q, remarks, isTextile, isCheck, metrics, weights, ths, rows, foot, globals: g };
+        }
+
+        // The finished challan page used by BOTH downloads.
+        function renderChallanHtml(view, entry, title) {
+            const metricsHtml = view.metrics.map(m => `<span>${escHtml(m.l)}: <b${m.accent ? ' style="color: #1d4ed8;"' : ''}>${escHtml(m.v)}</b></span>`).join('');
+            const weightsHtml = view.weights.map(w => `<span${w.accent ? ' style="color: #1d4ed8;"' : ''}>${escHtml(w.l)}: <b>${escHtml(w.v)}</b></span>`).join('');
+            const head = view.ths.map(h => `<th>${escHtml(h)}</th>`).join('');
+            const body = view.rows.map(r => `<tr>${r.map(c => `<td style="border: 1px solid #cbd5e1; padding: 4px 3px; text-align: center;">${escHtml(c)}</td>`).join('')}</tr>`).join('');
+            const foot = view.foot.map(c => `<td style="border: 1px solid #94a3b8; padding: 4px 3px; text-align: center; font-weight: bold; background: #e2e8f0;">${escHtml(c)}</td>`).join('');
+            return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>${escHtml(title)}</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 12px; margin: 0; background: #fff; color: #1e293b; font-size: 11px; }
+        .container { max-width: 100%; margin: 0 auto; }
+        .header { text-align: center; border-bottom: 2px solid #334155; padding-bottom: 8px; margin-bottom: 12px; }
+        .title { font-size: 16px; font-weight: 900; letter-spacing: 1px; }
+        .sub-header { font-size: 11px; font-weight: bold; margin-top: 4px; color: #334155; }
+        .info-card { border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 4px; padding: 6px 10px; margin-bottom: 12px; }
+        .metrics-row { display: flex; flex-wrap: wrap; gap: 12px; font-weight: 600; font-size: 10px; }
+        .weights-row { display: flex; flex-wrap: wrap; gap: 10px; font-size: 9.5px; border-top: 1px solid #e2e8f0; margin-top: 5px; padding-top: 5px; color: #475569; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 8px; table-layout: auto; }
+        th { background: #e2e8f0; color: #0f172a; font-weight: bold; border: 1px solid #cbd5e1; padding: 5px 3px; text-align: center; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">CUTTING CHALLAN REPORT</div>
+            <div class="sub-header">QUALITY: <span>${escHtml(view.quality)}</span> | REMARKS: <span>${escHtml(view.remarks || '-')}</span></div>
+        </div>
+        <div class="info-card">
+            <div class="metrics-row">${metricsHtml}</div>
+            <div class="weights-row">${weightsHtml}</div>
+        </div>
+        <table>
+            <thead>
+                <tr>${head}</tr>
+            </thead>
+            <tbody>${body}</tbody>
+            <tfoot>
+                <tr>${foot}</tr>
+            </tfoot>
+        </table>
+    </div>
+${buildEmbeddedEntryTag(entry)}
+</body>
+</html>`;
+        }
+
+        function challanFileName(remarks, quality) {
+            const cleanRemarks = String(remarks || '').replace(/[/\\?%*:|"<>]/g, '_').trim();
+            const cleanQuality = String(quality || 'QUALITY').replace(/[/\\?%*:|"<>]/g, '_').trim();
+            return cleanRemarks !== '' ? cleanRemarks : `${cleanQuality}_Challan_${new Date().toISOString().slice(0, 10)}`;
+        }
+
+        // Table Download: exactly what the main table shows right now.
+        function downloadDocument() {
+            calculateTotals();
+            const entry = buildCurrentEntrySnapshot();
+            const view = entry.view;
+            const name = challanFileName(view.remarks, view.quality);
+            reliableDownloadBlob(new Blob([renderChallanHtml(view, entry, name)], { type: 'text/html;charset=utf-8;' }), `${name}.html`);
+        }
+
+        // History Download: exactly what was on screen when the record was saved.
+        function downloadHistoryItem(index) {
+            const item = historyData[index];
+            if (!item) return;
+            const view = ensureEntryView(index);
+            if (!view) { alert('Ei record er table data toiri kora jay nai.'); return; }
+            const name = challanFileName(item.qualityRemarks || view.remarks, item.quality);
+            reliableDownloadBlob(new Blob([renderChallanHtml(view, item, name)], { type: 'text/html;charset=utf-8;' }), `${name}.html`);
+        }
+
+        // History popup: the same view, drawn small.
+        function openShowModal(index) {
+            const item = historyData[index];
+            if (!item) return;
+            const view = ensureEntryView(index);
+            const modalQuality = document.getElementById('showModalQuality');
+            if (modalQuality) modalQuality.innerText = item.quality || '';
+            const container = document.getElementById('showModalContent');
+            if (!container) return;
+            if (!view) { container.innerHTML = '<div class="text-xs text-gray-500 p-3">Table data toiri kora jay nai.</div>'; document.getElementById('showModal').classList.remove('hidden'); return; }
+
+            const idxOf = re => view.ths.findIndex(h => re.test(h.toLowerCase()));
+            const bi = idxOf(/^(b\.?\s*cons|body\s*mtr\/pc)/), ti = idxOf(/^(t\.?\s*cons|total\s*mtr\/pc)/);
+            const tdBase = 'px-1 py-1 border border-gray-300 text-center';
+            // Folding + Total columns: found by header text so older saved views work too.
+            const toti = view.ths.findIndex(h => /^total(\s*mtr)?$/i.test(String(h).trim()));
+            const fMetric = (view.metrics || []).find(m => /\(GM\/PC\)\s*$/i.test(m.l));
+            const fKey = fMetric ? fMetric.l.replace(/\s*\(GM\/PC\)\s*$/i, '').trim().toLowerCase() : '';
+            const fi = view.ths.findIndex(h => { const x = String(h).toLowerCase(); return (fKey && x.includes(fKey)) || /folding|by-plaket|by-plkt/.test(x); });
+            const colCls = (i, tag) => (i === bi ? (tag === 'th' ? ' bg-blue-50 text-blue-900' : tag === 'tf' ? ' text-blue-700 bg-blue-50/50' : ' bg-blue-50/50 font-bold text-blue-700') : '')
+                + (i === ti ? (tag === 'th' ? ' bg-purple-50 text-purple-900' : tag === 'tf' ? ' text-purple-700 bg-purple-50/50' : ' bg-purple-50/50 font-bold text-purple-700') : '')
+                + (i === fi ? (tag === 'th' ? ' bg-amber-50 text-amber-900' : tag === 'tf' ? ' text-amber-800 bg-amber-50/60' : ' bg-amber-50/60 font-bold text-amber-800') : '')
+                + (i === toti ? (tag === 'th' ? ' bg-emerald-50 text-emerald-900' : tag === 'tf' ? ' text-emerald-800 bg-emerald-50/60' : ' bg-emerald-50/60 font-bold text-emerald-800') : '');
+            const foldLabel = fi >= 0 ? view.ths[fi] : '';
+            const foldVal = fi >= 0 && view.foot[fi] !== undefined ? view.foot[fi] : '';
+            const totLabel = toti >= 0 ? view.ths[toti] : '';
+            const totVal = toti >= 0 && view.foot[toti] !== undefined ? view.foot[toti] : '';
+            const chip = (x, cls) => `<span${cls ? ` class="${cls}"` : ''}>${escHtml(x.l)}: <b>${escHtml(x.v)}</b></span>`;
+            const bLabel = bi >= 0 ? view.ths[bi].toUpperCase() : 'B.CONS';
+            const tLabel = ti >= 0 ? view.ths[ti].toUpperCase() : 'T.CONS';
+            const bVal = bi >= 0 && view.foot[bi] !== undefined ? view.foot[bi] : (item.totalBCons || '0.00000');
+            const tVal = ti >= 0 && view.foot[ti] !== undefined ? view.foot[ti] : (item.totalTCons || '0.00000');
+
+            container.innerHTML = `
+            <div class="bg-gray-50 p-2.5 rounded border border-gray-200 flex flex-col gap-1.5">
+                <div class="flex justify-between items-center text-gray-500 text-[11px] font-medium border-b border-gray-200 pb-1">
+                    <span>Saved Date: <b class="text-gray-700">${escHtml(item.timestamp)}</b></span>
+                    ${(item.qualityRemarks || view.remarks) ? `<span class="text-amber-700 font-bold">Remarks: ${escHtml(item.qualityRemarks || view.remarks)}</span>` : ''}
+                </div>
+                <div class="flex flex-wrap gap-3 text-[11px] font-semibold text-gray-600">${view.metrics.map(m => chip(m, m.accent ? 'text-blue-700' : '')).join('')}</div>
+                <div class="flex flex-wrap gap-2 text-[10px] text-gray-500 pt-1 border-t border-gray-200">${view.weights.map(w => chip(w, w.accent ? 'text-blue-700' : '')).join('')}</div>
+                <div class="flex flex-wrap items-center gap-3 text-[11px] font-bold pt-1 border-t border-gray-200">
+                    ${fi >= 0 ? `<span class="text-amber-700">${escHtml(String(foldLabel).toUpperCase())}: ${escHtml(foldVal)}</span>` : ''}
+                    ${toti >= 0 ? `<span class="text-emerald-700">${escHtml(String(totLabel).toUpperCase())}: ${escHtml(totVal)}</span>` : ''}
+                    <span class="text-blue-700">${escHtml(bLabel)}: ${escHtml(bVal)}</span>
+                    <span class="text-purple-700">${escHtml(tLabel)}: ${escHtml(tVal)}</span>
+                    ${item.consVarianceText ? `<span class="${escHtml(item.consVarianceClass || '')}">${escHtml(item.consVarianceText)}</span>` : ''}
+                </div>
+            </div>
+            <div class="overflow-x-auto border border-gray-200 rounded">
+                <table class="w-full text-left border-collapse text-[9px] sm:text-[10px]">
+                    <thead class="bg-gray-100 font-bold text-gray-700"><tr>
+                        ${view.ths.map((h, i) => `<th class="${tdBase} leading-tight${colCls(i, 'th')}">${escHtml(h)}</th>`).join('')}
+                    </tr></thead>
+                    <tbody>
+                        ${view.rows.map(r => `<tr class="hover:bg-gray-50 border-b border-gray-200">${r.map((c, i) => `<td class="${tdBase}${colCls(i, 'td')}">${escHtml(c)}</td>`).join('')}</tr>`).join('')}
+                    </tbody>
+                    <tfoot class="bg-gray-100 font-bold border-t-2 border-gray-300"><tr>
+                        ${view.foot.map((c, i) => `<td class="${tdBase}${colCls(i, 'tf')}">${escHtml(c)}</td>`).join('')}
+                    </tr></tfoot>
+                </table>
+            </div>`;
+            document.getElementById('showModal').classList.remove('hidden');
+        }
+
+        // Older records (saved before this version) have no stored view. Build it by
+        // running the SAME main-table engine on the record's saved inputs, then put
+        // the screen back exactly as it was.
+        function computeViewForEntry(entry) {
+            const q = entry.quality;
+            const sel = document.getElementById('globalQuality');
+            const tbody = document.getElementById('itemRows');
+            if (!sel || !tbody || !q) return null;
+
+            const ctrls = Array.from(document.querySelectorAll('input, select, textarea')).filter(el => !tbody.contains(el));
+            const ctrlBackup = ctrls.map(el => ({ el, value: el.value, checked: el.checked, disabled: el.disabled, ds: { ...el.dataset } }));
+            const tbodyClone = tbody.cloneNode(true);
+            const optionsBackup = sel.innerHTML, selBackup = sel.value;
+            const idBackup = nextRowOriginalId;
+            const dicts = [qualityData, qualityGsmData, qualityFoldingNameData, qualityFoldingGmData, qualityRemarksData,
+                qualityTextileStdConsData, qualityTextileTotalMetersData, qualityPoloPocketData, qualityPoloByPlaketData,
+                qualityPantSidePocketData, qualityPantBackPocketData, qualityTConsPartsData, qualityAdjustmentPartsData];
+            const dictBackup = dicts.map(d => ({ d, had: Object.prototype.hasOwnProperty.call(d, q), val: d[q] }));
+            const realSaveState = window.saveState;
+            let view = null;
+            try {
+                window.saveState = function () {};
+                const isTextile = q.toUpperCase().includes('TEXTILE');
+                if (!isTextile) {
+                    if (entry.stdCons !== undefined && entry.stdCons !== '') qualityData[q] = entry.stdCons;
+                    if (entry.stdGsm !== undefined && entry.stdGsm !== '') qualityGsmData[q] = entry.stdGsm;
+                }
+                qualityFoldingNameData[q] = isTextile ? '' : (entry.foldingName ?? qualityFoldingNameData[q] ?? '');
+                qualityFoldingGmData[q] = isTextile ? '0.00000' : (entry.foldingGm ?? qualityFoldingGmData[q] ?? '0.00000');
+                if (qualityData[q] === undefined) qualityData[q] = '0.00000';
+                if (qualityGsmData[q] === undefined) qualityGsmData[q] = '0';
+                if (!Array.from(sel.options).some(o => o.value === q)) {
+                    const opt = document.createElement('option'); opt.value = q; opt.text = q; sel.add(opt);
+                }
+                applyEntryToUI(entry);
+                calculateTotals();
+                view = captureView();
+            } catch (err) {
+                console.warn('Could not rebuild record view:', err);
+                view = null;
+            } finally {
+                dictBackup.forEach(x => { if (x.had) x.d[q] = x.val; else delete x.d[q]; });
+                sel.innerHTML = optionsBackup;
+                sel.value = selBackup;
+                const liveBody = document.getElementById('itemRows');
+                if (liveBody) liveBody.replaceWith(tbodyClone);
+                nextRowOriginalId = idBackup;
+                ctrlBackup.forEach(b => {
+                    b.el.value = b.value; b.el.checked = b.checked; b.el.disabled = b.disabled;
+                    Object.keys(b.el.dataset).forEach(k => { delete b.el.dataset[k]; });
+                    Object.keys(b.ds).forEach(k => { b.el.dataset[k] = b.ds[k]; });
+                });
+                window.saveState = realSaveState;
+                try { calculateTotals(); } catch (_) {}
+            }
+            return view;
+        }
+
+        function ensureEntryView(index) {
+            const item = historyData[index];
+            if (!item) return null;
+            if (item.view && Array.isArray(item.view.rows) && Array.isArray(item.view.ths)) return item.view;
+            const view = computeViewForEntry(normalizeHistoryEntry(item));
+            if (view) { item.view = view; saveHistoryToStorage(); }
+            return view;
+        }
+
+        function migrateHistoryViews() {
+            let changed = false;
+            for (let i = 0; i < historyData.length; i++) {
+                const it = historyData[i];
+                if (it && !(it.view && Array.isArray(it.view.rows))) {
+                    const v = computeViewForEntry(normalizeHistoryEntry(it));
+                    if (v) { it.view = v; changed = true; }
+                }
+            }
+            if (changed) { saveHistoryToStorage(); renderHistory(); }
+        }
+        window.addEventListener('load', () => setTimeout(() => { try { migrateHistoryViews(); } catch (e) { console.warn(e); } }, 300));
+
+
+        // Manual Rope weight of a row (what the user typed). Auto-split values are not saved.
+        function getRopeRowValue(row) {
+            const el = row && row.querySelector('.row-ropewt');
+            if (!el) return '';
+            if (el.dataset.autoRope === '1') return '';
+            if (el.dataset.origRopeWt !== undefined) return el.dataset.origRopeWt;
+            return el.dataset.weight !== undefined ? el.dataset.weight : el.value;
+        }
+
+        // Rib-like "Rope" support for TEXTILE PAJAMA qualities
+        function isPajamaQuality(q) {
+            const u = String(q || '').toUpperCase();
+            return u.includes('TEXTILE') && /PAJAMA|PYJAMA/.test(u);
+        }
+
         function reliableDownloadBlob(blob, filename) {
             try {
                 const url = URL.createObjectURL(blob);
@@ -4965,6 +4957,7 @@
                         pics: q('.row-pics') ? q('.row-pics').value : '',
                         bodywt: body ? (body.dataset.origBodyWt ?? body.dataset.weight ?? body.value) : '',
                         ribwt: q('.row-ribwt') ? q('.row-ribwt').value : '',
+                        ropewt: getRopeRowValue(row),
                         sidepocket: q('.row-sidepocket') ? q('.row-sidepocket').value : '',
                         backpocket: q('.row-backpocket') ? q('.row-backpocket').value : ''
                     });
@@ -5008,6 +5001,7 @@
                     globalMukpat: val('globalMukpatInput'),
                     globalRibWastage: val('globalRibWastageInput'),
                     globalRibTotal: val('globalTotalRibInput'),
+                    globalRope: val('globalRopeInput'),
                     textileStdCons: document.getElementById('textileStdConsInput')?.value || '',
                     textileTotalMeters: document.getElementById('textileTotalMetersInput')?.value || '',
                     textileCheckMode: !!document.getElementById('textileCheckMode')?.checked,
@@ -5039,27 +5033,6 @@
         // Re-open the existing Show modal with a safe fallback. This preserves the
         // original detailed preview and prevents one legacy/broken record from making
         // the Show button appear dead.
-        const __originalOpenShowModal = openShowModal;
-        function openShowModal(index) {
-            try {
-                __originalOpenShowModal(index);
-                return;
-            } catch (err) {
-                console.error('Show preview error:', err);
-                const item = normalizeHistoryEntry(historyData[index]);
-                if (!item) return;
-                const modal = document.getElementById('showModal');
-                const quality = document.getElementById('showModalQuality');
-                const content = document.getElementById('showModalContent');
-                if (quality) quality.innerText = item.quality || '';
-                if (content) {
-                    const safe = JSON.stringify(item, null, 2)
-                        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                    content.innerHTML = `<div class="bg-gray-50 border border-gray-200 rounded p-3 text-xs"><div class="font-bold text-gray-700 mb-2">Challan Details</div><pre class="whitespace-pre-wrap break-words text-gray-600">${safe}</pre></div>`;
-                }
-                if (modal) modal.classList.remove('hidden');
-            }
-        }
 
     </script>
 </body>
