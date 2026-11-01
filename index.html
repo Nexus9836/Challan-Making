@@ -269,6 +269,11 @@
                     </div>
                 </div>
 
+                <!-- Column Names (per quality) -->
+                <div class="flex justify-center no-print mt-1 w-full max-w-xl mx-auto">
+                    <button onclick="openColNamesModal()" class="bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 font-bold py-1 px-3 rounded text-xs transition cursor-pointer select-none">Column Names</button>
+                </div>
+
                 <!-- POLO Configuration Toggles and Global Weights Row -->
                 <div id="poloOptionsRow" class="flex flex-col items-center gap-3 no-print mt-1 w-full max-w-xl mx-auto border-t border-gray-100 pt-2 hidden">
                     <div class="flex justify-center gap-6 w-full">
@@ -321,6 +326,35 @@
                     </div>
                 </div>
                 
+                <!-- SWEAT SHIRT Configuration Toggles and Global Weights Row (Pocket / Belt / Cup) -->
+                <div id="sweatOptionsRow" class="flex flex-col items-center gap-3 no-print mt-1 w-full max-w-xl mx-auto border-t border-gray-100 pt-2 hidden">
+                    <div class="flex justify-center gap-6 w-full">
+                        <label class="flex items-center gap-1.5 text-[11px] font-bold text-gray-700 cursor-pointer select-none">
+                            <input type="checkbox" id="sweatHasPocket" onchange="updateSweatPocket(this.checked)" checked class="w-3.5 h-3.5 accent-blue-600"> POCKET
+                        </label>
+                        <label class="flex items-center gap-1.5 text-[11px] font-bold text-gray-700 cursor-pointer select-none">
+                            <input type="checkbox" id="sweatHasBelt" onchange="updateSweatBelt(this.checked)" checked class="w-3.5 h-3.5 accent-blue-600"> BELT
+                        </label>
+                        <label class="flex items-center gap-1.5 text-[11px] font-bold text-gray-700 cursor-pointer select-none">
+                            <input type="checkbox" id="sweatHasCup" onchange="updateSweatCup(this.checked)" checked class="w-3.5 h-3.5 accent-blue-600"> CUP
+                        </label>
+                    </div>
+                    <div class="flex flex-nowrap justify-center items-end gap-2 w-full">
+                        <div id="globalSweatPocketDiv" class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                            <span class="font-bold text-gray-600 text-[9px] tracking-wide text-center block h-6 flex items-center justify-center">POCKET WT</span>
+                            <input type="number" step="0.001" min="0" id="sweatTotalPocketInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();">
+                        </div>
+                        <div id="globalBeltDiv" class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                            <span class="font-bold text-gray-600 text-[9px] tracking-wide text-center block h-6 flex items-center justify-center">BELT WT</span>
+                            <input type="number" step="0.001" min="0" id="sweatTotalBeltInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();">
+                        </div>
+                        <div id="globalCupDiv" class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                            <span class="font-bold text-gray-600 text-[9px] tracking-wide text-center block h-6 flex items-center justify-center">CUP WT</span>
+                            <input type="number" step="0.001" min="0" id="sweatTotalCupInput" placeholder="0.000" class="border border-gray-300 focus:outline-none p-1 rounded bg-white w-full text-center font-semibold text-gray-800 text-xs" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3); calculateTotals();">
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Print View Header & Detailed Configuration Table -->
                 <div class="hidden print:block w-full border-b border-gray-400 pb-3 mb-2">
                     <div class="text-center mb-2">
@@ -386,6 +420,9 @@
                     <col class="c-extra">
                     <col class="c-extra">
                     <col class="c-extra">
+                    <col class="c-extra">
+                    <col class="c-extra">
+                    <col class="c-extra">
                     <col class="c-waste">
                     <col class="c-total">
                     <col class="c-bcons">
@@ -399,7 +436,10 @@
                         <th class="p-3 border border-gray-300 text-center w-20">Slips</th>
                         <th class="p-3 border border-gray-300 text-center w-24">Pics</th>
                         <th id="bodyWtHeaderTh" class="p-3 border border-gray-300 text-center w-28">Body Wt</th>
+                        <th id="sweatPktHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Pocket Wt</th>
                         <th id="ribHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Rib Wt</th>
+                        <th id="beltHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Belt Wt</th>
+                        <th id="cupHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Cup Wt</th>
                         <th id="ropeHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Rope Wt</th>
                         <th id="pocketHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Pocket Wt</th>
                         <th id="foldingHeaderTh" class="p-3 border border-gray-300 text-center w-28 hidden">Folding</th>
@@ -420,14 +460,17 @@
                         <td class="p-2 border border-gray-300 text-center"><input type="number" min="0" placeholder="SLIPS" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slips" oninput="calculateTotals(true)" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                         <td class="p-2 border border-gray-300 text-center"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                         <td class="p-2 border border-gray-300 text-center"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-spktwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-spktwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-beltwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-beltwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-cupwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-cupwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center hidden row-ropewt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ropewt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                        <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
-                        <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-pocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-pocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-folding-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-folding" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center hidden row-backpocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                        <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
-                        <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-collarcuff-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-collarcuff" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center row-wastage-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-wastage" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
                         <td class="p-2 border border-gray-300 text-center bg-blue-50/50">
                             <div class="font-bold text-blue-600 row-bcons">0.00000</div>
@@ -450,7 +493,10 @@
                         <td id="totalSlipsDisplay" class="p-2 border border-gray-300 text-center text-gray-800">0</td>
                         <td id="totalPicsDisplay" class="p-2 border border-gray-300 text-center text-gray-800">0</td>
                         <td id="totalBodyWtDisplay" class="p-2 border border-gray-300 text-center text-gray-800">0.000</td>
+                        <td id="totalSweatPktDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
                         <td id="totalRibWtDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
+                        <td id="totalBeltWtDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
+                        <td id="totalCupWtDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
                         <td id="totalRopeWtDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
                         <td id="totalPocketDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
                         <td id="totalFoldingDisplay" class="p-2 border border-gray-300 text-center text-gray-800 hidden">0.000</td>
@@ -536,6 +582,22 @@
             <div id="adjPartsList" class="space-y-2 text-xs font-semibold text-gray-700 max-h-[60vh] overflow-y-auto"></div>
             <div class="mt-5 flex justify-end">
                 <button onclick="closeAdjModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-1.5 rounded text-xs transition">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pop up Modal for per-quality Column Names -->
+    <div id="colNamesModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 hidden no-print">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
+            <h4 class="font-bold text-sm text-gray-800 mb-1 border-b border-gray-100 pb-2">Column Names <span id="colNamesQuality" class="text-[10px] font-normal text-gray-500"></span></h4>
+            <div class="text-[10px] text-gray-500 mb-2">Type your own name. It is used in the table, global boxes, Adjust list, T.cons list and the challan, and stays saved for this quality until you change it. Leave blank for the default name.</div>
+            <div id="colNamesList" class="space-y-2 text-xs font-semibold text-gray-700 max-h-[60vh] overflow-y-auto"></div>
+            <div class="mt-5 flex justify-between items-center">
+                <button onclick="clearColNameInputs()" class="text-red-500 hover:text-red-700 font-bold text-xs">Clear all</button>
+                <div class="flex gap-2">
+                    <button onclick="closeColNamesModal(false)" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-4 py-1.5 rounded text-xs transition">Cancel</button>
+                    <button onclick="closeColNamesModal(true)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-1.5 rounded text-xs transition">Save</button>
+                </div>
             </div>
         </div>
     </div>
@@ -632,12 +694,18 @@
         const qualityPantSidePocketData = {};
         const qualityPantBackPocketData = {};
 
+        // Parallel configuration trackers for Sweat Shirt specific optional fields (Belt / Cup on-off)
+        const qualitySweatBeltData = {};
+        const qualitySweatCupData = {};
+        const qualitySweatPocketData = {};
+
         // Per-quality T.cons component selection.
         // Polo keeps the four global weight boxes as four independent T.cons options:
         // Pocket, Plaket, By-Plaket and Collar/Cuff. Plaket + Collar/Cuff are active by default;
         // Pocket + By-Plaket remain optional and start unchecked.
         const qualityTConsPartsData = {};
     const qualityAdjustmentPartsData = {};
+    const qualityColumnNamesData = {};
         const TCONS_DEFAULT_PARTS = {
             body: true,
             rib: false,
@@ -648,6 +716,9 @@
             folding: false,
             sidePocket: true,
             backPocket: true,
+            sweatPocket: true,
+            belt: true,
+            cup: true,
             collar: true,
             wastage: true,
             ribWastage: false,
@@ -901,9 +972,29 @@
                 qualityPantBackPocketData[upperNew] = qualityPantBackPocketData[currentSelected];
                 delete qualityPantBackPocketData[currentSelected];
             }
+            if (qualitySweatBeltData[currentSelected] !== undefined) {
+                qualitySweatBeltData[upperNew] = qualitySweatBeltData[currentSelected];
+                delete qualitySweatBeltData[currentSelected];
+            }
+            if (qualitySweatCupData[currentSelected] !== undefined) {
+                qualitySweatCupData[upperNew] = qualitySweatCupData[currentSelected];
+                delete qualitySweatCupData[currentSelected];
+            }
+            if (qualitySweatPocketData[currentSelected] !== undefined) {
+                qualitySweatPocketData[upperNew] = qualitySweatPocketData[currentSelected];
+                delete qualitySweatPocketData[currentSelected];
+            }
             if (qualityTConsPartsData[currentSelected] !== undefined) {
                 qualityTConsPartsData[upperNew] = qualityTConsPartsData[currentSelected];
                 delete qualityTConsPartsData[currentSelected];
+            }
+            if (qualityAdjustmentPartsData[currentSelected] !== undefined) {
+                qualityAdjustmentPartsData[upperNew] = qualityAdjustmentPartsData[currentSelected];
+                delete qualityAdjustmentPartsData[currentSelected];
+            }
+            if (qualityColumnNamesData[currentSelected] !== undefined) {
+                qualityColumnNamesData[upperNew] = qualityColumnNamesData[currentSelected];
+                delete qualityColumnNamesData[currentSelected];
             }
 
             for (let key in qualityData) delete qualityData[key];
@@ -928,6 +1019,9 @@
                     if (entry.quality === currentSelected) {
                         entry.quality = upperNew;
                     }
+                    if (entry.view && entry.view.quality === currentSelected) {
+                        entry.view.quality = upperNew;
+                    }
                 });
                 saveHistoryToStorage();
             }
@@ -939,9 +1033,80 @@
             saveState();
         }
 
+        // Textile historical average (per size). Compares like with like:
+        // weight-mode history is averaged against weight-mode, meter-mode against meter-mode.
+        function getTextileHistoricalAverages(quality, size, isCheck) {
+            const normQuality = quality.trim().toUpperCase();
+            const normSize = size.trim().toUpperCase();
+            const isPajama = /PAJAMA|PYJAMA/.test(normQuality);
+            let totalPieces = 0, totalBody = 0, totalAll = 0;
+
+            historyData.forEach((entry, idx) => {
+                if (editIndex !== -1 && idx === editIndex) return;
+                if ((entry.quality || "").trim().toUpperCase() !== normQuality) return;
+                if (!entry.items || entry.items.length === 0) return;
+                /* items store real weights, so entries from BOTH modes are used */
+
+                const picsArr = entry.items.map(it => parseFloat(it.pics) || 0);
+                const sizeArr = entry.items.map(it => it.size || '');
+                const gWast = parseFloat(entry.globalWastage) || 0;
+                const gRope = isPajama ? (parseFloat(entry.globalRope) || 0) : 0;
+                const wastShares = allocateRoundedShares(gWast, picsArr, sizeArr);
+                const ropeShares = gRope > 0 ? allocateRoundedShares(gRope, picsArr, sizeArr) : null;
+
+                const rowsCalc = entry.items.map((it, i) => {
+                    const body = parseFloat(it.bodywt) || 0;
+                    const rope = isPajama ? (ropeShares ? (ropeShares[i] || 0) : (parseFloat(it.ropewt) || 0)) : 0;
+                    const wast = gWast > 0 ? roundTo50g(wastShares[i] || 0) : (parseFloat(it.wastewt) || 0);
+                    return { body, total: body + rope + wast };
+                });
+                const sumTotalWt = rowsCalc.reduce((a, r) => a + r.total, 0);
+                let factor = 1;
+                if (isCheck) {
+                    const tm = parseFloat(entry.textileTotalMeters) || 0;
+                    if (tm <= 0 || sumTotalWt <= 0) return;
+                    factor = tm / sumTotalWt;
+                }
+
+                entry.items.forEach((it, i) => {
+                    if ((it.size || "").trim().toUpperCase() !== normSize) return;
+                    const pics = picsArr[i];
+                    if (pics <= 0) return;
+                    totalPieces += pics;
+                    totalBody += rowsCalc[i].body * factor;
+                    totalAll += rowsCalc[i].total * factor;
+                });
+            });
+
+            if (totalPieces > 0) {
+                return { avgBCons: totalBody / totalPieces, avgTCons: totalAll / totalPieces, totalSamples: totalPieces };
+            }
+            return null;
+        }
+
+        function renderTextileRowAverages(row, histBench, pics, bCons, tCons) {
+            const bRef = row.querySelector('.row-bcons-ref');
+            const tRef = row.querySelector('.row-tcons-ref');
+            if (histBench && pics > 0) {
+                const bDiff = bCons - histBench.avgBCons;
+                const tDiff = tCons - histBench.avgTCons;
+                const bStr = (bDiff >= 0 ? "+" : "") + bDiff.toFixed(5);
+                const tStr = (tDiff >= 0 ? "+" : "") + tDiff.toFixed(5);
+                const bCls = Math.abs(bDiff) > 0.0025 ? "text-red-500 font-bold" : "text-gray-400";
+                const tCls = Math.abs(tDiff) > 0.0025 ? "text-red-500 font-bold" : "text-gray-400";
+                if (bRef) bRef.innerHTML = `<span class="text-[9px] text-gray-500 font-medium block">Avg: ${histBench.avgBCons.toFixed(5)}</span><span class="text-[8px] ${bCls} block">(${bStr})</span>`;
+                if (tRef) tRef.innerHTML = `<span class="text-[9px] text-gray-500 font-medium block">Avg: ${histBench.avgTCons.toFixed(5)}</span><span class="text-[8px] ${tCls} block">(${tStr})</span>`;
+            } else {
+                if (bRef) bRef.innerHTML = "";
+                if (tRef) tRef.innerHTML = "";
+            }
+        }
+
         // Helper function to compute Historical Average B.Cons and T.Cons for a specific quality and size
-        function getHistoricalAverages(quality, size) {
+        function getHistoricalAverages(quality, size, textileCheck) {
             if (!quality || !size || !historyData || historyData.length === 0) return null;
+            if (quality.trim().toUpperCase().includes('TEXTILE')) return getTextileHistoricalAverages(quality, size, !!textileCheck);
+            { const c = getComponentHistoricalAverages(quality, size, false); return c ? { avgBCons: c.body, avgTCons: c.tcons, totalSamples: c.pieces } : null; }
             const normQuality = quality.trim().toUpperCase();
             const normSize = size.trim().toUpperCase();
 
@@ -951,6 +1116,7 @@
 
             const isPoloActive = normQuality.includes('POLO');
             const isPantActive = normQuality.includes('PANT');
+            const isSweatActive = normQuality.includes('SWEAT SHIRT') && !normQuality.includes('TEXTILE');
 
             historyData.forEach((entry, idx) => {
                 if (editIndex !== -1 && idx === editIndex) return; // Skip currently editing entry
@@ -969,6 +1135,9 @@
                 const poloTotalPlaket = isPoloActive ? (parseFloat(entry.poloTotalPlaket) || 0) : 0;
                 const pantTotalSidePocket = (isPantActive && entry.pantHasSidePocket !== false) ? (parseFloat(entry.pantTotalSidePocket) || 0) : 0;
                 const pantTotalBackPocket = (isPantActive && entry.pantHasBackPocket !== false) ? (parseFloat(entry.pantTotalBackPocket) || 0) : 0;
+                const sweatTotalBelt = (isSweatActive && entry.sweatHasBelt !== false) ? (parseFloat(entry.sweatTotalBelt) || 0) : 0;
+                const sweatTotalCup = (isSweatActive && entry.sweatHasCup !== false) ? (parseFloat(entry.sweatTotalCup) || 0) : 0;
+                const sweatTotalPocket = (isSweatActive && entry.sweatHasPocket !== false) ? (parseFloat(entry.sweatTotalPocket) || 0) : 0;
 
                 entry.items.forEach(it => {
                     if ((it.size || "").trim().toUpperCase() === normSize) {
@@ -985,6 +1154,9 @@
 
                             let sidePktWt = (isPantActive && entry.pantHasSidePocket !== false && entryTotalPics > 0) ? (pics / entryTotalPics) * pantTotalSidePocket : 0;
                             let backPktWt = (isPantActive && entry.pantHasBackPocket !== false && entryTotalPics > 0) ? (pics / entryTotalPics) * pantTotalBackPocket : 0;
+                            let beltPart = (isSweatActive && entryTotalPics > 0) ? (pics / entryTotalPics) * sweatTotalBelt : 0;
+                            let cupPart = (isSweatActive && entryTotalPics > 0) ? (pics / entryTotalPics) * sweatTotalCup : 0;
+                            let sweatPktPart = (isSweatActive && entryTotalPics > 0) ? (pics / entryTotalPics) * sweatTotalPocket : 0;
 
                             let mainWstOnly = entryTotalPics > 0 ? (pics / entryTotalPics) * globalWastage : 0;
                             let byPlaketWstPart = (isPoloActive && entry.poloHasByPlaket !== false && entryTotalPics > 0) ? (pics / entryTotalPics) * (parseFloat(entry.poloTotalByPlaketWastage) || 0) : 0;
@@ -998,7 +1170,7 @@
                                 : getTConsParts(normQuality);
                             let mainFabricWeight = calculateTConsWeight(tParts, {
                                 body: bodywt, rib: ribTotal, pocket: pocketPart, plaket: plaketPart, byPlaket: byPlaketPart, folding: foldTotal,
-                                sidePocket: sidePktWt, backPocket: backPktWt, collar: collarPart,
+                                sidePocket: sidePktWt, backPocket: backPktWt, belt: beltPart, cup: cupPart, sweatPocket: sweatPktPart, collar: collarPart,
                                 wastage: mainWstOnly, byPlaketWastage: byPlaketWstPart, ribWastage: ribWstPart, mukpat: mukpatPart
                             });
                             totalMainFabricWt += mainFabricWeight;
@@ -1071,7 +1243,15 @@
                 return true;
             } catch (e) {
                 console.warn('History storage could not be saved.', e);
-                return false;
+                // Storage is full: the saved table view (`view`) can be rebuilt on load,
+                // so retry without it instead of losing the record itself.
+                try {
+                    localStorage.setItem('challan_history', JSON.stringify(historyData, (k, v) => (k === 'view' ? undefined : v)));
+                    return true;
+                } catch (e2) {
+                    console.warn('History storage could not be saved even without views.', e2);
+                    return false;
+                }
             }
         }
 
@@ -1123,6 +1303,15 @@
             if (localStorage.getItem('challan_qualityPantBackPocketData')) {
                 Object.assign(qualityPantBackPocketData, safeParseObject(localStorage.getItem('challan_qualityPantBackPocketData')));
             }
+            if (localStorage.getItem('challan_qualitySweatBeltData')) {
+                Object.assign(qualitySweatBeltData, safeParseObject(localStorage.getItem('challan_qualitySweatBeltData')));
+            }
+            if (localStorage.getItem('challan_qualitySweatCupData')) {
+                Object.assign(qualitySweatCupData, safeParseObject(localStorage.getItem('challan_qualitySweatCupData')));
+            }
+            if (localStorage.getItem('challan_qualitySweatPocketData')) {
+                Object.assign(qualitySweatPocketData, safeParseObject(localStorage.getItem('challan_qualitySweatPocketData')));
+            }
             if (localStorage.getItem('challan_poloTotalPocket')) document.getElementById('poloTotalPocketInput').value = localStorage.getItem('challan_poloTotalPocket');
             if (localStorage.getItem('challan_poloTotalPlaket')) document.getElementById('poloTotalPlaketInput').value = localStorage.getItem('challan_poloTotalPlaket');
             if (localStorage.getItem('challan_poloTotalByPlaket')) document.getElementById('poloTotalByPlaketInput').value = localStorage.getItem('challan_poloTotalByPlaket');
@@ -1130,6 +1319,9 @@
             if (localStorage.getItem('challan_poloTotalCollarCuff')) document.getElementById('poloTotalCollarCuffInput').value = localStorage.getItem('challan_poloTotalCollarCuff');
             if (localStorage.getItem('challan_pantTotalSidePocket')) document.getElementById('pantTotalSidePocketInput').value = localStorage.getItem('challan_pantTotalSidePocket');
             if (localStorage.getItem('challan_pantTotalBackPocket')) document.getElementById('pantTotalBackPocketInput').value = localStorage.getItem('challan_pantTotalBackPocket');
+            if (localStorage.getItem('challan_sweatTotalBelt')) document.getElementById('sweatTotalBeltInput').value = localStorage.getItem('challan_sweatTotalBelt');
+            if (localStorage.getItem('challan_sweatTotalCup')) document.getElementById('sweatTotalCupInput').value = localStorage.getItem('challan_sweatTotalCup');
+            if (localStorage.getItem('challan_sweatTotalPocket')) document.getElementById('sweatTotalPocketInput').value = localStorage.getItem('challan_sweatTotalPocket');
             if (localStorage.getItem('challan_globalWastage')) document.getElementById('globalWastageInput').value = localStorage.getItem('challan_globalWastage');
             if (localStorage.getItem('challan_globalMukpat')) document.getElementById('globalMukpatInput').value = localStorage.getItem('challan_globalMukpat');
             if (localStorage.getItem('challan_globalRibWastage')) document.getElementById('globalRibWastageInput').value = localStorage.getItem('challan_globalRibWastage');
@@ -1163,14 +1355,17 @@
                             <td class="p-2 border border-gray-300 text-center"><input type="number" min="0" placeholder="SLIPS" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slips" value="${item.slips || ''}" oninput="calculateTotals(true)" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                             <td class="p-2 border border-gray-300 text-center"><input type="number" value="${item.pics || ''}" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                             <td class="p-2 border border-gray-300 text-center"><input type="number" value="${item.bodywt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                            <td class="p-2 border border-gray-300 text-center hidden row-spktwt-td"><input type="number" value="${item.spktwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-spktwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                             <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" value="${item.ribwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                            <td class="p-2 border border-gray-300 text-center hidden row-beltwt-td"><input type="number" value="${item.beltwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-beltwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                            <td class="p-2 border border-gray-300 text-center hidden row-cupwt-td"><input type="number" value="${item.cupwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-cupwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                             <td class="p-2 border border-gray-300 text-center hidden row-ropewt-td"><input type="number" value="${item.ropewt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ropewt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                            <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
-                            <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
+                            <td class="p-2 border border-gray-300 text-center hidden row-pocket-td"><input type="number" step="0.001" min="0" value="${item.pktwt || ''}" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-pocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                            <td class="p-2 border border-gray-300 text-center hidden row-folding-td"><input type="number" step="0.001" min="0" value="${item.foldwt || ''}" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-folding" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                             <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" value="${item.sidepocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                             <td class="p-2 border border-gray-300 text-center hidden row-backpocket-td"><input type="number" value="${item.backpocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                            <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
-                            <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
+                            <td class="p-2 border border-gray-300 text-center hidden row-collarcuff-td"><input type="number" step="0.001" min="0" value="${item.collarwt || ''}" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-collarcuff" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                            <td class="p-2 border border-gray-300 text-center row-wastage-td"><input type="number" step="0.001" min="0" value="${item.wastewt || ''}" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-wastage" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                             <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
                             <td class="p-2 border border-gray-300 text-center bg-blue-50/50">
                                 <div class="font-bold text-blue-600 row-bcons">0.00000</div>
@@ -1203,6 +1398,14 @@
             }
 
             try {
+                const storedCNRaw = localStorage.getItem('challan_qualityColumnNamesData');
+                if (storedCNRaw) {
+                    const storedCN = JSON.parse(storedCNRaw);
+                    if (storedCN && typeof storedCN === 'object' && !Array.isArray(storedCN)) Object.assign(qualityColumnNamesData, storedCN);
+                }
+            } catch (e) { console.warn('Column names could not be restored.', e); }
+
+            try {
                 const storedQAPRaw = localStorage.getItem('challan_qualityAdjustmentPartsData');
                 if (storedQAPRaw) {
                     const storedQAP = JSON.parse(storedQAPRaw);
@@ -1233,6 +1436,9 @@
             localStorage.setItem('challan_qualityPoloByPlaketData', JSON.stringify(qualityPoloByPlaketData));
             localStorage.setItem('challan_qualityPantSidePocketData', JSON.stringify(qualityPantSidePocketData));
             localStorage.setItem('challan_qualityPantBackPocketData', JSON.stringify(qualityPantBackPocketData));
+            localStorage.setItem('challan_qualitySweatBeltData', JSON.stringify(qualitySweatBeltData));
+            localStorage.setItem('challan_qualitySweatCupData', JSON.stringify(qualitySweatCupData));
+            localStorage.setItem('challan_qualitySweatPocketData', JSON.stringify(qualitySweatPocketData));
             localStorage.setItem('challan_qualityTConsPartsData', JSON.stringify(qualityTConsPartsData));
             localStorage.setItem('challan_selectedQuality', document.getElementById('globalQuality').value);
             localStorage.setItem('fabricGsmInput', document.getElementById('fabricGsmInput').value);
@@ -1249,6 +1455,9 @@
             localStorage.setItem('challan_poloTotalCollarCuff', getGlobalVal('poloTotalCollarCuffInput'));
             localStorage.setItem('challan_pantTotalSidePocket', getGlobalVal('pantTotalSidePocketInput'));
             localStorage.setItem('challan_pantTotalBackPocket', getGlobalVal('pantTotalBackPocketInput'));
+            localStorage.setItem('challan_sweatTotalBelt', getGlobalVal('sweatTotalBeltInput'));
+            localStorage.setItem('challan_sweatTotalCup', getGlobalVal('sweatTotalCupInput'));
+            localStorage.setItem('challan_sweatTotalPocket', getGlobalVal('sweatTotalPocketInput'));
             localStorage.setItem('challan_globalWastage', getGlobalVal('globalWastageInput'));
             localStorage.setItem('challan_globalMukpat', getGlobalVal('globalMukpatInput'));
             localStorage.setItem('challan_globalRibWastage', getGlobalVal('globalRibWastageInput'));
@@ -1259,6 +1468,7 @@
             localStorage.setItem('challan_textileCheckMode', document.getElementById('textileCheckMode').checked);
             localStorage.setItem('challan_adjWeight', document.getElementById('adjWeightInput').value);
             localStorage.setItem('challan_adjAction', document.getElementById('adjActionSelect').value);
+            localStorage.setItem('challan_qualityColumnNamesData', JSON.stringify(qualityColumnNamesData));
             localStorage.setItem('challan_qualityAdjustmentPartsData', JSON.stringify(qualityAdjustmentPartsData));
             
             const rows = document.querySelectorAll('#itemRows tr');
@@ -1272,10 +1482,14 @@
                     slips: row.querySelector('.row-slips') ? row.querySelector('.row-slips').value : '',
                     pics: row.querySelector('.row-pics').value,
                     bodywt: bodyWtInput.dataset.origBodyWt !== undefined ? bodyWtInput.dataset.origBodyWt : (bodyWtInput.dataset.weight !== undefined ? bodyWtInput.dataset.weight : bodyWtInput.value),
-                    ribwt: row.querySelector('.row-ribwt') ? row.querySelector('.row-ribwt').value : '',
+                    ribwt: getRowOrigValue(row, 'row-ribwt'),
                     ropewt: getRopeRowValue(row),
-                    sidepocket: row.querySelector('.row-sidepocket') ? row.querySelector('.row-sidepocket').value : '',
-                    backpocket: row.querySelector('.row-backpocket') ? row.querySelector('.row-backpocket').value : ''
+                    pktwt: getRowManualValue(row, 'row-pocket'), foldwt: getRowManualValue(row, 'row-folding'), collarwt: getRowManualValue(row, 'row-collarcuff'), wastewt: getRowManualValue(row, 'row-wastage'),
+                    sidepocket: getRowOrigValue(row, 'row-sidepocket'),
+                    backpocket: getRowOrigValue(row, 'row-backpocket'),
+                    spktwt: getRowOrigValue(row, 'row-spktwt'),
+                    beltwt: getRowOrigValue(row, 'row-beltwt'),
+                    cupwt: getRowOrigValue(row, 'row-cupwt')
                 });
             });
             localStorage.setItem('challan_items', JSON.stringify(items));
@@ -1303,6 +1517,11 @@
                 parts.push({ key: 'byPlaket', label: 'By-Plaket Wt' });
                 parts.push({ key: 'byPlaketWastage', label: 'By-Plaket Wastage Wt' });
                 parts.push({ key: 'collar', label: 'Collar Cuff Wt' });
+            }
+            if (q.includes('SWEAT SHIRT')) {
+                const ribIdx = parts.findIndex(p => p.key === 'rib');
+                parts.splice(ribIdx + 1, 0, { key: 'belt', label: 'Belt Wt' }, { key: 'cup', label: 'Cup Wt' });
+                parts.splice(ribIdx, 0, { key: 'sweatPocket', label: 'Sweat Pocket Wt' });
             }
             if (isPant) {
                 parts.push({ key: 'sidePocket', label: 'Side Pocket Wt' });
@@ -1338,6 +1557,9 @@
             if (parts.folding) total += values.folding || 0;
             if (parts.sidePocket) total += values.sidePocket || 0;
             if (parts.backPocket) total += values.backPocket || 0;
+            if (parts.sweatPocket) total += values.sweatPocket || 0;
+            if (parts.belt) total += values.belt || 0;
+            if (parts.cup) total += values.cup || 0;
             if (parts.collar) total += values.collar || 0;
             if (parts.wastage) total += values.wastage || 0;
             if (parts.ribWastage) total += values.ribWastage || 0;
@@ -1355,7 +1577,7 @@
             list.innerHTML = available.length ? available.map(part => `
                 <label class="flex items-center gap-2 cursor-pointer py-1.5 px-2 rounded hover:bg-gray-50">
                     <input type="checkbox" data-tcons-part="${part.key}" ${parts[part.key] ? 'checked' : ''} onchange="updateTConsPartsFromModal()" class="w-4 h-4 accent-purple-600">
-                    <span>${part.label}</span>
+                    <span>${escHtml(colName(part.key, part.label))}</span>
                 </label>`).join('') : '<div class="text-gray-500 py-3 text-center">No T.cons parts available for this quality.</div>';
             document.getElementById('tConsModal').classList.remove('hidden');
         }
@@ -1413,15 +1635,17 @@
 
         // Textile weight-mode adjustment (Body + Wastage only). Shared by the live
         // table, the Show popup and the history Download so all three always agree.
-        function applyTextileAdjustment(bodyList, globalWastage, adjWeight, adjAction, chkBody, chkWastage, ropeList, chkRope) {
+        function applyTextileAdjustment(bodyList, globalWastage, adjWeight, adjAction, chkBody, chkWastage, ropeList, chkRope, wastList, chkWL) {
             ropeList = Array.isArray(ropeList) ? ropeList : [];
+            wastList = Array.isArray(wastList) ? wastList : [];
+            chkWL = !!chkWL && wastList.length > 0;
             chkRope = !!chkRope && ropeList.length > 0;
-            const result = { bodyList: bodyList.slice(), globalWastage: globalWastage, ropeList: ropeList.slice(), factor: 0 };
+            const result = { bodyList: bodyList.slice(), globalWastage: globalWastage, ropeList: ropeList.slice(), wastList: wastList.slice(), factor: 0 };
             adjWeight = parseFloat(adjWeight) || 0;
             if (!(adjWeight > 0)) return result;
             const bodySum = bodyList.reduce((a, b) => a + b, 0);
             const ropeSum = ropeList.reduce((a, b) => a + b, 0);
-            const baseSum = (chkBody ? bodySum : 0) + (chkWastage ? globalWastage : 0) + (chkRope ? ropeSum : 0);
+            const baseSum = (chkBody ? bodySum : 0) + (chkWastage ? globalWastage : 0) + (chkRope ? ropeSum : 0) + (chkWL ? wastList.reduce((a, b) => a + b, 0) : 0);
             if (!(baseSum > 0)) return result;
             const sign = (adjAction === 'SUB') ? -1 : 1;
             const factor = adjWeight / baseSum;
@@ -1431,14 +1655,17 @@
             let newWastage = globalWastage;
             if (chkBody) newBody = bodyList.map(b => roundTo50g(b + b * factor * sign));
             if (chkRope) newRope = ropeList.map(r => Math.max(0, roundTo50g(r + r * factor * sign)));
+            let newWL = wastList.slice();
+            if (chkWL) newWL = wastList.map(w => Math.max(0, roundTo50g(w + w * factor * sign)));
             if (chkWastage && globalWastage > 0) newWastage = Math.max(0, roundTo50g(globalWastage + globalWastage * factor * sign));
             // Exact reconciliation: the net change must equal the requested amount.
             // The leftover is put on the biggest Body row (or the biggest Rope row if Body is not selected).
-            const recList = chkBody ? newBody : (chkRope ? newRope : null);
+            const recList = chkBody ? newBody : (chkRope ? newRope : (chkWL ? newWL : null));
             if (recList && recList.length) {
                 const expectedTotal = roundTo50g(baseSum) + sign * roundTo50g(adjWeight);
                 const actualTotal = (chkBody ? newBody.reduce((a, b) => a + b, 0) : 0)
                     + (chkRope ? newRope.reduce((a, b) => a + b, 0) : 0)
+                    + (chkWL ? newWL.reduce((a, b) => a + b, 0) : 0)
                     + (chkWastage ? newWastage : 0);
                 const diff = parseFloat((expectedTotal - actualTotal).toFixed(3));
                 if (Math.abs(diff) > 0.0004) {
@@ -1449,6 +1676,7 @@
             }
             result.bodyList = newBody.map(v => parseFloat(v.toFixed(3)));
             result.ropeList = newRope.map(v => parseFloat(v.toFixed(3)));
+            result.wastList = newWL.map(v => parseFloat(v.toFixed(3)));
             result.globalWastage = parseFloat(newWastage.toFixed(3));
             return result;
         }
@@ -1496,7 +1724,7 @@
                     calculateTotals();
                 });
                 label.appendChild(cb);
-                label.appendChild(document.createTextNode(String(part.label).toUpperCase()));
+                label.appendChild(document.createTextNode(String(colName(part.key, part.label)).toUpperCase()));
                 list.appendChild(label);
             });
         }
@@ -1544,6 +1772,9 @@
             document.getElementById('poloHasByPlaket').checked = qualityPoloByPlaketData[currentQuality] !== false;
             document.getElementById('pantHasSidePocket').checked = qualityPantSidePocketData[currentQuality] !== false;
             document.getElementById('pantHasBackPocket').checked = qualityPantBackPocketData[currentQuality] !== false;
+            document.getElementById('sweatHasBelt').checked = qualitySweatBeltData[currentQuality] !== false;
+            document.getElementById('sweatHasCup').checked = qualitySweatCupData[currentQuality] !== false;
+            document.getElementById('sweatHasPocket').checked = qualitySweatPocketData[currentQuality] !== false;
             
             calculateTotals();
             saveState();
@@ -1619,6 +1850,27 @@
             saveState();
         }
 
+        function updateSweatPocket(checked) {
+            const currentQuality = document.getElementById('globalQuality').value;
+            qualitySweatPocketData[currentQuality] = checked;
+            calculateTotals();
+            saveState();
+        }
+
+        function updateSweatBelt(checked) {
+            const currentQuality = document.getElementById('globalQuality').value;
+            qualitySweatBeltData[currentQuality] = checked;
+            calculateTotals();
+            saveState();
+        }
+
+        function updateSweatCup(checked) {
+            const currentQuality = document.getElementById('globalQuality').value;
+            qualitySweatCupData[currentQuality] = checked;
+            calculateTotals();
+            saveState();
+        }
+
         function addQuality() {
             const newQuality = prompt("Enter new quality name:");
             if (newQuality && newQuality.trim() !== "") {
@@ -1636,6 +1888,9 @@
                     qualityPoloByPlaketData[upperQuality] = true;
                     qualityPantSidePocketData[upperQuality] = true;
                     qualityPantBackPocketData[upperQuality] = true;
+                    qualitySweatBeltData[upperQuality] = true;
+                    qualitySweatCupData[upperQuality] = true;
+                    qualitySweatPocketData[upperQuality] = true;
                 }
                 
                 renderQualityDropdown(upperQuality);
@@ -1660,8 +1915,12 @@
                     delete qualityPoloByPlaketData[targetValue];
                     delete qualityPantSidePocketData[targetValue];
                     delete qualityPantBackPocketData[targetValue];
+                    delete qualitySweatBeltData[targetValue];
+                    delete qualitySweatCupData[targetValue];
+                    delete qualitySweatPocketData[targetValue];
                     delete qualityTConsPartsData[targetValue];
                     delete qualityAdjustmentPartsData[targetValue];
+                    delete qualityColumnNamesData[targetValue];
                     localStorage.setItem('challan_qualityAdjustmentPartsData', JSON.stringify(qualityAdjustmentPartsData));
                     renderQualityDropdown();
                     loadConsumption();
@@ -1720,20 +1979,23 @@
             actionFocusInput = null;
         }
 
-        function syncMainTableLayout({ isTextileActive, isPajamaActive, isGrsActive, isPoloActive, isPantActive, isFoldingActive, poloHasByPlaket, pantHasSidePocket, pantHasBackPocket }) {
+        function syncMainTableLayout({ isTextileActive, isPajamaActive, isGrsActive, isPoloActive, isPantActive, isFoldingActive, poloHasByPlaket, pantHasSidePocket, pantHasBackPocket, isSweatActive, sweatHasBelt, sweatHasCup, sweatHasPocket }) {
             const table = document.getElementById('challanMainTable');
             if (!table) return;
             const cols = table.querySelectorAll('colgroup col');
-            if (cols.length !== 17) return;
+            if (cols.length !== 20) return;
 
-            const baseWidths = [120, 90, 80, 90, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 140, 140, 70];
+            const baseWidths = [120, 90, 80, 90, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 120, 140, 140, 70];
             const active = [
                 true,
                 true,
                 true,
                 true,
                 true,
+                !isTextileActive && !!isSweatActive && sweatHasPocket !== false,
                 !isTextileActive && isGrsActive,
+                !isTextileActive && !!isSweatActive && sweatHasBelt !== false,
+                !isTextileActive && !!isSweatActive && sweatHasCup !== false,
                 !!isPajamaActive,
                 !isTextileActive && isPoloActive,
                 !isTextileActive && (isFoldingActive || (isPoloActive && poloHasByPlaket)),
@@ -1771,6 +2033,251 @@
             table.style.minWidth = `${Math.max(totalWidth, table.parentElement ? table.parentElement.clientWidth : 0)}px`;
         }
 
+        // Guarantees a row owns its Belt / Cup cells right after the Rib cell.
+        // Rows built by older code paths or restored from old backups get them added here.
+        function ensureSweatCells(row) {
+            if (!row) return;
+            const ribTd = row.querySelector('.row-ribwt-td');
+            if (!ribTd) return;
+            if (!row.querySelector('.row-spktwt-td')) ribTd.insertAdjacentHTML('beforebegin', sweatCellHtml('spkt'));
+            if (!row.querySelector('.row-beltwt-td')) ribTd.insertAdjacentHTML('afterend', sweatCellHtml('belt') + sweatCellHtml('cup'));
+            else if (!row.querySelector('.row-cupwt-td')) row.querySelector('.row-beltwt-td').insertAdjacentHTML('afterend', sweatCellHtml('cup'));
+        }
+
+        function sweatCellHtml(kind) {
+            return `<td class="p-2 border border-gray-300 text-center hidden row-${kind}wt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-${kind}wt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>`;
+        }
+
+
+
+        // ---- Per-quality custom column names (shown in table, global boxes, Adjust, T.cons, challan) ----
+        function colName(key, def, quality) {
+            const q = quality !== undefined ? quality : ((document.getElementById('globalQuality') || {}).value || '');
+            const n = qualityColumnNamesData[q] && qualityColumnNamesData[q][key];
+            return (n && String(n).trim()) ? String(n).trim() : def;
+        }
+        const COLNAME_HEADERS = [['bodyWtHeaderTh', ['body']], ['sweatPktHeaderTh', ['sweatPocket']], ['ribHeaderTh', ['rib']], ['beltHeaderTh', ['belt']], ['cupHeaderTh', ['cup']], ['ropeHeaderTh', ['rope']],
+            ['pocketHeaderTh', ['pktPlkt', 'pocket']], ['foldingHeaderTh', ['foldingCol', 'folding']], ['sidePocketHeaderTh', ['sidePocket']], ['backPocketHeaderTh', ['backPocket']],
+            ['collarCuffHeaderTh', ['collar']], ['wastageHeaderTh', ['wastage']], ['totalHeaderTh', ['total']], ['bConsHeaderTh', ['bcons']], ['tConsHeaderTh', ['tcons']]];
+        const COLNAME_GLOBALS = { wastage: 'globalWastageInput', mukpat: 'globalMukpatInput', byPlaketWastage: 'poloTotalByPlaketWastageInput', ribWastage: 'globalRibWastageInput', rib: 'globalTotalRibInput', rope: 'globalRopeInput',
+            pocket: 'poloTotalPocketInput', plaket: 'poloTotalPlaketInput', byPlaket: 'poloTotalByPlaketInput', collar: 'poloTotalCollarCuffInput', sidePocket: 'pantTotalSidePocketInput', backPocket: 'pantTotalBackPocketInput',
+            sweatPocket: 'sweatTotalPocketInput', belt: 'sweatTotalBeltInput', cup: 'sweatTotalCupInput' };
+        const COLNAME_PRINT = { mukpat: 'printMukpatWtSpan', wastage: 'printWastageWtSpan', rib: 'printRibWtSpan', ribWastage: 'printRibWastageSpan', pocket: 'printPocketWtSpan', plaket: 'printPlaketWtSpan',
+            byPlaket: 'printByPlaketWtSpan', byPlaketWastage: 'printByPlaketWstSpan', collar: 'printCollarCuffSpan', sidePocket: 'printSidePocketSpan', backPocket: 'printBackPocketSpan' };
+        function applyColumnNames() {
+            const q = (document.getElementById('globalQuality') || {}).value || '';
+            const names = qualityColumnNamesData[q] || {};
+            const nm = k => (names[k] && String(names[k]).trim()) ? String(names[k]).trim() : '';
+            COLNAME_HEADERS.forEach(([id, keys]) => {
+                const th = document.getElementById(id); if (!th) return;
+                const custom = keys.map(nm).find(Boolean);
+                if (custom && th.innerText !== custom) th.innerText = custom;
+            });
+            Object.keys(COLNAME_GLOBALS).forEach(k => {
+                const inp = document.getElementById(COLNAME_GLOBALS[k]);
+                const sp = inp && inp.parentElement ? inp.parentElement.querySelector('span') : null;
+                if (!sp) return;
+                if (sp.dataset.def === undefined) sp.dataset.def = sp.textContent;
+                const t = nm(k) ? nm(k).toUpperCase() : sp.dataset.def;
+                if (sp.textContent !== t) sp.textContent = t;
+            });
+            Object.keys(COLNAME_PRINT).forEach(k => {
+                const sp = document.getElementById(COLNAME_PRINT[k]);
+                if (!sp || !sp.firstChild || sp.firstChild.nodeType !== 3) return;
+                if (sp.dataset.def === undefined) sp.dataset.def = sp.firstChild.nodeValue;
+                sp.firstChild.nodeValue = nm(k) ? nm(k).toUpperCase() + ': ' : sp.dataset.def;
+            });
+        }
+        function colNameItems(quality) {
+            const U = (quality || '').toUpperCase();
+            const items = getAdjustmentAvailableParts(quality).map(p => ({ key: p.key, label: p.label }));
+            if (!U.includes('TEXTILE') && U.includes('POLO')) {
+                items.push({ key: 'pktPlkt', label: 'Pkt + Plkt Wt (table column)' });
+                items.push({ key: 'foldingCol', label: 'Folding / By-Plaket (table column)' });
+            }
+            items.push({ key: 'total', label: 'Total' }, { key: 'bcons', label: 'B.cons' }, { key: 'tcons', label: 'T.cons' });
+            return items;
+        }
+        function openColNamesModal() {
+            const q = (document.getElementById('globalQuality') || {}).value || '';
+            if (!q) return;
+            const names = qualityColumnNamesData[q] || {};
+            document.getElementById('colNamesQuality').textContent = q;
+            const list = document.getElementById('colNamesList');
+            list.innerHTML = '';
+            colNameItems(q).forEach(it => {
+                const row = document.createElement('label'); row.className = 'flex flex-col gap-0.5';
+                const sp = document.createElement('span'); sp.className = 'text-[10px] text-gray-500'; sp.textContent = it.label;
+                const inp = document.createElement('input'); inp.type = 'text'; inp.dataset.colKey = it.key; inp.value = names[it.key] || ''; inp.placeholder = it.label;
+                inp.className = 'border border-gray-300 focus:outline-none p-1 rounded text-xs w-full'; inp.style.textTransform = 'none';
+                row.appendChild(sp); row.appendChild(inp); list.appendChild(row);
+            });
+            document.getElementById('colNamesModal').classList.remove('hidden');
+        }
+        function clearColNameInputs() { document.querySelectorAll('#colNamesList input').forEach(i => { i.value = ''; }); }
+        function closeColNamesModal(save) {
+            const q = (document.getElementById('globalQuality') || {}).value || '';
+            if (save && q) {
+                const out = {};
+                document.querySelectorAll('#colNamesList input').forEach(i => { const v = i.value.trim(); if (v) out[i.dataset.colKey] = v; });
+                if (Object.keys(out).length) qualityColumnNamesData[q] = out; else delete qualityColumnNamesData[q];
+                try { localStorage.setItem('challan_qualityColumnNamesData', JSON.stringify(qualityColumnNamesData)); } catch (_) {}
+            }
+            document.getElementById('colNamesModal').classList.add('hidden');
+            if (save) calculateTotals();
+        }
+
+        // ---- Dual-mode helpers: global box auto-splits, empty global = manual typing ----
+        function lockAutoInput(el) { el.disabled = true; el.classList.add('bg-gray-100'); el.dataset.auto = '1'; delete el.dataset.weight; }
+        function prepDualInput(el) {
+            if (el.dataset.auto === '1') { el.value = ''; delete el.dataset.auto; delete el.dataset.weight; }
+            el.disabled = false; el.classList.remove('bg-gray-100');
+            return true;
+        }
+        function writeWastageCell(row, text, isAuto, meterView) {
+            const el = row.querySelector('.row-wastage'); if (!el) return;
+            if (isAuto) { el.value = text; lockAutoInput(el); }
+            else if (meterView) { el.value = text; el.disabled = true; el.classList.add('bg-gray-100'); }
+        }
+        // Manual column value scaled by Weight Adjustment; the typed original is kept in data-orig-manual.
+        function adjManualVal(el, apply, factor, sign) {
+            const cur = parseFloat(el.value) || 0;
+            if (!apply || !(factor > 0)) return cur;
+            const adj = Math.max(0, roundTo50g(cur + cur * factor * sign));
+            el.dataset.origManual = el.value === '' ? '0' : el.value;
+            el.value = adj.toFixed(3);
+            el.dataset.adjShown = el.value;
+            return adj;
+        }
+        function getRowOrigValue(row, cls) {
+            const el = row && row.querySelector('.' + cls);
+            if (!el) return '';
+            return el.dataset.origManual !== undefined ? el.dataset.origManual : el.value;
+        }
+        function getRowManualValue(row, cls) {
+            const el = row && row.querySelector('.' + cls);
+            if (!el || el.dataset.auto === '1') return '';
+            if (el.dataset.origManual !== undefined) return el.dataset.origManual;
+            return el.dataset.weight !== undefined ? el.dataset.weight : el.value;
+        }
+        function cellTextNoRef(td) {
+            const c = td.cloneNode(true);
+            c.querySelectorAll('.cell-avg-ref').forEach(e => e.remove());
+            return c.textContent.trim();
+        }
+
+        // ---- Per-size historical average of EVERY weight column (per pc) ----
+        function getComponentHistoricalAverages(quality, size, isCheck) {
+            if (!quality || !size || !historyData || !historyData.length) return null;
+            const nq = quality.trim().toUpperCase(), ns = size.trim().toUpperCase();
+            const isTx = nq.includes('TEXTILE'), isPaj = isTx && /PAJAMA|PYJAMA/.test(nq);
+            const isPolo = nq.includes('POLO'), isPant = nq.includes('PANT');
+            const isGrs = nq.includes('GRS') || nq.includes('SWEAT SHIRT');
+            const isSw = nq.includes('SWEAT SHIRT') && !isTx;
+            const S = {}; ['body','spkt','rib','belt','cup','rope','pocket','folding','sidePocket','backPocket','collar','wastage','total','tcons'].forEach(k => S[k] = 0);
+            let pieces = 0;
+            const num = v => parseFloat(v) || 0;
+            historyData.forEach((entry, idx) => {
+                if (editIndex !== -1 && idx === editIndex) return;
+                if ((entry.quality || '').trim().toUpperCase() !== nq || !entry.items || !entry.items.length) return;
+                const items = entry.items;
+                const picsArr = items.map(it => num(it.pics));
+                const sizeArr = items.map(it => it.size || '');
+                const ePics = picsArr.reduce((a, b) => a + b, 0);
+                const sh = (tot, i) => ePics > 0 ? (picsArr[i] / ePics) * tot : 0;
+                if (isTx) {
+                    /* items store real weights, so entries from BOTH modes are used */
+                    const gW = num(entry.globalWastage), gR = isPaj ? num(entry.globalRope) : 0;
+                    const wS = allocateRoundedShares(gW, picsArr, sizeArr);
+                    const rS = gR > 0 ? allocateRoundedShares(gR, picsArr, sizeArr) : null;
+                    const rc = items.map((it, i) => {
+                        const body = num(it.bodywt);
+                        const rope = isPaj ? (rS ? (rS[i] || 0) : num(it.ropewt)) : 0;
+                        const wast = gW > 0 ? roundTo50g(wS[i] || 0) : num(it.wastewt);
+                        return { body, rope, wast, total: body + rope + wast };
+                    });
+                    let f = 1;
+                    if (isCheck) {
+                        const tm = num(entry.textileTotalMeters), sumT = rc.reduce((a, r) => a + r.total, 0);
+                        if (tm <= 0 || sumT <= 0) return;
+                        f = tm / sumT;
+                    }
+                    items.forEach((it, i) => {
+                        if ((it.size || '').trim().toUpperCase() !== ns || picsArr[i] <= 0) return;
+                        pieces += picsArr[i];
+                        S.body += rc[i].body * f; S.rope += rc[i].rope * f; S.wastage += rc[i].wast * f;
+                        S.total += rc[i].total * f; S.tcons += rc[i].total * f;
+                    });
+                    return;
+                }
+                const g = k => num(entry[k]);
+                const hasPkt = entry.poloHasPocket !== false, hasBy = entry.poloHasByPlaket !== false;
+                const hasSide = entry.pantHasSidePocket !== false, hasBack = entry.pantHasBackPocket !== false;
+                const hasBelt = entry.sweatHasBelt !== false, hasCup = entry.sweatHasCup !== false, hasSp = entry.sweatHasPocket !== false;
+                const gWst = g('globalWastage'), gMuk = g('globalMukpat');
+                const gRibWst = isGrs ? g('globalRibWastage') : 0, gRibTot = isGrs ? g('globalRibTotal') : 0;
+                const gPkt = isPolo && hasPkt ? g('poloTotalPocket') : 0, gPlk = isPolo ? g('poloTotalPlaket') : 0;
+                const gBy = isPolo && hasBy ? g('poloTotalByPlaket') : 0, gByW = isPolo && hasBy ? g('poloTotalByPlaketWastage') : 0;
+                const gCol = isPolo ? g('poloTotalCollarCuff') : 0;
+                const gSide = isPant && hasSide ? g('pantTotalSidePocket') : 0, gBack = isPant && hasBack ? g('pantTotalBackPocket') : 0;
+                const gBelt = isSw && hasBelt ? g('sweatTotalBelt') : 0, gCup = isSw && hasCup ? g('sweatTotalCup') : 0, gSpk = isSw && hasSp ? g('sweatTotalPocket') : 0;
+                const fGm = g('foldingGm');
+                const tParts = (entry.tConsParts && typeof entry.tConsParts === 'object') ? entry.tConsParts : getTConsParts(nq);
+                items.forEach((it, i) => {
+                    const pics = picsArr[i];
+                    if ((it.size || '').trim().toUpperCase() !== ns || pics <= 0) return;
+                    const body = num(it.bodywt);
+                    const rib = isGrs ? (gRibTot > 0 ? sh(gRibTot, i) : num(it.ribwt)) : 0;
+                    let pocket = sh(gPkt, i), plaket = sh(gPlk, i);
+                    if (isPolo && gPkt <= 0 && gPlk <= 0) { if (hasPkt) pocket = num(it.pktwt); else plaket = num(it.pktwt); }
+                    let byPl = sh(gBy, i);
+                    const foldOnly = fGm * pics;
+                    if (isPolo && hasBy && gBy <= 0 && fGm <= 0) byPl = num(it.foldwt);
+                    const side = isPant && hasSide ? (gSide > 0 ? sh(gSide, i) : num(it.sidepocket)) : 0;
+                    const back = isPant && hasBack ? (gBack > 0 ? sh(gBack, i) : num(it.backpocket)) : 0;
+                    const belt = isSw && hasBelt ? (gBelt > 0 ? sh(gBelt, i) : num(it.beltwt)) : 0;
+                    const cup = isSw && hasCup ? (gCup > 0 ? sh(gCup, i) : num(it.cupwt)) : 0;
+                    const spk = isSw && hasSp ? (gSpk > 0 ? sh(gSpk, i) : num(it.spktwt)) : 0;
+                    const collar = isPolo ? (gCol > 0 ? sh(gCol, i) : num(it.collarwt)) : 0;
+                    let wst = sh(gWst, i); const muk = sh(gMuk, i), byW = sh(gByW, i), ribW = sh(gRibWst, i);
+                    if (gWst + gMuk + gByW + gRibWst <= 0) wst = num(it.wastewt);
+                    const folding = foldOnly + byPl, pkt = pocket + plaket, wastage = wst + muk + byW + ribW;
+                    pieces += pics;
+                    S.body += body; S.spkt += spk; S.rib += rib; S.belt += belt; S.cup += cup; S.pocket += pkt; S.folding += folding;
+                    S.sidePocket += side; S.backPocket += back; S.collar += collar; S.wastage += wastage;
+                    S.total += body + folding + spk + rib + belt + cup + pkt + side + back + collar + wastage;
+                    S.tcons += calculateTConsWeight(tParts, { body, rib, pocket, plaket, byPlaket: byPl, byPlaketWastage: byW, folding: foldOnly, sidePocket: side, backPocket: back, sweatPocket: spk, belt, cup, collar, wastage: wst, ribWastage: ribW, mukpat: muk });
+                });
+            });
+            if (pieces <= 0) return null;
+            const out = { pieces };
+            Object.keys(S).forEach(k => out[k] = S[k] / pieces);
+            return out;
+        }
+
+        // Shows "Avg / (diff)" under every weight cell; red = looks wrong vs history for that size.
+        const COMP_REF_SEL = { body:'.row-bodywt', spkt:'.row-spktwt', rib:'.row-ribwt', belt:'.row-beltwt', cup:'.row-cupwt', rope:'.row-ropewt', pocket:'.row-pocket', folding:'.row-folding', sidePocket:'.row-sidepocket', backPocket:'.row-backpocket', collar:'.row-collarcuff', wastage:'.row-wastage', total:'.row-total' };
+        function renderRowComponentRefs(row, hist, pics, cur) {
+            Object.keys(COMP_REF_SEL).forEach(key => {
+                const el = row.querySelector(COMP_REF_SEL[key]);
+                const td = el ? (el.tagName === 'TD' ? el : el.closest('td')) : null;
+                if (!td) return;
+                let ref = td.querySelector(':scope > .cell-avg-ref');
+                const avg = hist ? hist[key] : undefined, c = cur ? cur[key] : undefined;
+                if (avg === undefined || c === undefined || !(pics > 0) || td.classList.contains('hidden') || (!(avg > 0) && !(c > 0))) {
+                    if (ref) ref.remove();
+                    td.classList.remove('bg-red-50'); return;
+                }
+                const cons = c / pics, diff = cons - avg;
+                // Body/Total use the same 0.0025 per-pc limit as B.cons/T.cons; other parts use 10% of their own average.
+                const tol = (key === 'body' || key === 'total') ? 0.0025 : Math.max(0.0005, avg * 0.10);
+                const bad = Math.abs(diff) > tol;
+                if (!ref) { ref = document.createElement('div'); ref.className = 'cell-avg-ref no-print leading-tight'; td.appendChild(ref); }
+                ref.innerHTML = `<span class="text-[10px] font-bold text-gray-700 block">${cons.toFixed(5)}</span><span class="text-[9px] text-gray-500 font-medium block">Avg: ${avg.toFixed(5)}</span><span class="text-[8px] ${bad ? 'text-red-500 font-bold' : 'text-gray-400'} block">(${diff >= 0 ? '+' : ''}${diff.toFixed(5)})</span>`;
+                td.classList.toggle('bg-red-50', bad);
+            });
+        }
+
         function calculateTotals(autoRenumberSlips = false) {
             const rows = document.querySelectorAll('#itemRows tr');
             
@@ -1778,9 +2285,22 @@
             rows.forEach(row => {
                 const bodyWtInput = row.querySelector('.row-bodywt');
                 if (bodyWtInput && bodyWtInput.dataset.origBodyWt !== undefined) {
-                    bodyWtInput.value = bodyWtInput.dataset.origBodyWt;
-                    bodyWtInput.removeAttribute('data-origBodyWt');
+                    // If the user typed over the adjusted number, keep their typing as the new
+                    // original value instead of overwriting it with the old one.
+                    const shownAdj = bodyWtInput.dataset.adjShownBodyWt;
+                    if (shownAdj === undefined || bodyWtInput.value === shownAdj) {
+                        bodyWtInput.value = bodyWtInput.dataset.origBodyWt;
+                    }
+                    delete bodyWtInput.dataset.origBodyWt;
+                    delete bodyWtInput.dataset.adjShownBodyWt;
                 }
+                ['.row-pocket','.row-folding','.row-collarcuff','.row-wastage','.row-ribwt','.row-sidepocket','.row-backpocket','.row-spktwt','.row-beltwt','.row-cupwt'].forEach(sl => {
+                    const e0 = row.querySelector(sl);
+                    if (e0 && e0.dataset.origManual !== undefined) {
+                        if (e0.dataset.adjShown === undefined || e0.value === e0.dataset.adjShown) e0.value = e0.dataset.origManual;
+                        delete e0.dataset.origManual; delete e0.dataset.adjShown;
+                    }
+                });
                 const ropeWtInput0 = row.querySelector('.row-ropewt');
                 if (ropeWtInput0 && ropeWtInput0.dataset.origRopeWt !== undefined) {
                     ropeWtInput0.value = ropeWtInput0.dataset.origRopeWt;
@@ -1792,7 +2312,8 @@
                 'globalWastageInput', 'globalMukpatInput', 'poloTotalByPlaketWastageInput', 
                 'globalRibWastageInput', 'globalTotalRibInput', 'poloTotalPocketInput', 
                 'poloTotalPlaketInput', 'poloTotalByPlaketInput', 'poloTotalCollarCuffInput', 
-                'pantTotalSidePocketInput', 'pantTotalBackPocketInput', 'globalRopeInput'
+                'pantTotalSidePocketInput', 'pantTotalBackPocketInput', 'globalRopeInput',
+                'sweatTotalBeltInput', 'sweatTotalCupInput', 'sweatTotalPocketInput'
             ];
             globalInputIds.forEach(id => {
                 const el = document.getElementById(id);
@@ -1863,6 +2384,9 @@
             let totalPocketSum = 0;
             let totalSidePocketSum = 0;
             let totalBackPocketSum = 0;
+            let totalBeltSum = 0;
+            let totalCupSum = 0;
+            let totalSweatPktSum = 0;
             let totalCollarCuffSum = 0;
             let totalMainFabricSum = 0;
 
@@ -1884,6 +2408,8 @@
             const isGrsActive = (currentQuality.toUpperCase().includes('GRS') || currentQuality.toUpperCase().includes('SWEAT SHIRT'));
             const isPoloActive = currentQuality.toUpperCase().includes('POLO');
             const isPantActive = currentQuality.toUpperCase().includes('PANT');
+            // Sweat Shirt = Rib quality that also gets Belt + Cup columns / global boxes
+            const isSweatActive = currentQuality.toUpperCase().includes('SWEAT SHIRT') && !currentQuality.toUpperCase().includes('TEXTILE');
             const isTextileActive = currentQuality.toUpperCase().includes('TEXTILE');
             // Textile Pajama = Textile quality with a Rope column + Rope global box
             const isPajamaActive = isTextileActive && /PAJAMA|PYJAMA/.test(currentQuality.toUpperCase());
@@ -1966,6 +2492,12 @@
             const poloHasByPlaket = qualityPoloByPlaketData[currentQuality] !== false;
             const pantHasSidePocket = qualityPantSidePocketData[currentQuality] !== false;
             const pantHasBackPocket = qualityPantBackPocketData[currentQuality] !== false;
+            const sweatHasBelt = qualitySweatBeltData[currentQuality] !== false;
+            const sweatHasCup = qualitySweatCupData[currentQuality] !== false;
+            const sweatHasPocket = qualitySweatPocketData[currentQuality] !== false;
+
+            // Make sure every row owns its Belt / Cup cells (rows made by any older code path).
+            rows.forEach(ensureSweatCells);
 
             // Keep all 16 table cells in the same grid position while collapsing
             // only the inactive columns to zero width. This prevents any row from
@@ -1979,7 +2511,11 @@
                 isFoldingActive,
                 poloHasByPlaket,
                 pantHasSidePocket,
-                pantHasBackPocket
+                pantHasBackPocket,
+                isSweatActive,
+                sweatHasBelt,
+                sweatHasCup,
+                sweatHasPocket
             });
 
             // Manage Polo config row visibility panel
@@ -2003,6 +2539,19 @@
                     document.getElementById('globalBackPocketDiv').style.display = pantHasBackPocket ? 'flex' : 'none';
                 } else {
                     pantOptionsRow.classList.add('hidden');
+                }
+            }
+
+            // Manage Sweat Shirt config row visibility panel (Belt / Cup)
+            const sweatOptionsRow = document.getElementById('sweatOptionsRow');
+            if (sweatOptionsRow) {
+                if (isSweatActive) {
+                    sweatOptionsRow.classList.remove('hidden');
+                    document.getElementById('globalBeltDiv').style.display = sweatHasBelt ? 'flex' : 'none';
+                    document.getElementById('globalCupDiv').style.display = sweatHasCup ? 'flex' : 'none';
+                    document.getElementById('globalSweatPocketDiv').style.display = sweatHasPocket ? 'flex' : 'none';
+                } else {
+                    sweatOptionsRow.classList.add('hidden');
                 }
             }
 
@@ -2057,6 +2606,12 @@
 
             const ropeTh = document.getElementById('ropeHeaderTh');
             if (ropeTh) ropeTh.classList.toggle('hidden', !isPajamaActive);
+            const sweatPktTh = document.getElementById('sweatPktHeaderTh');
+            if (sweatPktTh) sweatPktTh.classList.toggle('hidden', !(isSweatActive && sweatHasPocket));
+            const beltTh = document.getElementById('beltHeaderTh');
+            const cupTh = document.getElementById('cupHeaderTh');
+            if (beltTh) beltTh.classList.toggle('hidden', !(isSweatActive && sweatHasBelt));
+            if (cupTh) cupTh.classList.toggle('hidden', !(isSweatActive && sweatHasCup));
 
             const pocketTh = document.getElementById('pocketHeaderTh');
             const sidePocketTh = document.getElementById('sidePocketHeaderTh');
@@ -2074,6 +2629,8 @@
             if (sidePocketTh) (!isTextileActive && isPantActive && pantHasSidePocket) ? sidePocketTh.classList.remove('hidden') : sidePocketTh.classList.add('hidden');
             if (backPocketTh) (!isTextileActive && isPantActive && pantHasBackPocket) ? backPocketTh.classList.remove('hidden') : backPocketTh.classList.add('hidden');
             if (collarCuffTh) (!isTextileActive && isPoloActive) ? collarCuffTh.classList.remove('hidden') : collarCuffTh.classList.add('hidden');
+
+            applyColumnNames();
 
             const tfootTd = document.getElementById('totalFoldingDisplay');
             if (tfootTd) {
@@ -2095,6 +2652,12 @@
 
             const ropeTfootTd = document.getElementById('totalRopeWtDisplay');
             if (ropeTfootTd) ropeTfootTd.classList.toggle('hidden', !isPajamaActive);
+            const sweatPktTfootTd = document.getElementById('totalSweatPktDisplay');
+            if (sweatPktTfootTd) sweatPktTfootTd.classList.toggle('hidden', !(isSweatActive && sweatHasPocket));
+            const beltTfootTd = document.getElementById('totalBeltWtDisplay');
+            const cupTfootTd = document.getElementById('totalCupWtDisplay');
+            if (beltTfootTd) beltTfootTd.classList.toggle('hidden', !(isSweatActive && sweatHasBelt));
+            if (cupTfootTd) cupTfootTd.classList.toggle('hidden', !(isSweatActive && sweatHasCup));
 
             const pocketTfootTd = document.getElementById('totalPocketDisplay');
             const sidePocketTfootTd = document.getElementById('totalSidePocketDisplay');
@@ -2121,6 +2684,9 @@
             
             let totalSidePocketGlobal = isPantActive && pantHasSidePocket ? (parseFloat(document.getElementById('pantTotalSidePocketInput').value) || 0) : 0;
             let totalBackPocketGlobal = isPantActive && pantHasBackPocket ? (parseFloat(document.getElementById('pantTotalBackPocketInput').value) || 0) : 0;
+            let totalSweatPocketGlobal = (isSweatActive && sweatHasPocket) ? (parseFloat(document.getElementById('sweatTotalPocketInput').value) || 0) : 0;
+            let totalBeltGlobal = (isSweatActive && sweatHasBelt) ? (parseFloat(document.getElementById('sweatTotalBeltInput').value) || 0) : 0;
+            let totalCupGlobal = (isSweatActive && sweatHasCup) ? (parseFloat(document.getElementById('sweatTotalCupInput').value) || 0) : 0;
 
             let globalWastage = parseFloat(document.getElementById('globalWastageInput').value) || 0;
             let globalMukpat = parseFloat(document.getElementById('globalMukpatInput').value) || 0;
@@ -2133,6 +2699,8 @@
             let tempTotalPicsSum = 0;
             rows.forEach(row => {
                 tempTotalPicsSum += parseFloat(row.querySelector('.row-pics').value) || 0;
+                const wIn0 = row.querySelector('.row-wastage');
+                if (wIn0 && !isCheckActive && wIn0.dataset.weight !== undefined) { wIn0.value = wIn0.dataset.weight; delete wIn0.dataset.weight; }
                 
                 const bodyWtInput = row.querySelector('.row-bodywt');
                 if (!isCheckActive && bodyWtInput.dataset.weight !== undefined) {
@@ -2176,7 +2744,9 @@
             // Keep Textile wastage allocation outside the preparation block because
             // it is also consumed by the main row-rendering block below.
             let textileAllocatedWastage = [];
+            let textileWasteAuto = true;
             let textileCheckAdjBody = null; // adjusted body weights used for meter conversion
+            let textileCheckAdjWast = null; // adjusted manual wastage weights used for meter conversion
             let textileCheckAdjRope = null; // adjusted manual rope weights used for meter conversion
             const textileTotalMeters = parseFloat(document.getElementById('textileTotalMetersInput').value) || 0;
             const textileStdCons = parseFloat(document.getElementById('textileStdConsInput').value) || 0;
@@ -2208,8 +2778,24 @@
                             });
                         }
                     }
-                    const tRes = applyTextileAdjustment(tBodyOrig, globalWastage, tAdjWeight, tAdjAction, !!tSel.body, !!tSel.wastage, tRopeOrig, tRopeOn);
+                    const tWastManual = !(globalWastage > 0) && !!tSel.wastage;
+                    const tWastOrig = tWastManual ? tRows.map(r => {
+                        const wi = r.querySelector('.row-wastage');
+                        if (!wi || wi.dataset.auto === '1') return 0;
+                        return parseFloat(isCheckActive && wi.dataset.weight !== undefined ? wi.dataset.weight : wi.value) || 0;
+                    }) : [];
+                    const tRes = applyTextileAdjustment(tBodyOrig, globalWastage, tAdjWeight, tAdjAction, !!tSel.body, !!tSel.wastage, tRopeOrig, tRopeOn, tWastOrig, tWastManual);
                     if (tRes.factor > 0) {
+                        if (tWastManual && tRes.wastList) {
+                            if (isCheckActive) textileCheckAdjWast = tRes.wastList.slice();
+                            else tRows.forEach((r, i) => {
+                                const wi = r.querySelector('.row-wastage');
+                                if (!wi) return;
+                                if (wi.dataset.origManual === undefined) wi.dataset.origManual = wi.value === '' ? '0' : wi.value;
+                                wi.value = tRes.wastList[i].toFixed(3);
+                                wi.dataset.adjShown = wi.value;
+                            });
+                        }
                         if (tRopeOn) {
                             if (globalRope > 0) {
                                 const gRopeEl = document.getElementById('globalRopeInput');
@@ -2235,6 +2821,7 @@
                                     const inp = r.querySelector('.row-bodywt');
                                     if (inp.dataset.origBodyWt === undefined) inp.dataset.origBodyWt = inp.value === '' ? '0' : inp.value;
                                     inp.value = tRes.bodyList[i].toFixed(3);
+                                    inp.dataset.adjShownBodyWt = inp.value;
                                 });
                             }
                         }
@@ -2259,6 +2846,18 @@
                     Array.from(rows).map(row => parseFloat(row.querySelector('.row-pics').value) || 0),
                     Array.from(rows).map(row => row.querySelector('.row-size').value)
                 );
+
+                textileWasteAuto = globalWastage > 0;
+                if (!textileWasteAuto) {
+                    textileAllocatedWastage = Array.from(rows).map((r, ri) => {
+                        const wIn = r.querySelector('.row-wastage');
+                        if (!wIn) return 0;
+                        prepDualInput(wIn);
+                        if (isCheckActive && wIn.dataset.weight === undefined) wIn.dataset.weight = wIn.value;
+                        if (isCheckActive && textileCheckAdjWast && textileCheckAdjWast[ri] !== undefined) return textileCheckAdjWast[ri];
+                        return parseFloat(isCheckActive ? wIn.dataset.weight : wIn.value) || 0;
+                    });
+                }
 
                 const textileRopeWeights = [];
                 // Rope: global box is split by pics (size-ordered 50g units); otherwise manual row values.
@@ -2363,6 +2962,9 @@
             const chkSidePkt = !!adjSelection.sidePocket;
             const chkBackPkt = !!adjSelection.backPocket;
             const chkCollar = !!adjSelection.collar;
+            const chkSweatPkt = !!adjSelection.sweatPocket;
+            const chkBelt = !!adjSelection.belt;
+            const chkCup = !!adjSelection.cup;
 
             // When Weight Adjustment is cleared, restore all values temporarily
             // changed by the adjustment. This also releases row inputs that were
@@ -2373,6 +2975,7 @@
                     if (bodyInput && bodyInput.dataset.origBodyWt !== undefined) {
                         bodyInput.value = parseFloat(bodyInput.dataset.origBodyWt || 0).toFixed(3);
                         delete bodyInput.dataset.origBodyWt;
+                        delete bodyInput.dataset.adjShownBodyWt;
                     }
                 });
 
@@ -2387,6 +2990,9 @@
                     'poloTotalByPlaketInput',
                     'pantTotalSidePocketInput',
                     'pantTotalBackPocketInput',
+                    'sweatTotalBeltInput',
+                    'sweatTotalCupInput',
+                    'sweatTotalPocketInput',
                     'poloTotalCollarCuffInput',
                     'globalRopeInput'
                 ].forEach(id => {
@@ -2433,6 +3039,16 @@
                     if (chkSidePkt && isPantActive && pantHasSidePocket) baseSum += totalSidePocketGlobal > 0 ? (tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * totalSidePocketGlobal : 0) : (parseFloat(row.querySelector('.row-sidepocket').value) || 0);
                     if (chkBackPkt && isPantActive && pantHasBackPocket) baseSum += totalBackPocketGlobal > 0 ? (tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * totalBackPocketGlobal : 0) : (parseFloat(row.querySelector('.row-backpocket').value) || 0);
                     if (chkCollar && isPoloActive) baseSum += tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * totalCollarCuffGlobal : 0;
+                    // Manual columns (their global box is empty) take part in the adjustment too
+                    const mv = cls => { const e = row.querySelector(cls); return (e && e.dataset.auto !== '1') ? (parseFloat(e.value) || 0) : 0; };
+                    if (chkWastage && !(globalWastage > 0 || globalMukpat > 0 || globalByPlaketWastage > 0 || globalRibWastage > 0)) baseSum += mv('.row-wastage');
+                    if (isPoloActive && !(totalPocketGlobal > 0 || totalPlaketGlobal > 0) && ((poloHasPocket && chkPocket) || (!poloHasPocket && chkPlaket))) baseSum += mv('.row-pocket');
+                    if (isPoloActive && poloHasByPlaket && !isFoldingActive && !(totalByPlaketGlobal > 0) && chkByPlaket) baseSum += mv('.row-folding');
+                    if (isPoloActive && !(totalCollarCuffGlobal > 0) && chkCollar) baseSum += mv('.row-collarcuff');
+                    const shr = t => tempTotalPicsSum > 0 ? (pics / tempTotalPicsSum) * t : 0;
+                    if (chkSweatPkt && isSweatActive && sweatHasPocket) baseSum += totalSweatPocketGlobal > 0 ? shr(totalSweatPocketGlobal) : mv('.row-spktwt');
+                    if (chkBelt && isSweatActive && sweatHasBelt) baseSum += totalBeltGlobal > 0 ? shr(totalBeltGlobal) : mv('.row-beltwt');
+                    if (chkCup && isSweatActive && sweatHasCup) baseSum += totalCupGlobal > 0 ? shr(totalCupGlobal) : mv('.row-cupwt');
                 });
 
                 if (baseSum > 0) {
@@ -2454,6 +3070,9 @@
                     if (chkSidePkt && isPantActive && pantHasSidePocket) selectedGlobalIds.push('pantTotalSidePocketInput');
                     if (chkBackPkt && isPantActive && pantHasBackPocket) selectedGlobalIds.push('pantTotalBackPocketInput');
                     if (chkCollar && isPoloActive) selectedGlobalIds.push('poloTotalCollarCuffInput');
+                    if (chkSweatPkt && isSweatActive && sweatHasPocket) selectedGlobalIds.push('sweatTotalPocketInput');
+                    if (chkBelt && isSweatActive && sweatHasBelt) selectedGlobalIds.push('sweatTotalBeltInput');
+                    if (chkCup && isSweatActive && sweatHasCup) selectedGlobalIds.push('sweatTotalCupInput');
 
                     const globalAdjustmentEntries = selectedGlobalIds.map(id => {
                         const el = document.getElementById(id);
@@ -2504,6 +3123,9 @@
                 ? (parseFloat(document.getElementById('pantTotalSidePocketInput').value) || 0) : 0;
             totalBackPocketGlobal = (isPantActive && pantHasBackPocket)
                 ? (parseFloat(document.getElementById('pantTotalBackPocketInput').value) || 0) : 0;
+            totalSweatPocketGlobal = (isSweatActive && sweatHasPocket) ? (parseFloat(document.getElementById('sweatTotalPocketInput').value) || 0) : 0;
+            totalBeltGlobal = (isSweatActive && sweatHasBelt) ? (parseFloat(document.getElementById('sweatTotalBeltInput').value) || 0) : 0;
+            totalCupGlobal = (isSweatActive && sweatHasCup) ? (parseFloat(document.getElementById('sweatTotalCupInput').value) || 0) : 0;
 
             const allocationWeights = Array.from(rows).map(row => parseFloat(row.querySelector('.row-pics').value) || 0);
             const allocationSizes = Array.from(rows).map(row => row.querySelector('.row-size').value);
@@ -2529,6 +3151,9 @@
             const allocatedCollarCuff = allocateRoundedShares(totalCollarCuffGlobal, allocationWeights, allocationSizes);
             const allocatedSidePocket = allocateRoundedShares(totalSidePocketGlobal, allocationWeights, allocationSizes);
             const allocatedBackPocket = allocateRoundedShares(totalBackPocketGlobal, allocationWeights, allocationSizes);
+            const allocatedSweatPocket = allocateRoundedShares(totalSweatPocketGlobal, allocationWeights, allocationSizes);
+            const allocatedBelt = allocateRoundedShares(totalBeltGlobal, allocationWeights, allocationSizes);
+            const allocatedCup = allocateRoundedShares(totalCupGlobal, allocationWeights, allocationSizes);
 
             // Weight Adjustment exact-reconciliation setup. The requested adjustment
             // is treated as a 50g-unit amount, and the final selected total is
@@ -2545,6 +3170,10 @@
                 })() + adjustmentDelta * ((adjAction === 'ADD') ? 1 : -1)
             ) : 0;
 
+            const adjSignM = (adjAction === 'ADD') ? 1 : -1;
+            const adjOn = adjWeightValue > 0 && adjFactor > 0;
+            const compHistCache = {};
+            const getCompHist = s => (s in compHistCache) ? compHistCache[s] : (compHistCache[s] = s ? getComponentHistoricalAverages(currentQuality, s, isCheckActive) : null);
             rows.forEach((row, rowIndex) => {
                 const sizeVal = (row.querySelector('.row-size').value || "").trim().toUpperCase();
                 const pics = parseFloat(row.querySelector('.row-pics').value) || 0;
@@ -2552,15 +3181,18 @@
                 let bodywt = isCheckActive ? (parseFloat(bodyWtInput.dataset.weight) || 0) : (parseFloat(bodyWtInput.value) || 0);
 
                 // Fetch historical benchmarks for this row's size
-                const histBench = getHistoricalAverages(currentQuality, sizeVal);
+                const histBench = getHistoricalAverages(currentQuality, sizeVal, isCheckActive);
 
                 // Force layout state clean synchronization parameters to explicitly prevent shattered bounds
-                const foldingTd = row.querySelector('.row-folding');
+                const foldingTd = row.querySelector('.row-folding-td');
                 const ribTd = row.querySelector('.row-ribwt-td');
-                const pocketTd = row.querySelector('.row-pocket');
+                const pocketTd = row.querySelector('.row-pocket-td');
                 const sidePocketTd = row.querySelector('.row-sidepocket-td');
                 const backPocketTd = row.querySelector('.row-backpocket-td');
-                const collarCuffTd = row.querySelector('.row-collarcuff');
+                const collarCuffTd = row.querySelector('.row-collarcuff-td');
+                const spktTd = row.querySelector('.row-spktwt-td');
+                const beltTd = row.querySelector('.row-beltwt-td');
+                const cupTd = row.querySelector('.row-cupwt-td');
 
                 if (isTextileActive) {
                     if (foldingTd) foldingTd.classList.add('hidden');
@@ -2570,8 +3202,12 @@
                     if (backPocketTd) backPocketTd.classList.add('hidden');
                     if (foldingTd) foldingTd.classList.add('hidden');
                     if (collarCuffTd) collarCuffTd.classList.add('hidden');
+                    if (spktTd) spktTd.classList.add('hidden');
+                    if (beltTd) beltTd.classList.add('hidden');
+                    if (cupTd) cupTd.classList.add('hidden');
 
                     let rowWastage = textileAllocatedWastage[rowIndex] || 0;
+                    let tCells = null;
 
                     if (isCheckActive) {
                         const rowBodyMtr = textileBodyMetersByRow[rowIndex] || 0;
@@ -2582,7 +3218,7 @@
                         bodyWtInput.value = rowBodyMtr.toFixed(3);
                         if (isPajamaActive && row.querySelector('.row-ropewt')) row.querySelector('.row-ropewt').value = rowRopeMtr.toFixed(3);
                         totalRopeSum += rowRopeMtr;
-                        row.querySelector('.row-wastage').innerText = rowWastageMtr.toFixed(3);
+                        writeWastageCell(row, rowWastageMtr.toFixed(3), textileWasteAuto, true);
                         row.querySelector('.row-total').innerText = rowTotalMtr.toFixed(3);
 
                         const rowBodyMtrPerPc = pics > 0 ? rowBodyMtr / pics : 0;
@@ -2595,14 +3231,15 @@
                         totalBodyWtSum += rowBodyMtr;
                         totalWastageSum += rowWastageMtr;
                         totalWeightSum += rowTotalMtr;
+                        tCells = { body: rowBodyMtr, rope: rowRopeMtr, wastage: rowWastageMtr, total: rowTotalMtr };
                     } else {
-                        rowWastage = roundTo50g(rowWastage);
+                        if (textileWasteAuto) rowWastage = roundTo50g(rowWastage);
                         const rowWastageRounded = parseFloat(rowWastage.toFixed(3));
                         const rowRopeRounded = parseFloat((textileRopeWeightByRow[rowIndex] || 0).toFixed(3));
                         const rowTotalWeightRounded = parseFloat((parseFloat(bodywt.toFixed(3)) + rowRopeRounded + rowWastageRounded).toFixed(3));
                         totalRopeSum += rowRopeRounded;
 
-                        row.querySelector('.row-wastage').innerText = rowWastageRounded.toFixed(3);
+                        writeWastageCell(row, rowWastageRounded.toFixed(3), textileWasteAuto, false);
                         row.querySelector('.row-total').innerText = rowTotalWeightRounded.toFixed(3);
 
                         const grandBCons = pics > 0 ? bodywt / pics : 0;
@@ -2615,9 +3252,14 @@
                         totalBodyWtSum += parseFloat(bodywt.toFixed(3));
                         totalWastageSum += rowWastageRounded;
                         totalWeightSum += rowTotalWeightRounded;
+                        tCells = { body: bodywt, rope: rowRopeRounded, wastage: rowWastageRounded, total: rowTotalWeightRounded };
                     }
-                    if (row.querySelector('.row-bcons-ref')) row.querySelector('.row-bcons-ref').innerHTML = "";
-                    if (row.querySelector('.row-tcons-ref')) row.querySelector('.row-tcons-ref').innerHTML = "";
+                    renderTextileRowAverages(
+                        row, histBench, pics,
+                        parseFloat(row.querySelector('.row-bcons').innerText) || 0,
+                        parseFloat(row.querySelector('.row-tcons').innerText) || 0
+                    );
+                    renderRowComponentRefs(row, getCompHist(sizeVal), pics, tCells);
                 } else {
                     const fName = qualityFoldingNameData[currentQuality] || "";
                     const fGm = parseFloat(qualityFoldingGmData[currentQuality]) || 0;
@@ -2637,6 +3279,17 @@
                         byPlaketWt = roundTo50g(byPlaketWt);
                     }
                     let foldingWt = foldingOnlyWt + byPlaketWt;
+                    const foldingIn = row.querySelector('.row-folding');
+                    let foldManual = false;
+                    if (foldingIn) {
+                        if (!(isFoldingActive || (isPoloActive && poloHasByPlaket))) foldingIn.value = '';
+                        else if (isFoldingActive || totalByPlaketGlobal > 0) lockAutoInput(foldingIn);
+                        else {
+                            foldManual = prepDualInput(foldingIn);
+                            foldingWt = adjManualVal(foldingIn, adjOn && chkByPlaket && isPoloActive && poloHasByPlaket, adjFactor, adjSignM);
+                            if (isPoloActive && poloHasByPlaket) { byPlaketWt = foldingWt; foldingOnlyWt = 0; } else { foldingOnlyWt = foldingWt; byPlaketWt = 0; }
+                        }
+                    }
 
                     if (foldingTd) {
                         if (isFoldingActive || (isPoloActive && poloHasByPlaket)) {
@@ -2659,7 +3312,7 @@
                             } else {
                                 ribInput.disabled = false;
                                 ribInput.classList.remove('bg-gray-100');
-                                ribWt = parseFloat(ribInput.value) || 0;
+                                ribWt = adjManualVal(ribInput, adjOn && chkRib, adjFactor, adjSignM);
                             }
                         } else {
                             ribTd.classList.add('hidden');
@@ -2672,15 +3325,24 @@
                     let pocketOnlyWt = 0;
                     let plaketWt = 0;
                     let pktPlktWt = 0;
+                    const pocketIn = row.querySelector('.row-pocket');
+                    let pktManual = false;
                     if (pocketTd) {
                         if (isPoloActive) {
                             pocketTd.classList.remove('hidden');
-                            plaketWt = allocatedPlaket[rowIndex] || 0;
-                            pocketOnlyWt = poloHasPocket ? (allocatedPocket[rowIndex] || 0) : 0;
-                            pktPlktWt = pocketOnlyWt + plaketWt;
+                            if (totalPocketGlobal > 0 || totalPlaketGlobal > 0 || !pocketIn) {
+                                plaketWt = allocatedPlaket[rowIndex] || 0;
+                                pocketOnlyWt = poloHasPocket ? (allocatedPocket[rowIndex] || 0) : 0;
+                                pktPlktWt = pocketOnlyWt + plaketWt;
+                                if (pocketIn) lockAutoInput(pocketIn);
+                            } else {
+                                pktManual = prepDualInput(pocketIn);
+                                pktPlktWt = adjManualVal(pocketIn, adjOn && ((poloHasPocket && chkPocket) || (!poloHasPocket && chkPlaket)), adjFactor, adjSignM);
+                                if (poloHasPocket) pocketOnlyWt = pktPlktWt; else plaketWt = pktPlktWt;
+                            }
                         } else {
                             pocketTd.classList.add('hidden');
-                            pocketTd.innerText = '0.000';
+                            if (pocketIn) pocketIn.value = '';
                         }
                     }
 
@@ -2697,7 +3359,7 @@
                             } else {
                                 sidePocketInput.disabled = false;
                                 sidePocketInput.classList.remove('bg-gray-100');
-                                sidePocketWt = parseFloat(sidePocketInput.value) || 0;
+                                sidePocketWt = adjManualVal(sidePocketInput, adjOn && chkSidePkt, adjFactor, adjSignM);
                             }
                         } else {
                             sidePocketTd.classList.add('hidden');
@@ -2718,7 +3380,7 @@
                             } else {
                                 backPocketInput.disabled = false;
                                 backPocketInput.classList.remove('bg-gray-100');
-                                backPocketWt = parseFloat(backPocketInput.value) || 0;
+                                backPocketWt = adjManualVal(backPocketInput, adjOn && chkBackPkt, adjFactor, adjSignM);
                             }
                         } else {
                             backPocketTd.classList.add('hidden');
@@ -2726,14 +3388,85 @@
                         }
                     }
 
+                    // Dual-mode Sweat Pocket weight mechanism (global box splits by pics, else manual row entry)
+                    let spktWt = 0;
+                    const spktInput = row.querySelector('.row-spktwt');
+                    if (spktTd && spktInput) {
+                        if (isSweatActive && sweatHasPocket) {
+                            spktTd.classList.remove('hidden');
+                            if (totalSweatPocketGlobal > 0) {
+                                spktWt = allocatedSweatPocket[rowIndex] || 0;
+                                spktInput.disabled = true;
+                                spktInput.classList.add('bg-gray-100');
+                            } else {
+                                spktInput.disabled = false;
+                                spktInput.classList.remove('bg-gray-100');
+                                spktWt = adjManualVal(spktInput, adjOn && chkSweatPkt, adjFactor, adjSignM);
+                            }
+                        } else {
+                            spktTd.classList.add('hidden');
+                            spktInput.value = '';
+                        }
+                    }
+
+                    // Dual-mode Belt weight mechanism (global box splits by pics, else manual row entry)
+                    let beltWt = 0;
+                    const beltInput = row.querySelector('.row-beltwt');
+                    if (beltTd && beltInput) {
+                        if (isSweatActive && sweatHasBelt) {
+                            beltTd.classList.remove('hidden');
+                            if (totalBeltGlobal > 0) {
+                                beltWt = allocatedBelt[rowIndex] || 0;
+                                beltInput.disabled = true;
+                                beltInput.classList.add('bg-gray-100');
+                            } else {
+                                beltInput.disabled = false;
+                                beltInput.classList.remove('bg-gray-100');
+                                beltWt = adjManualVal(beltInput, adjOn && chkBelt, adjFactor, adjSignM);
+                            }
+                        } else {
+                            beltTd.classList.add('hidden');
+                            beltInput.value = '';
+                        }
+                    }
+
+                    // Dual-mode Cup weight mechanism (global box splits by pics, else manual row entry)
+                    let cupWt = 0;
+                    const cupInput = row.querySelector('.row-cupwt');
+                    if (cupTd && cupInput) {
+                        if (isSweatActive && sweatHasCup) {
+                            cupTd.classList.remove('hidden');
+                            if (totalCupGlobal > 0) {
+                                cupWt = allocatedCup[rowIndex] || 0;
+                                cupInput.disabled = true;
+                                cupInput.classList.add('bg-gray-100');
+                            } else {
+                                cupInput.disabled = false;
+                                cupInput.classList.remove('bg-gray-100');
+                                cupWt = adjManualVal(cupInput, adjOn && chkCup, adjFactor, adjSignM);
+                            }
+                        } else {
+                            cupTd.classList.add('hidden');
+                            cupInput.value = '';
+                        }
+                    }
+
                     let collarCuffWt = 0;
+                    const collarIn = row.querySelector('.row-collarcuff');
+                    let collarManual = false;
                     if (collarCuffTd) {
                         if (isPoloActive) {
                             collarCuffTd.classList.remove('hidden');
-                            collarCuffWt = allocatedCollarCuff[rowIndex] || 0;
+                            if (totalCollarCuffGlobal > 0 || !collarIn) {
+                                collarCuffWt = allocatedCollarCuff[rowIndex] || 0;
+                                if (collarIn) lockAutoInput(collarIn);
+                            } else {
+                                collarManual = prepDualInput(collarIn);
+                                collarCuffWt = adjManualVal(collarIn, adjOn && chkCollar, adjFactor, adjSignM);
+                            }
                         } else {
                             collarCuffTd.classList.add('hidden');
-                            collarCuffTd.innerText = '0.000';
+                            if (collarIn) collarIn.value = '';
                         }
                     }
 
@@ -2750,6 +3483,15 @@
                     let ribWastageWt = allocatedRibWastage[rowIndex] || 0;
                     let mainWastageOnlyPart = allocatedMainWastage[rowIndex] || 0;
                     let mainMukpatPart = rowMukpatPart;
+                    const wastageIn = row.querySelector('.row-wastage');
+                    const wasteAuto = (globalWastage > 0 || globalMukpat > 0 || globalByPlaketWastage > 0 || globalRibWastage > 0);
+                    let wasteManual = false;
+                    if (wastageIn && !wasteAuto) {
+                        wasteManual = prepDualInput(wastageIn);
+                        const mw = adjManualVal(wastageIn, adjOn && chkWastage, adjFactor, adjSignM);
+                        rowWastagePart = mw; mainWastageOnlyPart = mw; rowMukpatPart = 0; mainMukpatPart = 0;
+                        byPlaketWastageWt = 0; ribWastageWt = 0;
+                    }
 
                     // Body weight is row-based and therefore receives the requested
                     // adjustment here. All global-target components are already
@@ -2762,6 +3504,7 @@
                         let baseWt = parseFloat(bodyWtInput.dataset.origBodyWt) || 0;
                         bodywt = roundTo50g(baseWt + baseWt * adjFactor * ((adjAction === 'ADD') ? 1 : -1));
                         bodyWtInput.value = bodywt.toFixed(3);
+                        bodyWtInput.dataset.adjShownBodyWt = bodyWtInput.value;
                     }
 
                     // Exact Weight Adjustment reconciliation. All selected values are
@@ -2777,7 +3520,7 @@
                             selectedRowTotal += roundTo50g(bodywt);
                         }
                         if (chkWastage) {
-                            selectedRowTotal += roundTo50g(allocatedMainWastage[rowIndex] || 0);
+                            selectedRowTotal += roundTo50g(wasteManual ? mainWastageOnlyPart : (allocatedMainWastage[rowIndex] || 0));
                         }
                         if (chkByPlaketWastage && isPoloActive && poloHasByPlaket) {
                             selectedRowTotal += roundTo50g(allocatedByPlaketWastage[rowIndex] || 0);
@@ -2812,6 +3555,9 @@
                         if (chkCollar && isPoloActive) {
                             selectedRowTotal += roundTo50g(collarCuffWt);
                         }
+                        if (chkSweatPkt && isSweatActive && sweatHasPocket) selectedRowTotal += roundTo50g(spktWt);
+                        if (chkBelt && isSweatActive && sweatHasBelt) selectedRowTotal += roundTo50g(beltWt);
+                        if (chkCup && isSweatActive && sweatHasCup) selectedRowTotal += roundTo50g(cupWt);
 
                         adjustmentSelectedRunningTotal += selectedRowTotal;
 
@@ -2825,8 +3571,9 @@
                                 // Wastage when GRS is active.
                                 if (chkBody && bodywt + correction >= 0) {
                                     bodywt = roundTo50g(bodywt + correction);
-                                } else if (chkWastage && (allocatedMainWastage[rowIndex] || 0) + correction >= 0) {
-                                    allocatedMainWastage[rowIndex] = roundTo50g((allocatedMainWastage[rowIndex] || 0) + correction);
+                                } else if (chkWastage && (wasteManual ? mainWastageOnlyPart : (allocatedMainWastage[rowIndex] || 0)) + correction >= 0) {
+                                    if (wasteManual) { mainWastageOnlyPart = roundTo50g(mainWastageOnlyPart + correction); allocatedMainWastage[rowIndex] = mainWastageOnlyPart; }
+                                    else allocatedMainWastage[rowIndex] = roundTo50g((allocatedMainWastage[rowIndex] || 0) + correction);
                                     rowWastagePart = roundTo50g((allocatedMainWastage[rowIndex] || 0) + (allocatedByPlaketWastage[rowIndex] || 0) + (allocatedRibWastage[rowIndex] || 0));
                                 } else if (chkByPlaketWastage && (allocatedByPlaketWastage[rowIndex] || 0) + correction >= 0 && isPoloActive && poloHasByPlaket) {
                                     allocatedByPlaketWastage[rowIndex] = roundTo50g((allocatedByPlaketWastage[rowIndex] || 0) + correction);
@@ -2856,30 +3603,47 @@
                                     backPocketWt = roundTo50g(backPocketWt + correction);
                                 } else if (chkCollar && isPoloActive && collarCuffWt + correction >= 0) {
                                     collarCuffWt = roundTo50g(collarCuffWt + correction);
+                                } else if (chkSweatPkt && isSweatActive && sweatHasPocket && spktWt + correction >= 0) {
+                                    spktWt = roundTo50g(spktWt + correction);
+                                } else if (chkBelt && isSweatActive && sweatHasBelt && beltWt + correction >= 0) {
+                                    beltWt = roundTo50g(beltWt + correction);
+                                } else if (chkCup && isSweatActive && sweatHasCup && cupWt + correction >= 0) {
+                                    cupWt = roundTo50g(cupWt + correction);
                                 }
                             }
                         }
                     }
 
                     // Convert distributed and adjusted weights (Including folding to 50g increments)
-                    foldingWt = roundTo50g(foldingWt);
+                    if (!foldManual) foldingWt = roundTo50g(foldingWt);
                     if (globalRibTotal > 0) ribWt = roundTo50g(ribWt);
-                    pktPlktWt = roundTo50g(pktPlktWt);
+                    if (!pktManual) pktPlktWt = roundTo50g(pktPlktWt);
                     if (totalSidePocketGlobal > 0) sidePocketWt = roundTo50g(sidePocketWt);
                     if (totalBackPocketGlobal > 0) backPocketWt = roundTo50g(backPocketWt);
-                    collarCuffWt = roundTo50g(collarCuffWt);
-                    rowWastagePart = roundTo50g(rowWastagePart);
-                    rowMukpatPart = roundTo50g(rowMukpatPart);
-                    mainWastageOnlyPart = roundTo50g(mainWastageOnlyPart);
-                    mainMukpatPart = roundTo50g(mainMukpatPart);
+                    if (totalSweatPocketGlobal > 0) spktWt = roundTo50g(spktWt);
+                    if (totalBeltGlobal > 0) beltWt = roundTo50g(beltWt);
+                    if (totalCupGlobal > 0) cupWt = roundTo50g(cupWt);
+                    if (!collarManual) collarCuffWt = roundTo50g(collarCuffWt);
+                    if (!wasteManual) {
+                        rowWastagePart = roundTo50g(rowWastagePart);
+                        rowMukpatPart = roundTo50g(rowMukpatPart);
+                        mainWastageOnlyPart = roundTo50g(mainWastageOnlyPart);
+                        mainMukpatPart = roundTo50g(mainMukpatPart);
+                    }
 
                     // Unconditionally push live adjusted parameters text displays into inner target inputs/cells
-                    if (foldingTd && (isFoldingActive || (isPoloActive && poloHasByPlaket))) foldingTd.innerText = foldingWt.toFixed(3);
+                    if (foldingIn && !foldManual && (isFoldingActive || (isPoloActive && poloHasByPlaket))) foldingIn.value = foldingWt.toFixed(3);
                     if (ribInput && isGrsActive && globalRibTotal > 0) ribInput.value = ribWt.toFixed(3);
-                    if (pocketTd && isPoloActive) pocketTd.innerText = pktPlktWt.toFixed(3);
+                    if (pocketIn && !pktManual && isPoloActive) pocketIn.value = pktPlktWt.toFixed(3);
                     if (sidePocketInput && isPantActive && pantHasSidePocket && totalSidePocketGlobal > 0) sidePocketInput.value = sidePocketWt.toFixed(3);
                     if (backPocketInput && isPantActive && pantHasBackPocket && totalBackPocketGlobal > 0) backPocketInput.value = backPocketWt.toFixed(3);
-                    if (collarCuffTd && isPoloActive) collarCuffTd.innerText = collarCuffWt.toFixed(3);
+                    if (spktInput && isSweatActive && sweatHasPocket && totalSweatPocketGlobal > 0) spktInput.value = spktWt.toFixed(3);
+                    if (beltInput && isSweatActive && sweatHasBelt && totalBeltGlobal > 0) beltInput.value = beltWt.toFixed(3);
+                    if (cupInput && isSweatActive && sweatHasCup && totalCupGlobal > 0) cupInput.value = cupWt.toFixed(3);
+                    if (collarIn && !collarManual && isPoloActive) collarIn.value = collarCuffWt.toFixed(3);
+                    [[pocketIn, pktPlktWt], [foldingIn, foldingWt], [collarIn, collarCuffWt], [wastageIn, rowWastagePart], [ribInput, ribWt], [sidePocketInput, sidePocketWt], [backPocketInput, backPocketWt], [spktInput, spktWt], [beltInput, beltWt], [cupInput, cupWt]].forEach(([el, v]) => {
+                        if (el && el.dataset.origManual !== undefined) { el.value = (v || 0).toFixed(3); el.dataset.adjShown = el.value; }
+                    });
 
                     let rowWastage = rowWastagePart + rowMukpatPart;
                     
@@ -2889,13 +3653,16 @@
                     const rPktPlkt = parseFloat(pktPlktWt.toFixed(3));
                     const rSidePkt = parseFloat(sidePocketWt.toFixed(3));
                     const rBackPkt = parseFloat(backPocketWt.toFixed(3));
+                    const rSpkt = parseFloat(spktWt.toFixed(3));
+                    const rBelt = parseFloat(beltWt.toFixed(3));
+                    const rCup = parseFloat(cupWt.toFixed(3));
                     const rCollarCuff = parseFloat(collarCuffWt.toFixed(3));
                     const rWastage = parseFloat(rowWastage.toFixed(3));
 
-                    row.querySelector('.row-wastage').innerText = rWastage.toFixed(3);
+                    writeWastageCell(row, rWastage.toFixed(3), !wasteManual, false);
 
                     // Calculate total weight for this row
-                    const rowTotalWeight = rBody + rFolding + rRib + rPktPlkt + rSidePkt + rBackPkt + rCollarCuff + rWastage;
+                    const rowTotalWeight = rBody + rFolding + rSpkt + rRib + rBelt + rCup + rPktPlkt + rSidePkt + rBackPkt + rCollarCuff + rWastage;
                     row.querySelector('.row-total').innerText = rowTotalWeight.toFixed(3);
 
                     // Consumption calculation zone: Include lay components + lay wastages
@@ -2915,6 +3682,9 @@
                         folding: foldingOnlyWt,
                         sidePocket: sidePocketWt,
                         backPocket: backPocketWt,
+                        sweatPocket: spktWt,
+                        belt: beltWt,
+                        cup: cupWt,
                         collar: collarCuffWt,
                         wastage: mainWastageOnlyPart,
                         ribWastage: ribWastageWt,
@@ -2949,6 +3719,8 @@
                         if (tConsRefEl) tConsRefEl.innerHTML = "";
                     }
 
+                    renderRowComponentRefs(row, getCompHist(sizeVal), pics, { body: rBody, spkt: rSpkt, rib: rRib, belt: rBelt, cup: rCup, pocket: rPktPlkt, folding: rFolding, sidePocket: rSidePkt, backPocket: rBackPkt, collar: rCollarCuff, wastage: rWastage, total: rowTotalWeight });
+
                     // Accumulate values for grand totals
                     totalMainFabricSum += tConsWeightLive;
                     totalPicsSum += pics;
@@ -2959,6 +3731,9 @@
                     totalPocketSum += rPktPlkt;
                     totalSidePocketSum += rSidePkt;
                     totalBackPocketSum += rBackPkt;
+                    totalSweatPktSum += rSpkt;
+                    totalBeltSum += rBelt;
+                    totalCupSum += rCup;
                     totalCollarCuffSum += rCollarCuff;
                     totalWeightSum += rowTotalWeight;
                 }
@@ -3071,6 +3846,9 @@
             if (document.getElementById('totalPocketDisplay')) document.getElementById('totalPocketDisplay').innerText = totalPocketSum.toFixed(3);
             if (document.getElementById('totalSidePocketDisplay')) document.getElementById('totalSidePocketDisplay').innerText = totalSidePocketSum.toFixed(3);
             if (document.getElementById('totalBackPocketDisplay')) document.getElementById('totalBackPocketDisplay').innerText = totalBackPocketSum.toFixed(3);
+            if (document.getElementById('totalSweatPktDisplay')) document.getElementById('totalSweatPktDisplay').innerText = totalSweatPktSum.toFixed(3);
+            if (document.getElementById('totalBeltWtDisplay')) document.getElementById('totalBeltWtDisplay').innerText = totalBeltSum.toFixed(3);
+            if (document.getElementById('totalCupWtDisplay')) document.getElementById('totalCupWtDisplay').innerText = totalCupSum.toFixed(3);
             if (document.getElementById('totalCollarCuffDisplay')) document.getElementById('totalCollarCuffDisplay').innerText = totalCollarCuffSum.toFixed(3);
 
             saveState();
@@ -3090,10 +3868,14 @@
                     slips: row.querySelector('.row-slips') ? row.querySelector('.row-slips').value : '',
                     pics: row.querySelector('.row-pics').value,
                     bodywt: bodyWtInput.dataset.origBodyWt !== undefined ? bodyWtInput.dataset.origBodyWt : (bodyWtInput.dataset.weight !== undefined ? bodyWtInput.dataset.weight : bodyWtInput.value),
-                    ribwt: row.querySelector('.row-ribwt') ? row.querySelector('.row-ribwt').value : '',
+                    ribwt: getRowOrigValue(row, 'row-ribwt'),
                     ropewt: getRopeRowValue(row),
-                    sidepocket: row.querySelector('.row-sidepocket') ? row.querySelector('.row-sidepocket').value : '',
-                    backpocket: row.querySelector('.row-backpocket') ? row.querySelector('.row-backpocket').value : ''
+                    pktwt: getRowManualValue(row, 'row-pocket'), foldwt: getRowManualValue(row, 'row-folding'), collarwt: getRowManualValue(row, 'row-collarcuff'), wastewt: getRowManualValue(row, 'row-wastage'),
+                    sidepocket: getRowOrigValue(row, 'row-sidepocket'),
+                    backpocket: getRowOrigValue(row, 'row-backpocket'),
+                    spktwt: getRowOrigValue(row, 'row-spktwt'),
+                    beltwt: getRowOrigValue(row, 'row-beltwt'),
+                    cupwt: getRowOrigValue(row, 'row-cupwt')
                 });
             });
 
@@ -3123,6 +3905,9 @@
                 poloTotalCollarCuff: getGlobalVal('poloTotalCollarCuffInput'),
                 pantTotalSidePocket: getGlobalVal('pantTotalSidePocketInput'),
                 pantTotalBackPocket: getGlobalVal('pantTotalBackPocketInput'),
+                sweatTotalBelt: getGlobalVal('sweatTotalBeltInput'),
+                sweatTotalCup: getGlobalVal('sweatTotalCupInput'),
+                sweatTotalPocket: getGlobalVal('sweatTotalPocketInput'),
                 globalWastage: getGlobalVal('globalWastageInput'),
                 globalMukpat: getGlobalVal('globalMukpatInput'),
                 globalRibWastage: getGlobalVal('globalRibWastageInput'),
@@ -3222,6 +4007,10 @@
                         if (importedObj.qualityTextileTotalMetersData) Object.assign(qualityTextileTotalMetersData, importedObj.qualityTextileTotalMetersData);
                         if (importedObj.qualityTConsPartsData) Object.assign(qualityTConsPartsData, importedObj.qualityTConsPartsData);
                         if (importedObj.qualityAdjustmentPartsData) Object.assign(qualityAdjustmentPartsData, importedObj.qualityAdjustmentPartsData);
+                        if (importedObj.qualityColumnNamesData) { Object.assign(qualityColumnNamesData, importedObj.qualityColumnNamesData); localStorage.setItem('challan_qualityColumnNamesData', JSON.stringify(qualityColumnNamesData)); }
+                        if (importedObj.qualitySweatBeltData) Object.assign(qualitySweatBeltData, importedObj.qualitySweatBeltData);
+                        if (importedObj.qualitySweatCupData) Object.assign(qualitySweatCupData, importedObj.qualitySweatCupData);
+                        if (importedObj.qualitySweatPocketData) Object.assign(qualitySweatPocketData, importedObj.qualitySweatPocketData);
                         localStorage.setItem('challan_qualityTConsPartsData', JSON.stringify(qualityTConsPartsData));
                         localStorage.setItem('challan_qualityAdjustmentPartsData', JSON.stringify(qualityAdjustmentPartsData));
 
@@ -3237,6 +4026,9 @@
                         if (importedObj.poloTotalCollarCuff !== undefined) document.getElementById('poloTotalCollarCuffInput').value = importedObj.poloTotalCollarCuff;
                         if (importedObj.pantTotalSidePocket !== undefined) document.getElementById('pantTotalSidePocketInput').value = importedObj.pantTotalSidePocket;
                         if (importedObj.pantTotalBackPocket !== undefined) document.getElementById('pantTotalBackPocketInput').value = importedObj.pantTotalBackPocket;
+                        if (importedObj.sweatTotalBelt !== undefined) document.getElementById('sweatTotalBeltInput').value = importedObj.sweatTotalBelt;
+                        if (importedObj.sweatTotalCup !== undefined) document.getElementById('sweatTotalCupInput').value = importedObj.sweatTotalCup;
+                        if (importedObj.sweatTotalPocket !== undefined) document.getElementById('sweatTotalPocketInput').value = importedObj.sweatTotalPocket;
                         if (importedObj.globalWastage !== undefined) document.getElementById('globalWastageInput').value = importedObj.globalWastage;
                         if (importedObj.globalMukpat !== undefined) document.getElementById('globalMukpatInput').value = importedObj.globalMukpat;
                         if (importedObj.globalRibWastage !== undefined) document.getElementById('globalRibWastageInput').value = importedObj.globalRibWastage;
@@ -3276,14 +4068,17 @@
                                 <td class="p-2 border border-gray-300 text-center"><input type="number" min="0" placeholder="SLIPS" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slips" value="${item.slips || ''}" oninput="calculateTotals(true)" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                                 <td class="p-2 border border-gray-300 text-center"><input type="number" value="${item.pics || ''}" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                                 <td class="p-2 border border-gray-300 text-center"><input type="number" value="${item.bodywt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                                <td class="p-2 border border-gray-300 text-center hidden row-spktwt-td"><input type="number" value="${item.spktwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-spktwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                                 <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" value="${item.ribwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                                <td class="p-2 border border-gray-300 text-center hidden row-beltwt-td"><input type="number" value="${item.beltwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-beltwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                                <td class="p-2 border border-gray-300 text-center hidden row-cupwt-td"><input type="number" value="${item.cupwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-cupwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                                 <td class="p-2 border border-gray-300 text-center hidden row-ropewt-td"><input type="number" value="${item.ropewt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ropewt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                                <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
-                                <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
+                                <td class="p-2 border border-gray-300 text-center hidden row-pocket-td"><input type="number" step="0.001" min="0" value="${item.pktwt || ''}" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-pocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                                <td class="p-2 border border-gray-300 text-center hidden row-folding-td"><input type="number" step="0.001" min="0" value="${item.foldwt || ''}" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-folding" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                                 <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" value="${item.sidepocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                                 <td class="p-2 border border-gray-300 text-center hidden row-backpocket-td"><input type="number" value="${item.backpocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                                <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
-                                <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
+                                <td class="p-2 border border-gray-300 text-center hidden row-collarcuff-td"><input type="number" step="0.001" min="0" value="${item.collarwt || ''}" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-collarcuff" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                                <td class="p-2 border border-gray-300 text-center row-wastage-td"><input type="number" step="0.001" min="0" value="${item.wastewt || ''}" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-wastage" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                                 <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
                                 <td class="p-2 border border-gray-300 text-center bg-blue-50/50">
                                     <div class="font-bold text-blue-600 row-bcons">0.00000</div>
@@ -3328,8 +4123,13 @@
                 for (let key in qualityPoloByPlaketData) delete qualityPoloByPlaketData[key];
                 for (let key in qualityPantSidePocketData) delete qualityPantSidePocketData[key];
                 for (let key in qualityPantBackPocketData) delete qualityPantBackPocketData[key];
+                for (let key in qualitySweatBeltData) delete qualitySweatBeltData[key];
+                for (let key in qualitySweatCupData) delete qualitySweatCupData[key];
+                for (let key in qualitySweatPocketData) delete qualitySweatPocketData[key];
                 for (let key in qualityTConsPartsData) delete qualityTConsPartsData[key];
                 for (let key in qualityAdjustmentPartsData) delete qualityAdjustmentPartsData[key];
+                for (let key in qualityColumnNamesData) delete qualityColumnNamesData[key];
+                localStorage.removeItem('challan_qualityColumnNamesData');
                 localStorage.removeItem('challan_qualityTConsPartsData');
                 localStorage.removeItem('challan_qualityAdjustmentPartsData');
                 
@@ -3365,6 +4165,9 @@
                 document.getElementById('poloTotalCollarCuffInput').value = "";
                 document.getElementById('pantTotalSidePocketInput').value = "";
                 document.getElementById('pantTotalBackPocketInput').value = "";
+                document.getElementById('sweatTotalBeltInput').value = "";
+                document.getElementById('sweatTotalCupInput').value = "";
+                document.getElementById('sweatTotalPocketInput').value = "";
                 document.getElementById('globalWastageInput').value = "";
                 document.getElementById('globalMukpatInput').value = "";
                 document.getElementById('globalRibWastageInput').value = "";
@@ -3402,14 +4205,17 @@
                         <td class="p-2 border border-gray-300 text-center"><input type="number" min="0" placeholder="SLIPS" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slips" oninput="calculateTotals(true)" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                         <td class="p-2 border border-gray-300 text-center"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                         <td class="p-2 border border-gray-300 text-center"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-spktwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-spktwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-beltwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-beltwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-cupwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-cupwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center hidden row-ropewt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ropewt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                        <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
-                        <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-pocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-pocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-folding-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-folding" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center hidden row-backpocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                        <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
-                        <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-collarcuff-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-collarcuff" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center row-wastage-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-wastage" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
                         <td class="p-2 border border-gray-300 text-center bg-blue-50/50">
                             <div class="font-bold text-blue-600 row-bcons">0.00000</div>
@@ -3440,7 +4246,8 @@
                 'globalWastageInput', 'globalMukpatInput', 'poloTotalByPlaketWastageInput', 
                 'globalRibWastageInput', 'globalTotalRibInput', 'poloTotalPocketInput', 
                 'poloTotalPlaketInput', 'poloTotalByPlaketInput', 'poloTotalCollarCuffInput', 
-                'pantTotalSidePocketInput', 'pantTotalBackPocketInput', 'globalRopeInput'
+                'pantTotalSidePocketInput', 'pantTotalBackPocketInput', 'globalRopeInput',
+                'sweatTotalBeltInput', 'sweatTotalCupInput', 'sweatTotalPocketInput'
             ];
             globalInputIds.forEach(id => {
                 const el = document.getElementById(id);
@@ -3453,6 +4260,9 @@
             document.getElementById('poloTotalCollarCuffInput').value = "";
             document.getElementById('pantTotalSidePocketInput').value = "";
             document.getElementById('pantTotalBackPocketInput').value = "";
+            document.getElementById('sweatTotalBeltInput').value = "";
+            document.getElementById('sweatTotalCupInput').value = "";
+            document.getElementById('sweatTotalPocketInput').value = "";
             document.getElementById('globalWastageInput').value = "";
             document.getElementById('globalMukpatInput').value = "";
             document.getElementById('globalRibWastageInput').value = "";
@@ -3478,14 +4288,17 @@
                     <td class="p-2 border border-gray-300 text-center"><input type="number" min="0" placeholder="SLIPS" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slips" oninput="calculateTotals(true)" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                     <td class="p-2 border border-gray-300 text-center"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                     <td class="p-2 border border-gray-300 text-center"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                    <td class="p-2 border border-gray-300 text-center hidden row-spktwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-spktwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                     <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                    <td class="p-2 border border-gray-300 text-center hidden row-beltwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-beltwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                    <td class="p-2 border border-gray-300 text-center hidden row-cupwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-cupwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                     <td class="p-2 border border-gray-300 text-center hidden row-ropewt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ropewt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                    <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
-                    <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
+                    <td class="p-2 border border-gray-300 text-center hidden row-pocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-pocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                    <td class="p-2 border border-gray-300 text-center hidden row-folding-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-folding" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                     <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                     <td class="p-2 border border-gray-300 text-center hidden row-backpocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                    <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
-                    <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
+                    <td class="p-2 border border-gray-300 text-center hidden row-collarcuff-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-collarcuff" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                    <td class="p-2 border border-gray-300 text-center row-wastage-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-wastage" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                     <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
                     <td class="p-2 border border-gray-300 text-center bg-blue-50/50">
                         <div class="font-bold text-blue-600 row-bcons">0.00000</div>
@@ -3541,7 +4354,7 @@
                 'fabricGsmInput', 'globalWastageInput', 'globalMukpatInput',
                 'poloTotalByPlaketWastageInput', 'globalRibWastageInput', 'globalTotalRibInput', 'globalRopeInput',
                 'poloTotalPocketInput', 'poloTotalPlaketInput', 'poloTotalByPlaketInput',
-                'poloTotalCollarCuffInput', 'pantTotalSidePocketInput', 'pantTotalBackPocketInput',
+                'poloTotalCollarCuffInput', 'pantTotalSidePocketInput', 'pantTotalBackPocketInput', 'sweatTotalBeltInput', 'sweatTotalCupInput', 'sweatTotalPocketInput',
                 'textileStdConsInput', 'textileTotalMetersInput', 'qualityRemarksInput'
             ];
             checkGlobalIds.forEach(id => {
@@ -3561,6 +4374,9 @@
                 const rIn = row.querySelector('.row-ribwt');
                 const spIn = row.querySelector('.row-sidepocket');
                 const bpIn = row.querySelector('.row-backpocket');
+                const beltIn = row.querySelector('.row-beltwt');
+                const cupIn = row.querySelector('.row-cupwt');
+                const spktIn = row.querySelector('.row-spktwt');
 
                 if ((slIn && slIn.value.trim() !== "") ||
                     (sIn && sIn.value.trim() !== "") || 
@@ -3569,7 +4385,10 @@
                     (bIn && bIn.value.trim() !== "" && bIn.value.trim() !== "0" && bIn.value.trim() !== "0.000") ||
                     (rIn && rIn.value.trim() !== "" && rIn.value.trim() !== "0") ||
                     (spIn && spIn.value.trim() !== "" && spIn.value.trim() !== "0") ||
-                    (bpIn && bpIn.value.trim() !== "" && bpIn.value.trim() !== "0")) {
+                    (bpIn && bpIn.value.trim() !== "" && bpIn.value.trim() !== "0") ||
+                    (beltIn && beltIn.value.trim() !== "" && beltIn.value.trim() !== "0") ||
+                    (cupIn && cupIn.value.trim() !== "" && cupIn.value.trim() !== "0") ||
+                    (spktIn && spktIn.value.trim() !== "" && spktIn.value.trim() !== "0")) {
                     hasAnyInput = true;
                 }
             });
@@ -3607,10 +4426,14 @@
                         slips: slipsEl ? slipsEl.value : '',
                         pics: picsEl.value,
                         bodywt: bodywtEl.dataset.origBodyWt !== undefined ? bodywtEl.dataset.origBodyWt : (bodywtEl.dataset.weight !== undefined ? bodywtEl.dataset.weight : bodywtEl.value),
-                        ribwt: ribwtEl ? ribwtEl.value : '',
+                        ribwt: getRowOrigValue(row, 'row-ribwt'),
                         ropewt: getRopeRowValue(row),
-                        sidepocket: sidepocketEl ? sidepocketEl.value : '',
-                        backpocket: backpocketEl ? backpocketEl.value : ''
+                    pktwt: getRowManualValue(row, 'row-pocket'), foldwt: getRowManualValue(row, 'row-folding'), collarwt: getRowManualValue(row, 'row-collarcuff'), wastewt: getRowManualValue(row, 'row-wastage'),
+                        sidepocket: getRowOrigValue(row, 'row-sidepocket'),
+                        backpocket: getRowOrigValue(row, 'row-backpocket'),
+                        spktwt: getRowOrigValue(row, 'row-spktwt'),
+                    beltwt: getRowOrigValue(row, 'row-beltwt'),
+                        cupwt: getRowOrigValue(row, 'row-cupwt')
                     });
                 }
             });
@@ -3655,6 +4478,9 @@
                 poloTotalCollarCuff: isPoloActive ? getGlobalVal('poloTotalCollarCuffInput') : "",
                 pantTotalSidePocket: isPantActive ? getGlobalVal('pantTotalSidePocketInput') : "",
                 pantTotalBackPocket: isPantActive ? getGlobalVal('pantTotalBackPocketInput') : "",
+                sweatTotalBelt: (isGrsActive && quality.toUpperCase().includes('SWEAT SHIRT')) ? getGlobalVal('sweatTotalBeltInput') : "",
+                sweatTotalCup: (isGrsActive && quality.toUpperCase().includes('SWEAT SHIRT')) ? getGlobalVal('sweatTotalCupInput') : "",
+                sweatTotalPocket: (isGrsActive && quality.toUpperCase().includes('SWEAT SHIRT')) ? getGlobalVal('sweatTotalPocketInput') : "",
                 globalWastage: getGlobalVal('globalWastageInput'),
                 globalMukpat: isTextileActive ? "" : getGlobalVal('globalMukpatInput'),
                 globalRibWastage: isGrsActive ? getGlobalVal('globalRibWastageInput') : "",
@@ -3679,6 +4505,9 @@
                 poloHasByPlaket: isPoloActive ? (qualityPoloByPlaketData[quality] !== false) : false,
                 pantHasSidePocket: isPantActive ? (qualityPantSidePocketData[quality] !== false) : false,
                 pantHasBackPocket: isPantActive ? (qualityPantBackPocketData[quality] !== false) : false,
+                sweatHasBelt: quality.toUpperCase().includes('SWEAT SHIRT') ? (qualitySweatBeltData[quality] !== false) : false,
+                sweatHasCup: quality.toUpperCase().includes('SWEAT SHIRT') ? (qualitySweatCupData[quality] !== false) : false,
+                sweatHasPocket: quality.toUpperCase().includes('SWEAT SHIRT') ? (qualitySweatPocketData[quality] !== false) : false,
                 consVarianceText: varianceEl ? varianceEl.innerText : "",
                 consVarianceClass: varianceEl ? varianceEl.className : "",
                 // Freeze the exact T.cons component selection used for this snapshot.
@@ -3709,7 +4538,9 @@
                 alert("Record successfully saved to history!");
             }
             
-            saveHistoryToStorage();
+            if (!saveHistoryToStorage()) {
+                alert("WARNING: Browser storage is full, so this record was NOT saved permanently and will be lost on refresh. Please Export a backup and delete some old history.");
+            }
             renderHistory();
             calculateTotals();
         }
@@ -3720,7 +4551,7 @@
             // calculateTotals() would restore those old numbers over this record's values.
             ['globalWastageInput','globalMukpatInput','poloTotalByPlaketWastageInput','globalRibWastageInput','globalTotalRibInput',
              'poloTotalPocketInput','poloTotalPlaketInput','poloTotalByPlaketInput','poloTotalCollarCuffInput',
-             'pantTotalSidePocketInput','pantTotalBackPocketInput','globalRopeInput'].forEach(id => {
+             'pantTotalSidePocketInput','pantTotalBackPocketInput','globalRopeInput','sweatTotalBeltInput','sweatTotalCupInput','sweatTotalPocketInput'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) delete el.dataset.origValue;
             });
@@ -3745,6 +4576,9 @@
                     qualityPoloByPlaketData[item.quality] = item.poloHasByPlaket !== false;
                     qualityPantSidePocketData[item.quality] = item.pantHasSidePocket !== false;
                     qualityPantBackPocketData[item.quality] = item.pantHasBackPocket !== false;
+                    qualitySweatBeltData[item.quality] = item.sweatHasBelt !== false;
+                    qualitySweatCupData[item.quality] = item.sweatHasCup !== false;
+                    qualitySweatPocketData[item.quality] = item.sweatHasPocket !== false;
                     renderQualityDropdown(item.quality);
                 } else {
                     select.value = item.quality;
@@ -3757,6 +4591,9 @@
             qualityPoloByPlaketData[item.quality] = item.poloHasByPlaket !== false;
             qualityPantSidePocketData[item.quality] = item.pantHasSidePocket !== false;
             qualityPantBackPocketData[item.quality] = item.pantHasBackPocket !== false;
+            qualitySweatBeltData[item.quality] = item.sweatHasBelt !== false;
+            qualitySweatCupData[item.quality] = item.sweatHasCup !== false;
+            qualitySweatPocketData[item.quality] = item.sweatHasPocket !== false;
             if (item.tConsParts && typeof item.tConsParts === 'object') {
                 qualityTConsPartsData[item.quality] = { ...item.tConsParts };
             }
@@ -3765,6 +4602,9 @@
             document.getElementById('poloHasByPlaket').checked = item.poloHasByPlaket !== false;
             document.getElementById('pantHasSidePocket').checked = item.pantHasSidePocket !== false;
             document.getElementById('pantHasBackPocket').checked = item.pantHasBackPocket !== false;
+            document.getElementById('sweatHasBelt').checked = item.sweatHasBelt !== false;
+            document.getElementById('sweatHasCup').checked = item.sweatHasCup !== false;
+            document.getElementById('sweatHasPocket').checked = item.sweatHasPocket !== false;
             
             document.getElementById('poloTotalPocketInput').value = item.poloTotalPocket || "";
             document.getElementById('poloTotalPlaketInput').value = item.poloTotalPlaket || "";
@@ -3773,6 +4613,9 @@
             document.getElementById('poloTotalCollarCuffInput').value = item.poloTotalCollarCuff || "";
             document.getElementById('pantTotalSidePocketInput').value = item.pantTotalSidePocket || "";
             document.getElementById('pantTotalBackPocketInput').value = item.pantTotalBackPocket || "";
+            document.getElementById('sweatTotalBeltInput').value = item.sweatTotalBelt || "";
+            document.getElementById('sweatTotalCupInput').value = item.sweatTotalCup || "";
+            document.getElementById('sweatTotalPocketInput').value = item.sweatTotalPocket || "";
             document.getElementById('globalWastageInput').value = item.globalWastage || "";
             document.getElementById('globalMukpatInput').value = item.globalMukpat || "";
             document.getElementById('globalRibWastageInput').value = item.globalRibWastage || "";
@@ -3820,14 +4663,17 @@
                         <td class="p-2 border border-gray-300 text-center"><input type="number" min="0" placeholder="SLIPS" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slips" value="${rowItem.slips || ''}" oninput="calculateTotals(true)" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                         <td class="p-2 border border-gray-300 text-center"><input type="number" value="${rowItem.pics || ''}" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                         <td class="p-2 border border-gray-300 text-center"><input type="number" value="${rowItem.bodywt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-spktwt-td"><input type="number" value="${rowItem.spktwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-spktwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" value="${rowItem.ribwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-beltwt-td"><input type="number" value="${rowItem.beltwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-beltwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-cupwt-td"><input type="number" value="${rowItem.cupwt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-cupwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center hidden row-ropewt-td"><input type="number" value="${rowItem.ropewt || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ropewt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                        <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
-                        <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-pocket-td"><input type="number" step="0.001" min="0" value="${rowItem.pktwt || ''}" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-pocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-folding-td"><input type="number" step="0.001" min="0" value="${rowItem.foldwt || ''}" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-folding" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" value="${rowItem.sidepocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center hidden row-backpocket-td"><input type="number" value="${rowItem.backpocket || ''}" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                        <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
-                        <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
+                        <td class="p-2 border border-gray-300 text-center hidden row-collarcuff-td"><input type="number" step="0.001" min="0" value="${rowItem.collarwt || ''}" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-collarcuff" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                        <td class="p-2 border border-gray-300 text-center row-wastage-td"><input type="number" step="0.001" min="0" value="${rowItem.wastewt || ''}" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-wastage" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                         <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
                         <td class="p-2 border border-gray-300 text-center bg-blue-50/50">
                             <div class="font-bold text-blue-600 row-bcons">0.00000</div>
@@ -4065,14 +4911,17 @@
                 <td class="p-2 border border-gray-300 text-center"><input type="number" min="0" placeholder="SLIPS" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-slips" oninput="calculateTotals(true)" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                 <td class="p-2 border border-gray-300 text-center"><input type="number" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-pics" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(0);"></td>
                 <td class="p-2 border border-gray-300 text-center"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-bodywt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                <td class="p-2 border border-gray-300 text-center hidden row-spktwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-spktwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                 <td class="p-2 border border-gray-300 text-center hidden row-ribwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ribwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                <td class="p-2 border border-gray-300 text-center hidden row-beltwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-beltwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                <td class="p-2 border border-gray-300 text-center hidden row-cupwt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-cupwt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                 <td class="p-2 border border-gray-300 text-center hidden row-ropewt-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-ropewt" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                <td class="p-2 border border-gray-300 text-center font-semibold row-pocket hidden">0.000</td>
-                <td class="p-2 border border-gray-300 text-center font-semibold row-folding hidden">0.000</td>
+                <td class="p-2 border border-gray-300 text-center hidden row-pocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-pocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                <td class="p-2 border border-gray-300 text-center hidden row-folding-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-folding" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                 <td class="p-2 border border-gray-300 text-center hidden row-sidepocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-sidepocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                 <td class="p-2 border border-gray-300 text-center hidden row-backpocket-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center row-backpocket" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
-                <td class="p-2 border border-gray-300 text-center font-semibold row-collarcuff hidden">0.000</td>
-                <td class="p-2 border border-gray-300 text-center font-semibold row-wastage">0.000</td>
+                <td class="p-2 border border-gray-300 text-center hidden row-collarcuff-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-collarcuff" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
+                <td class="p-2 border border-gray-300 text-center row-wastage-td"><input type="number" step="0.001" min="0" class="w-full p-1 border border-gray-300 focus:outline-none rounded text-center font-semibold row-wastage" oninput="calculateTotals()" onblur="if(this.value!='') this.value=parseFloat(this.value).toFixed(3);"></td>
                 <td class="p-2 border border-gray-300 text-center font-semibold row-total">0.000</td>
                 <td class="p-2 border border-gray-300 text-center bg-blue-50/50">
                     <div class="font-bold text-blue-600 row-bcons">0.00000</div>
@@ -4121,6 +4970,10 @@
                 if(row.querySelector('.row-ropewt')) { row.querySelector('.row-ropewt').value = ''; delete row.querySelector('.row-ropewt').dataset.weight; delete row.querySelector('.row-ropewt').dataset.autoRope; }
                 if(row.querySelector('.row-sidepocket')) row.querySelector('.row-sidepocket').value = '';
                 if(row.querySelector('.row-backpocket')) row.querySelector('.row-backpocket').value = '';
+                if(row.querySelector('.row-beltwt')) row.querySelector('.row-beltwt').value = '';
+                if(row.querySelector('.row-cupwt')) row.querySelector('.row-cupwt').value = '';
+                if(row.querySelector('.row-spktwt')) row.querySelector('.row-spktwt').value = '';
+                ['pocket','folding','collarcuff','wastage'].forEach(k => { const e = row.querySelector('.row-' + k); if (e) { e.value = ''; delete e.dataset.auto; delete e.dataset.weight; } });
             }
             calculateTotals(true);
 
@@ -4287,6 +5140,9 @@
                 poloHasByPlaket: qualityPoloByPlaketData[quality] !== false,
                 pantHasSidePocket: qualityPantSidePocketData[quality] !== false,
                 pantHasBackPocket: qualityPantBackPocketData[quality] !== false,
+                sweatHasBelt: qualitySweatBeltData[quality] !== false,
+                sweatHasCup: qualitySweatCupData[quality] !== false,
+                sweatHasPocket: qualitySweatPocketData[quality] !== false,
                 tConsParts: qualityTConsPartsData[quality] || null,
                 adjustmentParts: qualityAdjustmentPartsData[quality] || null
             };
@@ -4338,10 +5194,14 @@
                     slips: g('.row-slips') ? g('.row-slips').value : '',
                     pics: g('.row-pics').value,
                     bodywt: body.dataset.origBodyWt !== undefined ? body.dataset.origBodyWt : (body.dataset.weight !== undefined ? body.dataset.weight : body.value),
-                    ribwt: g('.row-ribwt') ? g('.row-ribwt').value : '',
+                    ribwt: getRowOrigValue(row, 'row-ribwt'),
                     ropewt: getRopeRowValue(row),
-                    sidepocket: g('.row-sidepocket') ? g('.row-sidepocket').value : '',
-                    backpocket: g('.row-backpocket') ? g('.row-backpocket').value : ''
+                    pktwt: getRowManualValue(row, 'row-pocket'), foldwt: getRowManualValue(row, 'row-folding'), collarwt: getRowManualValue(row, 'row-collarcuff'), wastewt: getRowManualValue(row, 'row-wastage'),
+                    sidepocket: getRowOrigValue(row, 'row-sidepocket'),
+                    backpocket: getRowOrigValue(row, 'row-backpocket'),
+                    spktwt: getRowOrigValue(row, 'row-spktwt'),
+                    beltwt: getRowOrigValue(row, 'row-beltwt'),
+                    cupwt: getRowOrigValue(row, 'row-cupwt')
                 });
             });
             let slipNoRange = "";
@@ -4377,6 +5237,9 @@
                 poloTotalCollarCuff: isPolo ? gv('poloTotalCollarCuffInput') : "",
                 pantTotalSidePocket: isPant ? gv('pantTotalSidePocketInput') : "",
                 pantTotalBackPocket: isPant ? gv('pantTotalBackPocketInput') : "",
+                sweatTotalBelt: quality.toUpperCase().includes('SWEAT SHIRT') ? gv('sweatTotalBeltInput') : "",
+                sweatTotalCup: quality.toUpperCase().includes('SWEAT SHIRT') ? gv('sweatTotalCupInput') : "",
+                sweatTotalPocket: quality.toUpperCase().includes('SWEAT SHIRT') ? gv('sweatTotalPocketInput') : "",
                 globalWastage: gv('globalWastageInput'),
                 globalMukpat: isTextile ? "" : gv('globalMukpatInput'),
                 globalRibWastage: isGrs ? gv('globalRibWastageInput') : "",
@@ -4401,6 +5264,9 @@
                 poloHasByPlaket: isPolo ? (qualityPoloByPlaketData[quality] !== false) : false,
                 pantHasSidePocket: isPant ? (qualityPantSidePocketData[quality] !== false) : false,
                 pantHasBackPocket: isPant ? (qualityPantBackPocketData[quality] !== false) : false,
+                sweatHasBelt: quality.toUpperCase().includes('SWEAT SHIRT') ? (qualitySweatBeltData[quality] !== false) : false,
+                sweatHasCup: quality.toUpperCase().includes('SWEAT SHIRT') ? (qualitySweatCupData[quality] !== false) : false,
+                sweatHasPocket: quality.toUpperCase().includes('SWEAT SHIRT') ? (qualitySweatPocketData[quality] !== false) : false,
                 consVarianceText: varianceEl ? varianceEl.innerText : "",
                 consVarianceClass: varianceEl ? varianceEl.className : "",
                 tConsParts: getTConsParts(quality),
@@ -4442,6 +5308,9 @@
                 if (/^pics/.test(h)) return 'pics';
                 if (/^body\s*(wt|mtr)$/.test(h)) return 'bodywt';
                 if (/^rib\s*wt$/.test(h)) return 'ribwt';
+                if (/^pocket\s*wt$/.test(h)) return 'spktwt';
+                if (/^belt\s*wt$/.test(h)) return 'beltwt';
+                if (/^cup\s*wt$/.test(h)) return 'cupwt';
                 if (/^rope\s*(wt|mtr)$/.test(h)) return 'ropewt';
                 if (/^side\s*pkt/.test(h)) return 'sidepocket';
                 if (/^back\s*pkt/.test(h)) return 'backpocket';
@@ -4453,7 +5322,7 @@
             let idx = 0;
             table.querySelectorAll('tbody tr').forEach(tr => {
                 const cells = Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim());
-                const it = { origIndex: idx++, slipno: '', size: '', slips: '', pics: '', bodywt: '', ribwt: '', ropewt: '', sidepocket: '', backpocket: '' };
+                const it = { origIndex: idx++, slipno: '', size: '', slips: '', pics: '', bodywt: '', ribwt: '', ropewt: '', sidepocket: '', backpocket: '', spktwt: '', beltwt: '', cupwt: '' };
                 fields.forEach((f, i) => { if (f && cells[i] !== undefined) it[f] = clean(cells[i]); });
                 if (it.size || it.pics) items.push(it);
             });
@@ -4494,6 +5363,9 @@
                 poloTotalCollarCuff: num('COLLAR CUFF'),
                 pantTotalSidePocket: num('SIDE PKT'),
                 pantTotalBackPocket: num('BACK PKT'),
+                sweatTotalBelt: num('BELT WT'),
+                sweatTotalCup: num('CUP WT'),
+                sweatTotalPocket: num('POCKET WT'),
                 globalWastage: num('WASTAGE WT'),
                 globalMukpat: isTextile ? '' : num('MUKPAT WT'),
                 globalRibWastage: num('RIB WASTAGE'),
@@ -4539,6 +5411,9 @@
                 qualityPoloByPlaketData[quality] = (st.poloHasByPlaket ?? entry.poloHasByPlaket) !== false;
                 qualityPantSidePocketData[quality] = (st.pantHasSidePocket ?? entry.pantHasSidePocket) !== false;
                 qualityPantBackPocketData[quality] = (st.pantHasBackPocket ?? entry.pantHasBackPocket) !== false;
+                qualitySweatBeltData[quality] = (st.sweatHasBelt ?? entry.sweatHasBelt) !== false;
+                qualitySweatCupData[quality] = (st.sweatHasCup ?? entry.sweatHasCup) !== false;
+                qualitySweatPocketData[quality] = (st.sweatHasPocket ?? entry.sweatHasPocket) !== false;
                 if (st.tConsParts && typeof st.tConsParts === 'object') qualityTConsPartsData[quality] = st.tConsParts;
                 else if (entry.tConsParts && typeof entry.tConsParts === 'object') qualityTConsPartsData[quality] = entry.tConsParts;
                 if (st.adjustmentParts && typeof st.adjustmentParts === 'object') qualityAdjustmentPartsData[quality] = st.adjustmentParts;
@@ -4598,7 +5473,8 @@
                 ribWst: gv('globalRibWastageInput'), ribWt: gv('globalTotalRibInput'), rope: gv('globalRopeInput'),
                 pkt: gv('poloTotalPocketInput'), plkt: gv('poloTotalPlaketInput'),
                 byPlkt: gv('poloTotalByPlaketInput'), byPlktWst: gv('poloTotalByPlaketWastageInput'),
-                collar: gv('poloTotalCollarCuffInput'), sidePkt: gv('pantTotalSidePocketInput'), backPkt: gv('pantTotalBackPocketInput')
+                collar: gv('poloTotalCollarCuffInput'), sidePkt: gv('pantTotalSidePocketInput'), backPkt: gv('pantTotalBackPocketInput'),
+                belt: gv('sweatTotalBeltInput'), cup: gv('sweatTotalCupInput'), sweatPkt: gv('sweatTotalPocketInput')
             };
             const adj = gv('adjWeightInput');
             const adjAction = document.getElementById('adjActionSelect').value;
@@ -4616,18 +5492,21 @@
                 if (isFolding) metrics.push({ l: `${fName} (GM/PC)`, v: fGm.toFixed(5) });
             }
 
-            const weights = [{ l: 'WASTAGE WT', v: g.wst.toFixed(3) }];
-            if (!isTextile) weights.push({ l: 'MUKPAT WT', v: g.mkpt.toFixed(3) });
-            if (isGrs && g.ribWst > 0) weights.push({ l: 'RIB WASTAGE', v: g.ribWst.toFixed(3) });
-            if (isGrs && g.ribWt > 0) weights.push({ l: 'RIB WT', v: g.ribWt.toFixed(3) });
-            if (isTextile && /PAJAMA|PYJAMA/.test(U) && g.rope > 0) weights.push({ l: 'ROPE WT', v: g.rope.toFixed(3) });
-            if (isPolo && g.pkt > 0) weights.push({ l: 'PKT WT', v: g.pkt.toFixed(3) });
-            if (isPolo && g.plkt > 0) weights.push({ l: 'PLKT WT', v: g.plkt.toFixed(3) });
-            if (isPolo && g.byPlkt > 0) weights.push({ l: 'BY-PLKT WT', v: g.byPlkt.toFixed(3) });
-            if (isPolo && g.byPlktWst > 0) weights.push({ l: 'BY-PLKT WST', v: g.byPlktWst.toFixed(3) });
-            if (isPolo && g.collar > 0) weights.push({ l: 'COLLAR CUFF', v: g.collar.toFixed(3) });
-            if (isPant && g.sidePkt > 0) weights.push({ l: 'SIDE PKT', v: g.sidePkt.toFixed(3) });
-            if (isPant && g.backPkt > 0) weights.push({ l: 'BACK PKT', v: g.backPkt.toFixed(3) });
+            const weights = [{ l: colName('wastage', 'WASTAGE WT').toUpperCase(), v: g.wst.toFixed(3) }];
+            if (!isTextile) weights.push({ l: colName('mukpat', 'MUKPAT WT').toUpperCase(), v: g.mkpt.toFixed(3) });
+            if (isGrs && g.ribWst > 0) weights.push({ l: colName('ribWastage', 'RIB WASTAGE').toUpperCase(), v: g.ribWst.toFixed(3) });
+            if (isGrs && g.ribWt > 0) weights.push({ l: colName('rib', 'RIB WT').toUpperCase(), v: g.ribWt.toFixed(3) });
+            if (U.includes('SWEAT SHIRT') && !isTextile && g.sweatPkt > 0) weights.push({ l: colName('sweatPocket', 'POCKET WT').toUpperCase(), v: g.sweatPkt.toFixed(3) });
+            if (U.includes('SWEAT SHIRT') && !isTextile && g.belt > 0) weights.push({ l: colName('belt', 'BELT WT').toUpperCase(), v: g.belt.toFixed(3) });
+            if (U.includes('SWEAT SHIRT') && !isTextile && g.cup > 0) weights.push({ l: colName('cup', 'CUP WT').toUpperCase(), v: g.cup.toFixed(3) });
+            if (isTextile && /PAJAMA|PYJAMA/.test(U) && g.rope > 0) weights.push({ l: colName('rope', 'ROPE WT').toUpperCase(), v: g.rope.toFixed(3) });
+            if (isPolo && g.pkt > 0) weights.push({ l: colName('pocket', 'PKT WT').toUpperCase(), v: g.pkt.toFixed(3) });
+            if (isPolo && g.plkt > 0) weights.push({ l: colName('plaket', 'PLKT WT').toUpperCase(), v: g.plkt.toFixed(3) });
+            if (isPolo && g.byPlkt > 0) weights.push({ l: colName('byPlaket', 'BY-PLKT WT').toUpperCase(), v: g.byPlkt.toFixed(3) });
+            if (isPolo && g.byPlktWst > 0) weights.push({ l: colName('byPlaketWastage', 'BY-PLKT WST').toUpperCase(), v: g.byPlktWst.toFixed(3) });
+            if (isPolo && g.collar > 0) weights.push({ l: colName('collar', 'COLLAR CUFF').toUpperCase(), v: g.collar.toFixed(3) });
+            if (isPant && g.sidePkt > 0) weights.push({ l: colName('sidePocket', 'SIDE PKT').toUpperCase(), v: g.sidePkt.toFixed(3) });
+            if (isPant && g.backPkt > 0) weights.push({ l: colName('backPocket', 'BACK PKT').toUpperCase(), v: g.backPkt.toFixed(3) });
             if (adj > 0) weights.push({ l: 'ADJUST WT', v: `${adjAction === 'ADD' ? '+' : '-'}${adj.toFixed(3)} KG`, accent: true });
 
             // Only the MAIN table (not the Show popup or any other table on the page).
@@ -4648,7 +5527,7 @@
                         const bC = td.querySelector('.row-bcons'), tC = td.querySelector('.row-tcons');
                         if (bC) val = bC.innerText.trim();
                         else if (tC) val = tC.innerText.trim();
-                        else val = td.innerText.trim() || '-';
+                        else val = cellTextNoRef(td) || '-';
                     }
                     cells.push(val);
                 });
@@ -4824,7 +5703,7 @@ ${buildEmbeddedEntryTag(entry)}
             const idBackup = nextRowOriginalId;
             const dicts = [qualityData, qualityGsmData, qualityFoldingNameData, qualityFoldingGmData, qualityRemarksData,
                 qualityTextileStdConsData, qualityTextileTotalMetersData, qualityPoloPocketData, qualityPoloByPlaketData,
-                qualityPantSidePocketData, qualityPantBackPocketData, qualityTConsPartsData, qualityAdjustmentPartsData];
+                qualityPantSidePocketData, qualityPantBackPocketData, qualitySweatBeltData, qualitySweatCupData, qualitySweatPocketData, qualityTConsPartsData, qualityAdjustmentPartsData];
             const dictBackup = dicts.map(d => ({ d, had: Object.prototype.hasOwnProperty.call(d, q), val: d[q] }));
             const realSaveState = window.saveState;
             let view = null;
@@ -4956,10 +5835,14 @@ ${buildEmbeddedEntryTag(entry)}
                         slips: q('.row-slips') ? q('.row-slips').value : '',
                         pics: q('.row-pics') ? q('.row-pics').value : '',
                         bodywt: body ? (body.dataset.origBodyWt ?? body.dataset.weight ?? body.value) : '',
-                        ribwt: q('.row-ribwt') ? q('.row-ribwt').value : '',
+                        ribwt: getRowOrigValue(row, 'row-ribwt'),
                         ropewt: getRopeRowValue(row),
-                        sidepocket: q('.row-sidepocket') ? q('.row-sidepocket').value : '',
-                        backpocket: q('.row-backpocket') ? q('.row-backpocket').value : ''
+                    pktwt: getRowManualValue(row, 'row-pocket'), foldwt: getRowManualValue(row, 'row-folding'), collarwt: getRowManualValue(row, 'row-collarcuff'), wastewt: getRowManualValue(row, 'row-wastage'),
+                        sidepocket: getRowOrigValue(row, 'row-sidepocket'),
+                        backpocket: getRowOrigValue(row, 'row-backpocket'),
+                        spktwt: getRowOrigValue(row, 'row-spktwt'),
+                        beltwt: getRowOrigValue(row, 'row-beltwt'),
+                        cupwt: getRowOrigValue(row, 'row-cupwt')
                     });
                 });
 
@@ -4986,8 +5869,12 @@ ${buildEmbeddedEntryTag(entry)}
                     qualityPoloByPlaketData,
                     qualityPantSidePocketData,
                     qualityPantBackPocketData,
+                    qualitySweatBeltData,
+                    qualitySweatCupData,
+                    qualitySweatPocketData,
                     qualityTConsPartsData,
                     qualityAdjustmentPartsData,
+                qualityColumnNamesData,
                     selectedQuality: quality,
                     fabricGsm: document.getElementById('fabricGsmInput')?.value || '',
                     poloTotalPocket: val('poloTotalPocketInput'),
@@ -4997,6 +5884,9 @@ ${buildEmbeddedEntryTag(entry)}
                     poloTotalCollarCuff: val('poloTotalCollarCuffInput'),
                     pantTotalSidePocket: val('pantTotalSidePocketInput'),
                     pantTotalBackPocket: val('pantTotalBackPocketInput'),
+                    sweatTotalBelt: val('sweatTotalBeltInput'),
+                    sweatTotalCup: val('sweatTotalCupInput'),
+                    sweatTotalPocket: val('sweatTotalPocketInput'),
                     globalWastage: val('globalWastageInput'),
                     globalMukpat: val('globalMukpatInput'),
                     globalRibWastage: val('globalRibWastageInput'),
