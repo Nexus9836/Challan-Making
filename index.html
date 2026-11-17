@@ -15,6 +15,7 @@
                 margin: 6mm;
             }
             .no-print { display: none !important; }
+            #challanMainBlock { zoom: 1 !important; }
             body { 
                 background-color: white !important; 
                 font-size: 10px !important; 
@@ -43,6 +44,10 @@
                 display: inline-block !important;
             }
         }
+        /* Zoom controls: the page zooms like browser zoom (text + table grow/shrink together). */
+        #challanMainBlock { zoom: var(--page-zoom, 1); }
+        #zoomControls button { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+        #zoomPanel.open { display: flex; }
         /* Forces the text display to be uppercase instantly */
         input[type="text"] { text-transform: uppercase; }
         /* Main challan table: fixed column geometry prevents rows/headers from reflowing
@@ -105,6 +110,18 @@
     </style>
 </head>
 <body class="bg-gray-100 p-2 sm:p-6">
+
+    <!-- Zoom In / Out controls (hidden by default; tap the magnifier to open, auto-closes) -->
+    <div id="zoomControls" class="no-print fixed bottom-3 right-3 z-40 flex items-center justify-end">
+        <div id="zoomPanel" class="hidden items-center bg-white border border-gray-300 rounded-full shadow-lg overflow-hidden mr-2">
+            <button type="button" onclick="zoomOut()" id="zoomOutBtn" title="Zoom out" aria-label="Zoom out" class="w-10 h-10 flex items-center justify-center text-xl font-bold text-gray-700 hover:bg-gray-100 active:bg-gray-200 disabled:opacity-30">&minus;</button>
+            <button type="button" onclick="zoomReset()" id="zoomLevelBtn" title="Reset to 100%" aria-label="Reset zoom" class="min-w-[3.25rem] h-10 px-1 text-xs font-bold text-gray-700 border-x border-gray-200 hover:bg-gray-100 active:bg-gray-200">100%</button>
+            <button type="button" onclick="zoomIn()" id="zoomInBtn" title="Zoom in" aria-label="Zoom in" class="w-10 h-10 flex items-center justify-center text-xl font-bold text-gray-700 hover:bg-gray-100 active:bg-gray-200 disabled:opacity-30">+</button>
+        </div>
+        <button type="button" onclick="toggleZoomPanel()" id="zoomToggleBtn" title="Zoom" aria-label="Zoom options" aria-expanded="false" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-800/80 text-white shadow-lg hover:bg-gray-900 active:bg-gray-900">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16zM8 11h6M11 8v6" /></svg>
+        </button>
+    </div>
 
     <div id="challanMainBlock" class="max-w-6xl mx-auto bg-white p-4 sm:p-8 rounded-lg shadow-md challan-container">
         
@@ -3600,6 +3617,7 @@
                 
                 loadConsumption();
                 try { localStorage.clear(); } catch (e) { console.warn('Storage clear failed.', e); }
+                saveZoom();
             }
         }
 
@@ -4859,6 +4877,65 @@ ${buildEmbeddedEntryTag(entry)}
             return (item && item.view && Array.isArray(item.view.rows) && Array.isArray(item.view.ths)) ? item.view : null;
         }
 
+
+        // ---- Zoom In / Out ----
+        const ZOOM_MIN = 50, ZOOM_MAX = 200, ZOOM_STEP = 10, ZOOM_KEY = 'challan_pageZoom';
+        let pageZoom = 100;
+
+        function applyZoom() {
+            const block = document.getElementById('challanMainBlock');
+            if (block) block.style.setProperty('--page-zoom', String(pageZoom / 100));
+            const lbl = document.getElementById('zoomLevelBtn');
+            if (lbl) lbl.textContent = pageZoom + '%';
+            const outBtn = document.getElementById('zoomOutBtn');
+            const inBtn = document.getElementById('zoomInBtn');
+            if (outBtn) outBtn.disabled = pageZoom <= ZOOM_MIN;
+            if (inBtn) inBtn.disabled = pageZoom >= ZOOM_MAX;
+        }
+        function saveZoom() {
+            try { localStorage.setItem(ZOOM_KEY, String(pageZoom)); } catch (_) {}
+        }
+        function setZoom(v) {
+            v = Math.round(Number(v) / ZOOM_STEP) * ZOOM_STEP;
+            if (!isFinite(v)) v = 100;
+            pageZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, v));
+            applyZoom();
+            saveZoom();
+        }
+        // Panel is hidden by default; opens on tap and closes by itself after a few seconds or on outside tap.
+        let zoomPanelTimer = null;
+        function setZoomPanel(open) {
+            const panel = document.getElementById('zoomPanel');
+            const btn = document.getElementById('zoomToggleBtn');
+            if (!panel) return;
+            panel.classList.toggle('open', open);
+            if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            clearTimeout(zoomPanelTimer);
+            if (open) zoomPanelTimer = setTimeout(() => setZoomPanel(false), 4000);
+        }
+        function toggleZoomPanel() {
+            const panel = document.getElementById('zoomPanel');
+            setZoomPanel(!(panel && panel.classList.contains('open')));
+        }
+        function keepZoomPanelOpen() {
+            const panel = document.getElementById('zoomPanel');
+            if (panel && panel.classList.contains('open')) setZoomPanel(true);
+        }
+        document.addEventListener('pointerdown', function (e) {
+            const box = document.getElementById('zoomControls');
+            if (box && !box.contains(e.target)) setZoomPanel(false);
+        });
+        function zoomIn()    { setZoom(pageZoom + ZOOM_STEP); keepZoomPanelOpen(); }
+        function zoomOut()   { setZoom(pageZoom - ZOOM_STEP); keepZoomPanelOpen(); }
+        function zoomReset() { setZoom(100); keepZoomPanelOpen(); }
+        (function initZoom() {
+            try {
+                const saved = parseInt(localStorage.getItem(ZOOM_KEY), 10);
+                if (isFinite(saved)) pageZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, saved));
+            } catch (_) {}
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyZoom);
+            else applyZoom();
+        })();
 
         function reliableDownloadBlob(blob, filename) {
             try {
