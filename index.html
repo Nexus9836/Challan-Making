@@ -175,6 +175,21 @@
                     </button>
                 </div>
 
+                <!-- Cutter (who did this cutting) -->
+                <div id="cutterRow" class="flex flex-col items-center gap-1 no-print mt-1 w-full max-w-md mx-auto">
+                    <span class="font-bold text-gray-700 text-[10px] sm:text-[11px] tracking-wide text-center block">CUTTER</span>
+                    <div class="flex items-center gap-1">
+                        <select id="cutterSelect" onchange="onCutterChange()" class="border border-gray-300 focus:outline-none p-1 rounded bg-white min-w-[200px] text-center font-semibold text-gray-800 text-xs"></select>
+                        <button type="button" onclick="addCutter()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold w-7 h-7 flex items-center justify-center rounded transition" title="Add Cutter">+</button>
+                        <button type="button" onclick="renameCutter()" class="bg-amber-500 hover:bg-amber-600 text-white w-7 h-7 flex items-center justify-center rounded transition" title="Rename Cutter">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                        </button>
+                        <button type="button" onclick="deleteCutter()" class="bg-red-500 hover:bg-red-600 text-white w-7 h-7 flex items-center justify-center rounded transition" title="Delete Cutter from list">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Quality Remarks Input Row -->
                 <div id="qualityRemarksRow" class="flex flex-nowrap justify-center items-end gap-3 no-print mt-1 w-full max-w-md mx-auto">
                     <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
@@ -999,6 +1014,68 @@
             }
         }
 
+        // ---- Cutter: who did this cutting (list is editable, saved in the browser + in backups) ----
+        let cutterList = [];
+        function loadCutters() {
+            try { const a = JSON.parse(localStorage.getItem('challan_cutters') || '[]'); cutterList = Array.isArray(a) ? a.map(x => String(x).trim().toUpperCase()).filter(Boolean) : []; } catch (_) { cutterList = []; }
+            let sel = '';
+            try { sel = localStorage.getItem('challan_cutter_selected') || ''; } catch (_) {}
+            renderCutterSelect(sel);
+        }
+        function saveCutters() {
+            try { localStorage.setItem('challan_cutters', JSON.stringify(cutterList)); } catch (_) {}
+        }
+        function renderCutterSelect(selected) {
+            const el = document.getElementById('cutterSelect');
+            if (!el) return;
+            const want = String(selected || '').trim().toUpperCase();
+            if (want && !cutterList.includes(want)) { cutterList.push(want); saveCutters(); }
+            el.innerHTML = '<option value="">-- SELECT CUTTER --</option>' + cutterList.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
+            el.value = want;
+        }
+        function getCutter() {
+            const el = document.getElementById('cutterSelect');
+            return el ? String(el.value || '').trim().toUpperCase() : '';
+        }
+        function onCutterChange() {
+            try { localStorage.setItem('challan_cutter_selected', getCutter()); } catch (_) {}
+        }
+        function addCutter() {
+            const name = String(prompt('Cutter-er naam likhun:') || '').trim().toUpperCase();
+            if (!name) return;
+            renderCutterSelect(name);
+            saveCutters();
+            onCutterChange();
+        }
+        function renameCutter() {
+            const old = getCutter();
+            if (!old) { alert('Age list theke ekjon cutter select korun.'); return; }
+            const name = String(prompt('Notun naam:', old) || '').trim().toUpperCase();
+            if (!name || name === old) return;
+            if (cutterList.includes(name)) { alert('Ei naam agei ache.'); return; }
+            cutterList = cutterList.map(c => c === old ? name : c);
+            if (Array.isArray(historyData)) {
+                historyData.forEach(h => {
+                    if (h && String(h.cutter || '').toUpperCase() === old) h.cutter = name;
+                    if (h && h.view && String(h.view.cutter || '').toUpperCase() === old) h.view.cutter = name;
+                });
+                saveHistoryToStorage();
+                renderHistory();
+            }
+            saveCutters();
+            renderCutterSelect(name);
+            onCutterChange();
+        }
+        function deleteCutter() {
+            const old = getCutter();
+            if (!old) { alert('Age list theke ekjon cutter select korun.'); return; }
+            if (!confirm(old + ' ke list theke muche felbo? (Purono history te naam thakbe.)')) return;
+            cutterList = cutterList.filter(c => c !== old);
+            saveCutters();
+            renderCutterSelect('');
+            onCutterChange();
+        }
+
         // History can contain data from older versions of the app. Normalize every
         // record before rendering so one damaged record can never hide the whole list.
         function normalizeHistoryEntry(entry) {
@@ -1007,6 +1084,7 @@
             normalized.quality = String(entry.quality ?? 'UNKNOWN QUALITY');
             normalized.timestamp = String(entry.timestamp ?? '');
             normalized.qualityRemarks = String(entry.qualityRemarks ?? '').toUpperCase();
+            normalized.cutter = String(entry.cutter ?? '').trim().toUpperCase();
             normalized.items = Array.isArray(entry.items) ? entry.items.filter(x => x && typeof x === 'object' && !Array.isArray(x)) : [];
             normalized.tConsParts = (entry.tConsParts && typeof entry.tConsParts === 'object' && !Array.isArray(entry.tConsParts))
                 ? { ...entry.tConsParts }
@@ -1176,6 +1254,7 @@
             // Restore history safely and normalize legacy/malformed records.
             try { const cw = JSON.parse(localStorage.getItem('challan_colWst') || '{}'); Object.keys(cw).forEach(k => { const e = CM_SLOTS[k] && document.getElementById(CM_SLOTS[k].win); if (e) e.value = cw[k]; }); } catch (_) {}
             historyData = loadHistoryFromStorage();
+            loadCutters();
 
             loadConsumption();
             renderHistory();
@@ -3451,6 +3530,12 @@
                         if (importedObj.adjWeight !== undefined) document.getElementById('adjWeightInput').value = importedObj.adjWeight;
                         if (importedObj.adjAction !== undefined) document.getElementById('adjActionSelect').value = importedObj.adjAction;
 
+                        if (Array.isArray(importedObj.cutterList)) {
+                            cutterList = importedObj.cutterList.map(x => String(x).trim().toUpperCase()).filter(Boolean);
+                            saveCutters();
+                            renderCutterSelect(importedObj.selectedCutter || '');
+                            onCutterChange();
+                        }
                         if (importedObj.historyData) {
                             historyData = Array.isArray(importedObj.historyData) ? importedObj.historyData.map(normalizeHistoryEntry).filter(Boolean) : [];
                             saveHistoryToStorage();
@@ -3617,6 +3702,8 @@
                 
                 loadConsumption();
                 try { localStorage.clear(); } catch (e) { console.warn('Storage clear failed.', e); }
+                cutterList = [];
+                renderCutterSelect('');
                 saveZoom();
             }
         }
@@ -3825,6 +3912,7 @@
                 foldingName: isTextileActive ? "" : (qualityFoldingNameData[quality] || ""),
                 foldingGm: isTextileActive ? "0.00000" : (qualityFoldingGmData[quality] || "0.00000"),
                 qualityRemarks: String(qualityRemarksData[quality] || "").toUpperCase(),
+                cutter: getCutter(),
                 totalSlips: document.getElementById('totalSlipsDisplay') ? document.getElementById('totalSlipsDisplay').innerText : "0",
                 slipNoRange: slipNoRange,
                 totalPics: totalMainPics,
@@ -3942,6 +4030,8 @@
             
             qualityRemarksData[item.quality] = item.qualityRemarks || "";
             document.getElementById('qualityRemarksInput').value = item.qualityRemarks || "";
+            renderCutterSelect(item.cutter || '');
+            onCutterChange();
             
             qualityTextileStdConsData[item.quality] = item.textileStdCons || "";
             qualityTextileTotalMetersData[item.quality] = item.textileTotalMeters || "";
@@ -4080,9 +4170,9 @@
                 if (searchVal) {
                     const qualityMatch = String(item.quality ?? '').toUpperCase().includes(searchVal);
                     const timeMatch = String(item.timestamp ?? '').toUpperCase().includes(searchVal);
-                    const remarksMatch = String(item.qualityRemarks ?? '').toUpperCase().includes(searchVal);
+                    const remarksMatch = String(item.qualityRemarks ?? '').toUpperCase().includes(searchVal) || String(item.cutter ?? '').toUpperCase().includes(searchVal);
                     const slipRangeMatch = String(currentSlipRange ?? '').toUpperCase().includes(searchVal);
-                    const sizeMatch = safeItems.some(row => String(row.size ?? '').toUpperCase().includes(searchVal) || String(row.slipno ?? '').toUpperCase().includes(searchVal));
+                    const sizeMatch = safeItems.some(row => String(row.size ?? '').toUpperCase().includes(searchVal) || String(row.slipno ?? '').toUpperCase().includes(searchVal) || String(row.color ?? '').toUpperCase().includes(searchVal));
                     if (!qualityMatch && !timeMatch && !remarksMatch && !sizeMatch && !slipRangeMatch) {
                         return;
                     }
@@ -4131,16 +4221,49 @@
                     });
                 }
 
+                // Colour summary: same logic as the COLOR WISE SUMMARY table.
+                // A blank colour cell means "same colour as the row above", so pics of the
+                // following rows are added to the colour written in the block's first row.
+                let colorSummaryStr = "";
+                {
+                    let colorList = [];
+                    const savedColors = item.view && item.view.colors && Array.isArray(item.view.colors.rows) ? item.view.colors.rows : null;
+                    if (savedColors) {
+                        // Exactly what the summary table showed when this record was saved
+                        colorList = savedColors.map(r => ({ name: String(r[0] ?? ''), pics: String(r[1] ?? '0') }));
+                    } else {
+                        // Older records: rebuild with the same carry-forward rule
+                        let cur = '', any = false;
+                        const m = new Map();
+                        safeItems.forEach(r => {
+                            const own = String(r.color ?? '').trim().toUpperCase();
+                            if (own) { cur = own; any = true; }
+                            const key = cur || '-';
+                            m.set(key, (m.get(key) || 0) + (parseFloat(r.pics) || 0));
+                        });
+                        if (any) colorList = Array.from(m.entries()).map(([name, pics]) => ({ name, pics: String(pics) }));
+                    }
+                    if (colorList.length > 0) {
+                        const chips = colorList.map(c =>
+                            `<span class="inline-flex items-center gap-1 bg-white border border-gray-300 rounded-full px-2 py-0.5 text-[10px] font-bold text-gray-700">${escHtml(c.name)}<span class="text-blue-600">${escHtml(c.pics)} pcs</span></span>`
+                        ).join('');
+                        colorSummaryStr = `<div class="flex flex-wrap items-center gap-1 mt-1.5"><span class="text-[10px] font-bold text-gray-400">COLORS (${colorList.length}):</span>${chips}</div>`;
+                    }
+                }
+
+                const cutterBadge = item.cutter ? `<span class="inline-flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded px-1.5 py-0.5 text-[10px] font-bold mt-1 w-fit">CUTTER: ${escHtml(item.cutter)}</span>` : '';
                 let remarksInfoStr = item.qualityRemarks ? `<div class="text-[11px] text-amber-700 italic mt-0.5 font-bold">Note: ${item.qualityRemarks}</div>` : '';
 
                 logCard.innerHTML = `
                     <div class="flex flex-col gap-0.5 min-w-0 flex-1">
                         <span class="font-bold text-gray-800 text-sm truncate">${historyQuality}</span>
                         <span class="text-[10px] text-gray-400 font-medium">${String(item.timestamp ?? '')}</span>
+                        ${cutterBadge}
                         ${remarksInfoStr}
                         <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-500 mt-1 font-semibold">
                             ${!isHistoryTextile ? `<span>Std Cons: <span class="text-gray-700">${item.stdCons}</span></span><span>Std GSM: <span class="text-gray-700">${item.stdGsm}</span></span><span>Fab GSM: <span class="text-gray-700">${item.fabricGsm}</span></span>${foldingInfoStr}${wastageInfoStr}${adjInfoStr}${colInfoStr}` : `${textileInfoStr}${totalWstShown > 0 ? `<span>Wastage: <span class="text-gray-700">${totalWstShown.toFixed(3)}kg</span></span>` : ''}${adjInfoStr}`}
                         </div>
+                        ${colorSummaryStr}
                     </div>
                     <div class="flex items-center justify-between sm:justify-end gap-3 border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-200 shrink-0 w-full sm:w-auto">
                         <div class="flex gap-4 text-xs font-bold text-gray-700 items-center flex-wrap sm:flex-nowrap">
@@ -4546,6 +4669,7 @@
                 foldingName: isTextile ? "" : (qualityFoldingNameData[quality] || ""),
                 foldingGm: isTextile ? "0.00000" : (qualityFoldingGmData[quality] || "0.00000"),
                 qualityRemarks: String(qualityRemarksData[quality] || "").toUpperCase(),
+                cutter: getCutter(),
                 totalSlips: txt('totalSlipsDisplay') || "0",
                 slipNoRange,
                 totalPics: txt('totalPicsDisplay'),
@@ -4727,7 +4851,7 @@
 
             const remarksInput = document.getElementById('qualityRemarksInput');
             const remarks = String(qualityRemarksData[q] || (remarksInput ? remarksInput.value : '') || '').trim();
-            return { version: 1, quality: q, remarks, isTextile, isCheck, metrics, weights, ths, rows, foot, colors: computeColorSummary(), globals: g };
+            return { version: 1, quality: q, remarks, cutter: getCutter(), isTextile, isCheck, metrics, weights, ths, rows, foot, colors: computeColorSummary(), globals: g };
         }
 
         // The finished challan page used by BOTH downloads.
@@ -4760,7 +4884,7 @@
     <div class="container">
         <div class="header">
             <div class="title">CUTTING CHALLAN REPORT</div>
-            <div class="sub-header">QUALITY: <span>${escHtml(view.quality)}</span> | REMARKS: <span>${escHtml(view.remarks || '-')}</span></div>
+            <div class="sub-header">QUALITY: <span>${escHtml(view.quality)}</span> | REMARKS: <span>${escHtml(view.remarks || '-')}</span>${(view.cutter || (entry && entry.cutter)) ? ` | CUTTER: <span>${escHtml(view.cutter || entry.cutter)}</span>` : ''}</div>
         </div>
         <div class="info-card">
             <div class="metrics-row">${metricsHtml}</div>
@@ -4845,6 +4969,7 @@ ${buildEmbeddedEntryTag(entry)}
                 <div class="flex justify-between items-center text-gray-500 text-[11px] font-medium border-b border-gray-200 pb-1">
                     <span>Saved Date: <b class="text-gray-700">${escHtml(item.timestamp)}</b></span>
                     ${(item.qualityRemarks || view.remarks) ? `<span class="text-amber-700 font-bold">Remarks: ${escHtml(item.qualityRemarks || view.remarks)}</span>` : ''}
+                    ${(item.cutter || view.cutter) ? `<span class="text-indigo-700 font-bold">Cutter: ${escHtml(item.cutter || view.cutter)}</span>` : ''}
                 </div>
                 <div class="flex flex-wrap gap-3 text-[11px] font-semibold text-gray-600">${view.metrics.map(m => chip(m, m.accent ? 'text-blue-700' : '')).join('')}</div>
                 <div class="flex flex-wrap gap-2 text-[10px] text-gray-500 pt-1 border-t border-gray-200">${view.weights.map(w => chip(w, w.accent ? 'text-blue-700' : '')).join('')}</div>
@@ -5022,6 +5147,8 @@ ${buildEmbeddedEntryTag(entry)}
                     qualityAdjustmentPartsData,
                 qualityColumnNamesData,
                     selectedQuality: quality,
+                    cutterList,
+                    selectedCutter: getCutter(),
                     fabricGsm: document.getElementById('fabricGsmInput')?.value || '',
                     slot4Total: val('slot4TotalInput'),
                     slot5Total: val('slot5TotalInput'),
