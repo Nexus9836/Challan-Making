@@ -107,6 +107,42 @@
             position: static !important;
             transform: none !important;
         }
+
+        /* ===== UI polish (screen only, CSS only: no logic, ids or handlers touched) ===== */
+        @media screen {
+            html { -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
+            body { font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans Bengali", "Kalpurush", Roboto, Arial, sans-serif; background: linear-gradient(180deg, #eef2f9 0%, #e6ebf5 100%); }
+            .challan-container { border-radius: 16px; box-shadow: 0 10px 30px -12px rgba(30, 41, 59, .25), 0 2px 6px rgba(30, 41, 59, .06); border: 1px solid #e2e8f0; }
+            /* clear keyboard/touch focus (many fields had no visible focus before) */
+            input:focus-visible, select:focus-visible, textarea:focus-visible { border-color: #3b82f6 !important; box-shadow: 0 0 0 3px rgba(59, 130, 246, .22); outline: none; }
+            #challanMainTable input:focus-visible, #challanMainTable select:focus-visible { box-shadow: inset 0 0 0 2px rgba(59, 130, 246, .45); }
+            button:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+            input, select, textarea { border-radius: 8px; transition: border-color .15s, box-shadow .15s; }
+            button { cursor: pointer; transition: background-color .15s, transform .08s, box-shadow .15s, opacity .15s; }
+            button:active:not(:disabled) { transform: scale(.96); }
+            button:disabled { opacity: .5; cursor: not-allowed; }
+            .challan-container button.rounded, .challan-container button.rounded-lg { border-radius: 8px; }
+            /* header controls: calmer section dividers and info bars */
+            .challan-container .border-t.border-gray-100 { border-color: #e8edf5; }
+            #lotInfoBar, #cutterPendingPanel { border-radius: 10px; }
+            #cutterPendingPanel { background: #f1f6ff; border-color: #cfe0fb; }
+            /* table: easier row tracking */
+            #challanMainTable { border-radius: 10px; }
+            #itemRows > tr { transition: background-color .12s; }
+            #itemRows > tr:hover { background-color: rgba(59, 130, 246, .06); }
+            /* popups: softer card, readable on phones */
+            div.fixed.inset-0 > .bg-white { border-radius: 16px; box-shadow: 0 24px 60px -20px rgba(15, 23, 42, .45); border: 1px solid #e2e8f0; }
+            div.fixed.inset-0 { backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+            /* thin, unobtrusive scrollbars */
+            * { scrollbar-width: thin; scrollbar-color: #b8c2d4 transparent; }
+            #zoomPanel, #zoomToggleBtn { box-shadow: 0 6px 18px -6px rgba(30, 41, 59, .4); }
+        }
+        /* bigger tap targets for the small +/edit/delete icon buttons on touch screens */
+        @media screen and (pointer: coarse) {
+            #cutterRow button, #lotRow button { min-width: 30px; min-height: 30px; }
+            #lotActionRow button { min-height: 28px; padding-left: .55rem; padding-right: .55rem; }
+        }
+        @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
     </style>
 </head>
 <body class="bg-gray-100 p-2 sm:p-6">
@@ -175,19 +211,49 @@
                     </button>
                 </div>
 
+                <!-- Cutter + Lot side by side -->
+                <div id="cutterLotWrap" class="flex flex-row items-start justify-center gap-2 no-print mt-1 w-full max-w-xl mx-auto">
                 <!-- Cutter (who did this cutting) -->
-                <div id="cutterRow" class="flex flex-col items-center gap-1 no-print mt-1 w-full max-w-md mx-auto">
+                <div id="cutterRow" class="flex flex-col items-center gap-1 flex-1 min-w-0">
                     <span class="font-bold text-gray-700 text-[10px] sm:text-[11px] tracking-wide text-center block">CUTTER</span>
-                    <div class="flex items-center gap-1">
-                        <select id="cutterSelect" onchange="onCutterChange()" class="border border-gray-300 focus:outline-none p-1 rounded bg-white min-w-[200px] text-center font-semibold text-gray-800 text-xs"></select>
-                        <button type="button" onclick="addCutter()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold w-7 h-7 flex items-center justify-center rounded transition" title="Add Cutter">+</button>
-                        <button type="button" onclick="renameCutter()" class="bg-amber-500 hover:bg-amber-600 text-white w-7 h-7 flex items-center justify-center rounded transition" title="Rename Cutter">
+                    <div class="flex items-center gap-1 w-full">
+                        <select id="cutterSelect" onchange="onCutterChange()" class="border border-gray-300 focus:outline-none p-1 rounded bg-white min-w-0 flex-1 text-center font-semibold text-gray-800 text-xs"></select>
+                        <button type="button" onclick="addCutter()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold w-6 h-6 sm:w-7 sm:h-7 shrink-0 flex items-center justify-center rounded transition" title="Add Cutter">+</button>
+                        <button type="button" onclick="renameCutter()" class="bg-amber-500 hover:bg-amber-600 text-white w-6 h-6 sm:w-7 sm:h-7 shrink-0 flex items-center justify-center rounded transition" title="Rename Cutter">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                         </button>
-                        <button type="button" onclick="deleteCutter()" class="bg-red-500 hover:bg-red-600 text-white w-7 h-7 flex items-center justify-center rounded transition" title="Delete Cutter from list">
+                        <button type="button" onclick="deleteCutter()" class="bg-red-500 hover:bg-red-600 text-white w-6 h-6 sm:w-7 sm:h-7 shrink-0 flex items-center justify-center rounded transition" title="Delete Cutter from list">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
                     </div>
+                </div>
+
+                <!-- Lot (which fabric lot this cutting came from) -->
+                <div id="lotRow" class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                    <span class="font-bold text-gray-700 text-[10px] sm:text-[11px] tracking-wide text-center block">LOT</span>
+                    <div class="flex items-center gap-1 w-full">
+                        <select id="lotSelect" onchange="onLotChange()" class="border border-gray-300 focus:outline-none p-1 rounded bg-white min-w-0 flex-1 text-center font-semibold text-gray-800 text-xs"></select>
+                        <button type="button" onclick="addLot()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold w-6 h-6 sm:w-7 sm:h-7 shrink-0 flex items-center justify-center rounded transition" title="Add Lot">+</button>
+                        <button type="button" onclick="editLot()" class="bg-amber-500 hover:bg-amber-600 text-white w-6 h-6 sm:w-7 sm:h-7 shrink-0 flex items-center justify-center rounded transition" title="Edit / Rename Lot">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                        </button>
+                        <button type="button" onclick="deleteLot()" class="bg-red-500 hover:bg-red-600 text-white w-6 h-6 sm:w-7 sm:h-7 shrink-0 flex items-center justify-center rounded transition" title="Delete Lot from list">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                    </div>
+                    <div id="lotInfoBar" class="hidden text-[11px] font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded px-2 py-0.5 text-center"></div>
+                </div>
+                </div>
+
+                <!-- Cutter pending balance bar -->
+                <div id="cutterPendingPanel" class="hidden no-print mt-1 w-full max-w-xl mx-auto bg-blue-50 border border-blue-100 rounded px-1.5 py-1"></div>
+
+                <!-- Godown / Cutter lot actions -->
+                <div id="lotActionRow" class="flex flex-row justify-center gap-1 no-print mt-1 w-full max-w-xl mx-auto">
+                    <button type="button" onclick="openLotMoveModal('ISSUE')" class="bg-sky-500 hover:bg-sky-600 text-white font-bold px-2 py-0.5 rounded text-[11px] transition">📤 Issue</button>
+                    <button type="button" onclick="openLotMoveModal('RETURN')" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-2 py-0.5 rounded text-[11px] transition">↩ Return</button>
+                    <button type="button" onclick="openLotMoveModal('SHORT')" class="bg-rose-500 hover:bg-rose-600 text-white font-bold px-2 py-0.5 rounded text-[11px] transition" title="Mark as Short">✂ Short</button>
+                    <button type="button" onclick="openLotXferModal()" class="bg-purple-500 hover:bg-purple-600 text-white font-bold px-2 py-0.5 rounded text-[11px] transition">🔀 New / Merge</button>
                 </div>
 
                 <!-- Quality Remarks Input Row -->
@@ -496,7 +562,10 @@
         <!-- History Section -->
         <div class="mt-8 border-t border-gray-200 pt-6 no-print">
             <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-4">
-                <h3 class="text-md font-bold text-gray-700 tracking-wide">CHALLAN HISTORY</h3>
+                <div class="flex items-center gap-2">
+                    <h3 class="text-md font-bold text-gray-700 tracking-wide">CHALLAN HISTORY</h3>
+                    <button type="button" onclick="openLotDetailsModal()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-2.5 py-1 rounded text-xs transition">Lot Details</button>
+                </div>
                 <input type="text" id="historySearchInput" placeholder="SEARCH HISTORY..." oninput="renderHistory()" class="border border-gray-300 focus:outline-none p-1.5 rounded bg-white text-xs font-bold max-w-xs w-full">
             </div>
             <div id="historyList" class="space-y-3">
@@ -597,6 +666,106 @@
             </div>
             <div class="mt-5 flex justify-end">
                 <button onclick="closeQualityOrderModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-1.5 rounded text-xs transition">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pop up Modal: Add / Edit Lot -->
+    <div id="lotEditModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-[60] hidden no-print">
+        <div class="bg-white p-5 rounded-lg shadow-xl max-w-xs w-full mx-4">
+            <h4 id="lotEditTitle" class="font-bold text-sm text-gray-800 mb-3">Add Lot</h4>
+            <label class="block text-[11px] font-bold text-gray-600 mb-0.5">LOT NO</label>
+            <input type="text" id="lotNoInput" oninput="this.value = this.value.toUpperCase();" placeholder="LOT NO" class="border border-gray-300 focus:outline-none p-1.5 rounded bg-white w-full text-xs font-semibold text-gray-800 mb-2">
+            <label class="block text-[11px] font-bold text-gray-600 mb-0.5">LOT WEIGHT (KG)</label>
+            <input type="number" id="lotWeightInput" step="0.001" min="0" placeholder="0.000" onblur="if(this.value!=='') this.value=parseFloat(this.value).toFixed(3);" class="border border-gray-300 focus:outline-none p-1.5 rounded bg-white w-full text-xs font-semibold text-gray-800">
+            <details id="leDetails" class="mt-3 border border-gray-200 rounded bg-gray-50">
+                <summary class="px-2 py-1.5 text-[11px] font-bold text-gray-700 cursor-pointer select-none">📤 সরাসরি কাটারে Issue (ঐচ্ছিক)</summary>
+                <div class="flex gap-1 p-2 pt-0.5">
+                    <select id="leCutter" class="border border-gray-300 focus:outline-none p-1.5 rounded bg-white flex-1 min-w-0 text-xs font-semibold text-gray-800"></select>
+                    <input type="number" id="leKg" step="0.001" min="0" inputmode="decimal" placeholder="KG" onblur="if(this.value!=='') this.value=parseFloat(this.value).toFixed(3);" class="border border-gray-300 focus:outline-none p-1.5 rounded bg-white w-20 text-center text-xs font-semibold text-gray-800">
+                    <button type="button" onclick="leFillAll()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-2 rounded text-[11px] transition">ALL</button>
+                </div>
+            </details>
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" onclick="closeLotEditModal()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold px-4 py-1.5 rounded text-xs transition">Cancel</button>
+                <button type="button" onclick="saveLotFromModal()" class="bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-1.5 rounded text-xs transition">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pop up Modal: Issue (Godown -> Cutter) / Return Challan (Cutter -> Godown) -->
+    <div id="lotMoveModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-[70] hidden no-print">
+        <div class="bg-white p-4 rounded-lg shadow-xl max-w-xs w-full mx-4">
+            <h4 id="lmTitle" class="font-bold text-sm text-gray-800 mb-3">Issue</h4>
+            <label class="block text-[11px] font-bold text-gray-600 mb-0.5">LOT</label>
+            <select id="lmLot" onchange="onLotMoveLotChange()" class="border border-gray-300 focus:outline-none p-1.5 rounded bg-white w-full text-xs font-semibold text-gray-800 mb-2"></select>
+            <label class="block text-[11px] font-bold text-gray-600 mb-0.5">CUTTER</label>
+            <select id="lmCutter" onchange="onLotMoveCutterChange()" class="border border-gray-300 focus:outline-none p-1.5 rounded bg-white w-full text-xs font-semibold text-gray-800 mb-2"></select>
+            <label class="block text-[11px] font-bold text-gray-600 mb-0.5">WEIGHT (KG)</label>
+            <div class="flex gap-1">
+                <input type="number" id="lmKg" step="0.001" min="0" inputmode="decimal" placeholder="0.000" oninput="updateLotMoveInfo()" onblur="if(this.value!=='') this.value=parseFloat(this.value).toFixed(3); updateLotMoveInfo();" onkeydown="if(event.key==='Enter'){event.preventDefault();saveLotMove(false);}" class="border border-gray-300 focus:outline-none p-1.5 rounded bg-white flex-1 min-w-0 text-xs font-semibold text-gray-800">
+                <button type="button" onclick="fillLotMoveAll()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-2.5 rounded text-[11px] transition">ALL</button>
+            </div>
+            <div id="lmInfo" class="mt-2 text-[11px] font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded px-2 py-1 leading-snug"></div>
+            <div class="flex justify-end gap-2 mt-3">
+                <button type="button" onclick="closeLotMoveModal()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold px-3 py-1.5 rounded text-xs transition">Cancel</button>
+                <button type="button" onclick="saveLotMove(true)" class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-3 py-1.5 rounded text-xs transition" title="Save and add another">Save +</button>
+                <button type="button" onclick="saveLotMove(false)" class="bg-green-500 hover:bg-green-600 text-white font-bold px-3 py-1.5 rounded text-xs transition">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pop up Modal: New Lot from 1+ lots / Merge 2+ lots -->
+    <div id="lotXferModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-[70] hidden no-print p-2">
+        <div class="bg-white p-4 rounded-lg shadow-xl max-w-sm w-full max-h-[92vh] overflow-y-auto">
+            <h4 class="font-bold text-sm text-gray-800 mb-1">🔀 New Lot / Merge</h4>
+            <p class="text-[10px] text-gray-500 mb-2 leading-snug">গোডাউনের ব্যালেন্স থেকে মাল নিয়ে নতুন/বিদ্যমান লটে যোগ করুন। সবার পুরো ব্যালেন্স নিলে সেটাই Merge।</p>
+            <div id="lxRows" class="space-y-1.5"></div>
+            <div class="flex gap-1.5 mt-2">
+                <button type="button" onclick="lxAddRow()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-2.5 py-1 rounded text-[11px] transition">+ Lot যোগ</button>
+                <button type="button" onclick="lxFillAllLots()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-2.5 py-1 rounded text-[11px] transition">সব লট (পুরো)</button>
+            </div>
+            <label class="block text-[11px] font-bold text-gray-600 mt-3 mb-0.5">NEW / TARGET LOT NO</label>
+            <input type="text" id="lxTarget" list="lxLotList" autocomplete="off" oninput="this.value=this.value.toUpperCase(); updateLotXferInfo();" onkeydown="if(event.key==='Enter'){event.preventDefault();saveLotXfer();}" placeholder="NEW LOT NO" class="border border-gray-300 focus:outline-none p-1.5 rounded bg-white w-full text-xs font-semibold text-gray-800">
+            <datalist id="lxLotList"></datalist>
+            <details id="lxDetails" class="mt-2 border border-gray-200 rounded bg-gray-50">
+                <summary class="px-2 py-1.5 text-[11px] font-bold text-gray-700 cursor-pointer select-none">📤 সরাসরি কাটারে Issue (ঐচ্ছিক)</summary>
+                <div class="flex gap-1 p-2 pt-0.5">
+                    <select id="lxCutter" onchange="updateLotXferInfo()" class="border border-gray-300 focus:outline-none p-1.5 rounded bg-white flex-1 min-w-0 text-xs font-semibold text-gray-800"></select>
+                    <input type="number" id="lxIssueKg" step="0.001" min="0" inputmode="decimal" placeholder="KG" oninput="updateLotXferInfo()" onblur="if(this.value!=='') this.value=parseFloat(this.value).toFixed(3); updateLotXferInfo();" onkeydown="if(event.key==='Enter'){event.preventDefault();saveLotXfer();}" class="border border-gray-300 focus:outline-none p-1.5 rounded bg-white w-20 text-center text-xs font-semibold text-gray-800">
+                    <button type="button" onclick="lxIssueAll()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-2 rounded text-[11px] transition">ALL</button>
+                </div>
+            </details>
+            <div id="lxInfo" class="mt-2 text-[11px] font-bold text-gray-700 bg-gray-50 border border-gray-200 rounded px-2 py-1 leading-snug"></div>
+            <div class="flex justify-end gap-2 mt-3">
+                <button type="button" onclick="closeLotXferModal()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold px-4 py-1.5 rounded text-xs transition">Cancel</button>
+                <button type="button" onclick="saveLotXfer()" class="bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-1.5 rounded text-xs transition">Create / Merge</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pop up Modal: Lot Details & Summary -->
+    <div id="lotDetailsModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 hidden no-print p-2 sm:p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="flex items-center justify-between p-3.5 border-b border-gray-200 bg-gray-50">
+                <h4 class="font-bold text-sm text-gray-800">📦 Lot Details</h4>
+                <button type="button" onclick="closeLotDetailsModal()" class="text-gray-400 hover:text-gray-700 text-lg font-bold px-2 py-0.5 rounded">✕</button>
+            </div>
+            <div class="p-4 overflow-y-auto space-y-4 flex-1 text-xs">
+                <input type="text" id="lotSearchInput" oninput="renderLotDetailsTable()" placeholder="🔍 Search lot no / weight..." autocomplete="off" class="border border-gray-300 focus:outline-none focus:border-indigo-400 p-1.5 rounded bg-white w-full text-xs font-semibold text-gray-800">
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <button type="button" onclick="openLotMoveModal('ISSUE')" class="bg-sky-500 hover:bg-sky-600 text-white font-bold px-2.5 py-1 rounded text-[11px] transition">📤 Issue</button>
+                    <button type="button" onclick="openLotMoveModal('RETURN')" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-2.5 py-1 rounded text-[11px] transition">↩ Return</button>
+                    <button type="button" onclick="openLotMoveModal('SHORT')" class="bg-rose-500 hover:bg-rose-600 text-white font-bold px-2.5 py-1 rounded text-[11px] transition" title="Mark as Short">✂ Short</button>
+                    <button type="button" onclick="openLotXferModal()" class="bg-purple-500 hover:bg-purple-600 text-white font-bold px-2.5 py-1 rounded text-[11px] transition">🔀 New Lot / Merge</button>
+                    <label class="flex items-center gap-1 text-[11px] font-semibold text-gray-600 ml-auto cursor-pointer"><input type="checkbox" id="lotHideClosed" checked onchange="renderLotDetailsTable()"> Closed লট লুকান</label>
+                </div>
+                <div id="lotDetailsTable"></div>
+                <div id="lotCutterPending"></div>
+                <div id="lotSummaryBox"></div>
+            </div>
+            <div class="p-3 border-t border-gray-200 bg-gray-50 flex justify-end">
+                <button type="button" onclick="closeLotDetailsModal()" class="bg-gray-600 hover:bg-gray-700 text-white font-bold px-5 py-1.5 rounded text-xs transition">Close</button>
             </div>
         </div>
     </div>
@@ -1039,6 +1208,7 @@
         }
         function onCutterChange() {
             try { localStorage.setItem('challan_cutter_selected', getCutter()); } catch (_) {}
+            try { refreshLotInfo(); } catch (_) {}
         }
         function addCutter() {
             const name = String(prompt('Cutter-er naam likhun:') || '').trim().toUpperCase();
@@ -1054,6 +1224,8 @@
             if (!name || name === old) return;
             if (cutterList.includes(name)) { alert('Ei naam agei ache.'); return; }
             cutterList = cutterList.map(c => c === old ? name : c);
+            lotLedger.forEach(e => { if (e.cutter === old) e.cutter = name; });
+            saveLots();
             if (Array.isArray(historyData)) {
                 historyData.forEach(h => {
                     if (h && String(h.cutter || '').toUpperCase() === old) h.cutter = name;
@@ -1076,6 +1248,971 @@
             onCutterChange();
         }
 
+        // ---- Godown ledger: Issue (Godown -> Cutter), Return (Cutter -> Godown), Transfer (Lot -> Lot) ----
+        // lotData[no].weight stays the "base" godown weight. Everything else is derived from this ledger + history:
+        //   Godown total   = weight + IN - OUT
+        //   Godown balance = Godown total - ISSUE + RETURN
+        //   Cutter balance = ISSUE(cutter) - RETURN(cutter) - challan totalWeight(lot, cutter) + EXCESS(cutter) - SHORT(cutter)
+        //   EXCESS = cutter cut more than issued (kept separately, auto-recorded just before the next issue so it is not deducted from it)
+        //   SHORT  = leftover balance written off from the cutter's account (does not go back to godown)
+        let lotLedger = [];
+        function r3(n) { return Math.round((parseFloat(n) || 0) * 1000) / 1000; }
+        function fk(n) { n = r3(n); if (Math.abs(n) < 0.0005) n = 0; return n.toFixed(3); }
+        function lotUid() { return 'L' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+        function lotNowStr() { return new Date().toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+        function normLedgerEntry(e) {
+            if (!e || typeof e !== 'object' || Array.isArray(e)) return null;
+            const type = String(e.type || '').toUpperCase();
+            if (!['ISSUE', 'RETURN', 'OUT', 'IN', 'EXCESS', 'SHORT'].includes(type)) return null;
+            const lot = String(e.lot || '').trim().toUpperCase();
+            const kg = r3(e.kg);
+            if (!lot || !(kg > 0)) return null;
+            return { id: String(e.id || lotUid()), ts: String(e.ts || ''), type, lot, cutter: String(e.cutter || '').trim().toUpperCase(), kg, tid: String(e.tid || ''), ref: String(e.ref || '').trim().toUpperCase(), note: String(e.note || '') };
+        }
+        function normLotRec(no, src) {
+            const w = parseFloat(src && src.weight);
+            const r = { lotNo: no, weight: Number((isNaN(w) ? 0 : w).toFixed(3)) };
+            if (src && src.origin && typeof src.origin === 'object') r.origin = src.origin;
+            return r;
+        }
+        function loadLotLedger() {
+            let raw = null;
+            try { raw = localStorage.getItem('challan_lotLedger'); } catch (_) {}
+            if (raw === null) { lotLedger = []; migrateLegacyLotLedger(); return; }
+            try { const a = JSON.parse(raw); lotLedger = Array.isArray(a) ? a.map(normLedgerEntry).filter(Boolean) : []; } catch (_) { lotLedger = []; }
+        }
+        // Old data had no Issue step: every old challan weight is treated as already issued to its cutter, so old balances stay the same.
+        function migrateLegacyLotLedger() {
+            const g = {};
+            if (Array.isArray(historyData)) historyData.forEach(h => {
+                if (!h) return;
+                const lot = String(h.lotNo || '').trim().toUpperCase();
+                if (!lot || !lotData[lot]) return;
+                const cut = String(h.cutter || '').trim().toUpperCase();
+                const w = parseFloat(h.totalWeight) || 0;
+                if (w > 0) { const k = lot + '\u0001' + cut; g[k] = (g[k] || 0) + w; }
+            });
+            Object.keys(g).forEach(k => {
+                const parts = k.split('\u0001');
+                lotLedger.push({ id: lotUid(), ts: lotNowStr(), type: 'ISSUE', lot: parts[0], cutter: parts[1], kg: r3(g[k]), tid: '', ref: '', note: 'AUTO (পুরনো চালানের হিসাব)' });
+            });
+            try { localStorage.setItem('challan_lotLedger', JSON.stringify(lotLedger)); } catch (_) {}
+        }
+        function lotLedgerSum(no, type, cutter) {
+            let s = 0;
+            lotLedger.forEach(e => { if (e.lot === no && e.type === type && (cutter === undefined || e.cutter === cutter)) s += e.kg; });
+            return s;
+        }
+        function getLotGodownTotal(no) { const l = lotData[no]; return l ? r3(l.weight + lotLedgerSum(no, 'IN') - lotLedgerSum(no, 'OUT')) : 0; }
+        function getLotIssued(no) { return r3(lotLedgerSum(no, 'ISSUE')); }
+        function getLotReturned(no) { return r3(lotLedgerSum(no, 'RETURN')); }
+        function getLotGodownBal(no) { return r3(getLotGodownTotal(no) - getLotIssued(no) + getLotReturned(no)); }
+        function getLotUsedByCutter(no, cutter) {
+            let u = 0;
+            if (Array.isArray(historyData)) historyData.forEach(h => {
+                if (h && String(h.lotNo || '').trim().toUpperCase() === no && String(h.cutter || '').trim().toUpperCase() === cutter) u += parseFloat(h.totalWeight) || 0;
+            });
+            return u;
+        }
+        function getCutterLotBal(no, cutter) { return r3(lotLedgerSum(no, 'ISSUE', cutter) - lotLedgerSum(no, 'RETURN', cutter) - getLotUsedByCutter(no, cutter) + lotLedgerSum(no, 'EXCESS', cutter) - lotLedgerSum(no, 'SHORT', cutter)); }
+        // Excess = already recorded EXCESS entries + any minus balance still open (cut more than issued, not yet settled by a new issue).
+        function getCutterLotExcess(no, cutter) { const b = getCutterLotBal(no, cutter); return r3(lotLedgerSum(no, 'EXCESS', cutter) + (b < -0.0005 ? -b : 0)); }
+        function getCutterLotShort(no, cutter) { return r3(lotLedgerSum(no, 'SHORT', cutter)); }
+        function getLotExcessTotal(no) { let t = 0; getLotCutterKeys(no).forEach(c => { t += getCutterLotExcess(no, c); }); return r3(t); }
+        function getLotShortTotal(no) { return r3(lotLedgerSum(no, 'SHORT')); }
+        // Excess up to this % of the issued weight is normal; above it the submit asks for confirmation.
+        const EXCESS_LIMIT_PCT = 2;
+        // Weight issued to the cutter for the current batch (ISSUE - RETURN since the last recorded EXCESS).
+        function getCutterIssueBasis(no, cutter) {
+            let b = 0;
+            lotLedger.forEach(e => {
+                if (e.lot !== no || e.cutter !== cutter) return;
+                if (e.type === 'ISSUE') b += e.kg;
+                else if (e.type === 'RETURN') b -= e.kg;
+                else if (e.type === 'EXCESS') b = 0;
+            });
+            return r3(Math.max(b, 0));
+        }
+        // Call before a new ISSUE: if the cutter is in minus (cut more than issued), keep that as a separate EXCESS record
+        // so the new issue starts clean (e.g. a new 200 kg issue stays 200.000, not 198).
+        function settleCutterExcess(no, cutter) {
+            if (!no || !cutter || !lotData[no]) return;
+            const b = getCutterLotBal(no, cutter);
+            if (b < -0.0005) lotLedger.push({ id: lotUid(), ts: lotNowStr(), type: 'EXCESS', lot: no, cutter, kg: r3(-b), tid: '', ref: '', note: 'AUTO (আগের ইস্যুর Excess আলাদা রেকর্ড)' });
+        }
+        function getLotCutterKeys(no) {
+            const set = new Set();
+            lotLedger.forEach(e => { if (e.lot === no && (e.type === 'ISSUE' || e.type === 'RETURN' || e.type === 'EXCESS' || e.type === 'SHORT')) set.add(e.cutter); });
+            if (Array.isArray(historyData)) historyData.forEach(h => { if (h && String(h.lotNo || '').trim().toUpperCase() === no) set.add(String(h.cutter || '').trim().toUpperCase()); });
+            return Array.from(set).sort();
+        }
+        function getLotCutterBalTotal(no) { let t = 0; getLotCutterKeys(no).forEach(c => { t += getCutterLotBal(no, c); }); return r3(t); }
+        function lotIsClosed(no) {
+            if (!lotData[no]) return false;
+            if (!(getLotGodownTotal(no) > 0.0005)) return false;
+            if (Math.abs(getLotGodownBal(no)) > 0.0005) return false;
+            return getLotCutterKeys(no).every(c => Math.abs(getCutterLotBal(no, c)) <= 0.0005);
+        }
+        function cutterLabel(c) { return c ? c : '(NO CUTTER)'; }
+        function countNegLotBalances() {
+            let n = 0;
+            Object.keys(lotData).forEach(no => {
+                if (getLotGodownBal(no) < -0.0005) n++;
+                getLotCutterKeys(no).forEach(c => { if (getCutterLotBal(no, c) < -0.0005) n++; });
+            });
+            return n;
+        }
+        // Runs a change; rolls it back (and returns false) if it would make any balance negative.
+        function tryLedgerChange(mutator) {
+            const bl = lotLedger.slice(), bd = JSON.stringify(lotData), nb = countNegLotBalances();
+            mutator();
+            if (countNegLotBalances() > nb) { lotLedger = bl; lotData = JSON.parse(bd); return false; }
+            return true;
+        }
+        // Balance the current challan can draw from (when editing a saved challan, its own old weight is added back).
+        function getSubmitAvail(lot, cut) {
+            let avail = getCutterLotBal(lot, cut);
+            if (typeof editIndex !== 'undefined' && editIndex !== -1 && historyData[editIndex]) {
+                const o = historyData[editIndex];
+                if (String(o.lotNo || '').trim().toUpperCase() === lot && String(o.cutter || '').trim().toUpperCase() === cut) avail += parseFloat(o.totalWeight) || 0;
+            }
+            return r3(avail);
+        }
+        function confirmLotBalanceForSubmit(totalWeightText) {
+            const lot = getLot();
+            if (!lot) return true;
+            const cut = getCutter();
+            if (!cut) {
+                const old = (typeof editIndex !== 'undefined' && editIndex !== -1) ? historyData[editIndex] : null;
+                if (old && String(old.lotNo || '').trim().toUpperCase() === lot && !String(old.cutter || '').trim()) return true;
+                alert('লট সিলেক্ট করা আছে, তাই CUTTER সিলেক্ট করুন — চালানের ওজন কাটারের কাছে থাকা লটের ব্যালেন্স থেকে কাটা হবে।');
+                return false;
+            }
+            if (!lotData[lot]) return true;
+            const w = parseFloat(totalWeightText) || 0;
+            const avail = getSubmitAvail(lot, cut);
+            if (w > avail + 0.0005) {
+                // Excess up to EXCESS_LIMIT_PCT % of the issued weight is normal (no prompt). Above that: ask first.
+                const ex = r3(w - avail), basis = getCutterIssueBasis(lot, cut);
+                const lim = r3(basis * EXCESS_LIMIT_PCT / 100);
+                if (ex <= lim + 0.0005) return true;
+                return confirm(`⚠️ সতর্কতা: Excess ${EXCESS_LIMIT_PCT}% সীমার বেশি!\n\nকাটার: ${cut}\nলট: ${lot}\nইস্যুকৃত ওজন: ${fk(basis)} kg\nকাটারের কাছে ব্যালেন্স: ${fk(avail)} kg\nএই চালানের ওজন: ${fk(w)} kg\nExcess: ${fk(ex)} kg${basis > 0 ? ' (' + (ex / basis * 100).toFixed(2) + '%)' : ''}\nসর্বোচ্চ অনুমোদিত (${EXCESS_LIMIT_PCT}%): ${fk(lim)} kg\n\nতবুও সাবমিট করবেন?`);
+            }
+            return true;
+        }
+        function deleteLotLedgerEntry(id) {
+            const e = lotLedger.find(x => x.id === id);
+            if (!e) return;
+            if (e.tid) { undoLotXfer(e.tid); return; }
+            if (!confirm(`${e.type} ${fk(e.kg)} kg (${e.lot} / ${cutterLabel(e.cutter)}) মুছে ফেলবেন?`)) return;
+            const ok = tryLedgerChange(() => { lotLedger = lotLedger.filter(x => x.id !== id); });
+            if (!ok) { alert('এই এন্ট্রি মুছলে কোনো ব্যালেন্স মাইনাস হয়ে যাবে — তাই মোছা যায়নি।'); return; }
+            saveLots(); renderLotSelect(getLot()); refreshLotDetailsIfOpen();
+        }
+        function undoLotXfer(tid) {
+            const items = lotLedger.filter(x => x.tid === tid);
+            if (!items.length) return;
+            if (!confirm('এই লট ট্রান্সফার/মার্জ বাতিল করবেন? (দুই পাশের ব্যালেন্স আগের অবস্থায় ফিরবে)')) return;
+            const ok = tryLedgerChange(() => {
+                lotLedger = lotLedger.filter(x => x.tid !== tid);
+                Object.keys(lotData).forEach(no => {
+                    const o = lotData[no].origin;
+                    const unused = !lotLedger.some(x => x.lot === no) && !(historyData || []).some(h => h && String(h.lotNo || '').trim().toUpperCase() === no);
+                    if (o && o.tid === tid && unused && !(lotData[no].weight > 0)) delete lotData[no];
+                });
+            });
+            if (!ok) { alert('বাতিল করলে কোনো ব্যালেন্স মাইনাস হয়ে যাবে (নতুন লট থেকে মাল ইতিমধ্যে ইস্যু/ব্যবহার হয়েছে) — তাই বাতিল করা যায়নি।'); return; }
+            const sel = getLot();
+            saveLots(); renderLotSelect(lotData[sel] ? sel : ''); onLotChange(); refreshLotDetailsIfOpen();
+        }
+        // After importing a shared challan whose lot is new on this device: cover any shortfall so balances do not start negative.
+        function autoCoverLotShortfall(no) {
+            if (!lotData[no]) return;
+            getLotCutterKeys(no).forEach(c => {
+                const b = getCutterLotBal(no, c);
+                if (b < -0.0005) lotLedger.push({ id: lotUid(), ts: lotNowStr(), type: 'ISSUE', lot: no, cutter: c, kg: r3(-b), tid: '', ref: '', note: 'AUTO (ইম্পোর্ট করা চালান)' });
+            });
+            saveLots();
+        }
+
+        // ---- One-pass snapshot of all lot balances (fast for 100-200+ lots) ----
+        function lotSnap() {
+            const S = {};
+            Object.keys(lotData).forEach(no => { S[no] = { tot: lotData[no].weight, iss: 0, ret: 0, used: 0, cnt: 0, sht: 0, xs: 0, cut: {} }; });
+            const cc = (o, k) => o.cut[k] || (o.cut[k] = { iss: 0, ret: 0, used: 0, exc: 0, sht: 0 });
+            lotLedger.forEach(e => {
+                const o = S[e.lot]; if (!o) return;
+                if (e.type === 'IN') o.tot += e.kg;
+                else if (e.type === 'OUT') o.tot -= e.kg;
+                else if (e.type === 'ISSUE') { o.iss += e.kg; cc(o, e.cutter).iss += e.kg; }
+                else if (e.type === 'RETURN') { o.ret += e.kg; cc(o, e.cutter).ret += e.kg; }
+                else if (e.type === 'EXCESS') { cc(o, e.cutter).exc += e.kg; }
+                else if (e.type === 'SHORT') { o.sht += e.kg; cc(o, e.cutter).sht += e.kg; }
+            });
+            if (Array.isArray(historyData)) historyData.forEach(h => {
+                if (!h) return;
+                const o = S[String(h.lotNo || '').trim().toUpperCase()]; if (!o) return;
+                const w = parseFloat(h.totalWeight) || 0;
+                o.used += w; o.cnt++; cc(o, String(h.cutter || '').trim().toUpperCase()).used += w;
+            });
+            Object.keys(S).forEach(no => {
+                const o = S[no];
+                o.tot = r3(o.tot); o.gb = r3(o.tot - o.iss + o.ret);
+                let cb = 0, allZero = true, xs = 0;
+                Object.keys(o.cut).forEach(k => {
+                    const x = o.cut[k]; x.bal = r3(x.iss - x.ret - x.used + x.exc - x.sht); cb += x.bal; if (Math.abs(x.bal) > 0.0005) allZero = false;
+                    x.xs = r3(x.exc + (x.bal < -0.0005 ? -x.bal : 0)); xs += x.xs;
+                });
+                o.cb = r3(cb); o.xs = r3(xs); o.sht = r3(o.sht);
+                o.closed = o.tot > 0.0005 && Math.abs(o.gb) <= 0.0005 && allZero;
+            });
+            return S;
+        }
+        // Pending (balance > 0) lots per cutter: { CUTTER: [{lot, bal}], ... }
+        function pendingByCutter(snap) {
+            const R = {};
+            Object.keys(snap).sort().forEach(no => {
+                Object.keys(snap[no].cut).forEach(c => {
+                    const b = snap[no].cut[c].bal;
+                    if (b > 0.0005) (R[c] = R[c] || []).push({ lot: no, bal: b });
+                });
+            });
+            return R;
+        }
+        let cutterPendingSig = '';
+        function pickLotFromChip(no) { renderLotSelect(no); onLotChange(); }
+        function renderCutterPending() {
+            const el = document.getElementById('cutterPendingPanel');
+            if (!el) return;
+            const cut = getCutter();
+            if (!cut) { if (cutterPendingSig !== '') { el.classList.add('hidden'); el.innerHTML = ''; cutterPendingSig = ''; } return; }
+            const list = pendingByCutter(lotSnap())[cut] || [];
+            const cur = getLot();
+            const total = r3(list.reduce((a, x) => a + x.bal, 0));
+            const chips = list.map(x => `<span class="shrink-0 inline-flex items-stretch border ${x.lot === cur ? 'border-blue-500' : 'border-gray-300'} rounded overflow-hidden text-[11px] font-bold">
+                <button type="button" data-lot="${escHtml(x.lot)}" onclick="pickLotFromChip(this.dataset.lot)" class="px-1.5 py-0.5 ${x.lot === cur ? 'bg-blue-100 text-blue-800' : 'bg-white text-gray-800'}" title="এই লট সিলেক্ট করুন">${escHtml(x.lot)}: ${fk(x.bal)}</button>
+                <button type="button" data-lot="${escHtml(x.lot)}" data-cut="${escHtml(cut)}" onclick="openLotMoveModal('RETURN', this.dataset.lot, this.dataset.cut)" class="px-1.5 bg-orange-100 text-orange-700" title="Return">↩</button>
+                <button type="button" data-lot="${escHtml(x.lot)}" data-cut="${escHtml(cut)}" onclick="openLotMoveModal('SHORT', this.dataset.lot, this.dataset.cut)" class="px-1.5 bg-rose-100 text-rose-700" title="Mark as Short">✂ Short</button></span>`).join('');
+            const html = `<div class="flex items-center gap-1.5"><div class="shrink-0 leading-tight text-center"><div class="text-[10px] font-bold text-gray-500 truncate max-w-[72px]">👷 ${escHtml(cut)}</div><div class="text-[12px] font-extrabold text-blue-700">${fk(total)}</div></div>` +
+                (list.length ? `<div class="flex flex-nowrap gap-1 overflow-x-auto pb-0.5 min-w-0 flex-1">${chips}</div>` : '<div class="text-[11px] text-gray-400 italic">কোনো লটের ব্যালেন্স বাকি নেই</div>') + '</div>';
+            if (html !== cutterPendingSig) { el.innerHTML = html; cutterPendingSig = html; }
+            el.classList.remove('hidden');
+        }
+        let lotCutterPendingOpen = true;
+        function renderLotCutterPending() {
+            const el = document.getElementById('lotCutterPending');
+            if (!el) return;
+            const R = pendingByCutter(lotSnap());
+            const cuts = Object.keys(R).sort();
+            const body = cuts.length ? cuts.map(c => {
+                const tot = r3(R[c].reduce((a, x) => a + x.bal, 0));
+                return `<div class="mb-1.5"><div class="font-bold text-[11px] text-gray-800">👷 ${escHtml(cutterLabel(c))} <span class="text-blue-700">— ${fk(tot)} kg</span></div><div class="flex flex-wrap gap-1 mt-0.5">${R[c].map(x => `<span class="inline-flex items-stretch border border-gray-300 rounded overflow-hidden text-[11px] font-bold">
+                    <button type="button" data-lot="${escHtml(x.lot)}" onclick="viewLotSummary(this.dataset.lot)" class="px-1.5 py-0.5 bg-white hover:bg-blue-50">${escHtml(x.lot)}: ${fk(x.bal)}</button>
+                    <button type="button" data-lot="${escHtml(x.lot)}" data-cut="${escHtml(c)}" onclick="openLotMoveModal('RETURN', this.dataset.lot, this.dataset.cut)" class="px-1.5 bg-orange-100 hover:bg-orange-200 text-orange-700">↩ Return</button>
+                    <button type="button" data-lot="${escHtml(x.lot)}" data-cut="${escHtml(c)}" onclick="openLotMoveModal('SHORT', this.dataset.lot, this.dataset.cut)" class="px-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700" title="Mark as Short">✂ Short</button></span>`).join('')}</div></div>`;
+            }).join('') : '<div class="text-[11px] text-gray-400 italic">কোনো কাটারের ঘরে মাল বাকি নেই।</div>';
+            el.innerHTML = `<details ${lotCutterPendingOpen ? 'open' : ''} ontoggle="lotCutterPendingOpen=this.open" class="border border-blue-200 bg-blue-50/40 rounded-lg px-3 py-2"><summary class="font-bold text-xs text-blue-800 cursor-pointer">👷 Cutter-wise Pending Stock</summary><div class="mt-1.5">${body}</div></details>`;
+        }
+
+        // ---- Lot filter (no floating panel): a small search input above the real <select>. ----
+        // Typing rebuilds the <select> options to the matches; one match = auto-select; Enter = pick first match.
+        function lpBadge(sel, no, snap) {
+            const o = snap[no];
+            if (!o) return '';
+            if (sel.id === 'lmLot' && (lotMoveMode === 'RETURN' || lotMoveMode === 'SHORT')) {
+                const c = String((document.getElementById('lmCutter') || {}).value || '').toUpperCase();
+                return c ? `Cutter: ${fk(o.cut[c] ? o.cut[c].bal : 0)}` : `Godown: ${fk(o.gb)}`;
+            }
+            let t = `Godown: ${fk(o.gb)}`;
+            if (sel.id === 'lotSelect') { const c = getCutter(); if (c) t += ` · ${c}: ${fk(o.cut[c] ? o.cut[c].bal : 0)}`; }
+            return t;
+        }
+        function lpRefresh(sel) {            // options were re-built from outside: just drop any filter state
+            if (!sel || !sel._lp) return;
+            const lp = sel._lp;
+            lp.filtering = false; lp.input.value = '';
+            sel.removeAttribute('size');
+        }
+        function lpOpen(sel) { if (sel && sel._lp) sel._lp.input.focus(); }
+        function lpClose() {}
+        function lpRestore(sel, want) {
+            const lp = sel && sel._lp;
+            if (!lp || !lp.filtering) return;
+            const v = want !== undefined ? want : sel.value;
+            sel.innerHTML = lp.html;
+            sel.value = v;
+            sel.removeAttribute('size');
+            lp.filtering = false; lp.input.value = '';
+        }
+        function lpMatches(sel) {
+            const lp = sel._lp, q = lp.input.value.trim().toUpperCase();
+            return lp.master.filter(n => n.includes(q));
+        }
+        function lpPick(sel, v) {
+            lpRestore(sel, v);
+            sel.value = v;
+            sel.dispatchEvent(new Event('change'));
+        }
+        function lpFilter(sel) {
+            const lp = sel._lp, q = lp.input.value.trim().toUpperCase();
+            if (!q) { lpRestore(sel); return; }
+            if (!lp.filtering) {
+                lp.html = sel.innerHTML;
+                lp.master = Array.from(sel.options).filter(o => o.value).map(o => o.value);
+                lp.snap = lotSnap();
+                lp.prev = sel.value;
+                lp.filtering = true;
+            }
+            const m = lpMatches(sel);
+            if (m.length === 1 && m[0] !== lp.prev) { lpPick(sel, m[0]); return; }
+            const cur = lp.prev;
+            const opts = [];
+            if (cur && !m.includes(cur)) opts.push(`<option value="${escHtml(cur)}">✔ ${escHtml(cur)} (সিলেক্টেড)</option>`);
+            m.forEach(n => opts.push(`<option value="${escHtml(n)}">${escHtml(n)} — ${escHtml(lpBadge(sel, n, lp.snap))}</option>`));
+            if (!m.length) opts.push('<option value="" disabled>কোনো লট পাওয়া যায়নি</option>');
+            sel.innerHTML = opts.join('');
+            sel.value = cur || '';
+            if (!cur) sel.selectedIndex = -1;
+            if (opts.length > 1) sel.size = Math.min(6, opts.length); else sel.removeAttribute('size');
+        }
+        function makeLotPicker(sel) {
+            if (!sel || sel._lp) return;
+            const wrap = document.createElement('div');
+            wrap.className = 'lp-wrap flex flex-col gap-0.5 flex-1 min-w-0';
+            const input = document.createElement('input');
+            input.type = 'text'; input.autocomplete = 'off'; input.placeholder = '🔍 লট খুঁজুন';
+            input.setAttribute('autocapitalize', 'characters'); input.setAttribute('enterkeyhint', 'search');
+            input.className = 'border border-gray-200 focus:border-blue-400 focus:outline-none px-1.5 py-0.5 rounded bg-gray-50 w-full text-center text-[11px] font-semibold text-gray-700';
+            sel.parentNode.insertBefore(wrap, sel);
+            wrap.appendChild(input); wrap.appendChild(sel);
+            const lp = { sel, wrap, input, filtering: false, html: '', master: [], snap: {}, prev: '' };
+            sel._lp = lp;
+            input.addEventListener('input', () => { input.value = input.value.toUpperCase(); lpFilter(sel); });
+            input.addEventListener('keydown', ev => {
+                if (ev.key === 'Enter') {
+                    ev.preventDefault(); ev.stopPropagation();
+                    if (lp.filtering) { const m = lpMatches(sel); if (m.length) lpPick(sel, m[0]); }
+                } else if (ev.key === 'Escape') {
+                    if (lp.filtering || input.value) { ev.preventDefault(); ev.stopPropagation(); lpRestore(sel); input.value = ''; }
+                }
+            });
+            // Picking from the shown list (real <select> change) ends filtering and restores the full list.
+            sel.addEventListener('change', () => { if (lp.filtering) lpRestore(sel); });
+        }
+
+        // ---- Issue / Return modal ----
+        let lotMoveMode = 'ISSUE';
+        function lmAvail() {
+            const lot = (document.getElementById('lmLot') || {}).value || '';
+            const cut = String((document.getElementById('lmCutter') || {}).value || '').toUpperCase();
+            if (!lot || !lotData[lot]) return 0;
+            return lotMoveMode === 'ISSUE' ? getLotGodownBal(lot) : getCutterLotBal(lot, cut);
+        }
+        function fillLmCutters(lot, want) {
+            const el = document.getElementById('lmCutter');
+            const set = new Set(cutterList);
+            if (lot) getLotCutterKeys(lot).forEach(c => { if (c) set.add(c); });
+            if (want) set.add(want);
+            const arr = Array.from(set).sort();
+            el.innerHTML = '<option value="">-- SELECT CUTTER --</option>' + arr.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
+            el.value = want || '';
+        }
+        function openLotMoveModal(mode, lot, cutter) {
+            const keys = Object.keys(lotData).sort();
+            if (!keys.length) { alert('আগে একটি লট যোগ করুন (LOT এর + বাটন)।'); return; }
+            lotMoveMode = (mode === 'RETURN' || mode === 'SHORT') ? mode : 'ISSUE';
+            document.getElementById('lmTitle').innerText = lotMoveMode === 'ISSUE' ? '📤 গোডাউন → কাটারে ইস্যু' : (lotMoveMode === 'SHORT' ? '✂ Mark as Short (কাটারের ঘরে পড়ে থাকা ব্যালেন্স)' : '↩ Return Challan (কাটার → গোডাউন)');
+            const want = String(lot || getLot() || '').toUpperCase();
+            const el = document.getElementById('lmLot');
+            el.innerHTML = '<option value="">-- SELECT LOT --</option>' + keys.map(k => `<option value="${escHtml(k)}">${escHtml(k)}${lotIsClosed(k) ? ' ✓' : ''}</option>`).join('');
+            el.value = lotData[want] ? want : '';
+            makeLotPicker(el); lpRefresh(el);
+            fillLmCutters(el.value, String(cutter !== undefined && cutter !== null ? cutter : getCutter()).toUpperCase());
+            document.getElementById('lmKg').value = '';
+            if (lotMoveMode === 'SHORT') lmAutoFillShort();
+            updateLotMoveInfo();
+            document.getElementById('lotMoveModal').classList.remove('hidden');
+            setTimeout(() => { if (!el.value) { lpOpen(el); return; } const k = document.getElementById(document.getElementById('lmCutter').value ? 'lmKg' : 'lmCutter'); if (k) k.focus(); }, 0);
+        }
+        function closeLotMoveModal() { document.getElementById('lotMoveModal').classList.add('hidden'); }
+        function onLotMoveLotChange() {
+            const lot = document.getElementById('lmLot').value;
+            fillLmCutters(lot, document.getElementById('lmCutter').value);
+            if (lotMoveMode === 'SHORT') lmAutoFillShort();
+            updateLotMoveInfo();
+            lpRefresh(document.getElementById('lmLot'));
+            const k = document.getElementById(document.getElementById('lmCutter').value ? 'lmKg' : 'lmCutter'); if (k) k.focus();
+        }
+        // Mark as Short: the weight defaults to the balance still lying with the cutter for that lot.
+        function lmAutoFillShort() {
+            const lot = (document.getElementById('lmLot') || {}).value || '';
+            const cut = String((document.getElementById('lmCutter') || {}).value || '').toUpperCase();
+            const kgEl = document.getElementById('lmKg');
+            if (!kgEl) return;
+            const b = (lot && cut && lotData[lot]) ? getCutterLotBal(lot, cut) : 0;
+            kgEl.value = b > 0.0005 ? b.toFixed(3) : '';
+        }
+        function onLotMoveCutterChange() {
+            if (lotMoveMode === 'SHORT') lmAutoFillShort();
+            updateLotMoveInfo();
+        }
+        function updateLotMoveInfo() {
+            const info = document.getElementById('lmInfo');
+            if (!info) return;
+            const lot = document.getElementById('lmLot').value;
+            const cut = String(document.getElementById('lmCutter').value || '').toUpperCase();
+            if (!lot || !lotData[lot]) { info.innerHTML = 'লট সিলেক্ট করুন'; return; }
+            const kg = parseFloat(document.getElementById('lmKg').value) || 0;
+            const gb = getLotGodownBal(lot);
+            const cb = cut ? getCutterLotBal(lot, cut) : 0;
+            const bad = kg > lmAvail() + 0.0005;
+            const red = 'text-red-600';
+            if (lotMoveMode === 'ISSUE') {
+                info.innerHTML = `গোডাউন ব্যালেন্স: ${fk(gb)}${cut ? ` | ${escHtml(cut)}-এর কাছে এখন: ${fk(cb)}` : ''}` +
+                    (kg > 0 ? `<br><span class="${bad ? red : 'text-green-700'}">ইস্যুর পর গোডাউন: ${fk(gb - kg)}${cut ? ` | ${escHtml(cut)}: ${fk(cb < -0.0005 ? kg : cb + kg)}` : ''}${bad ? ' — ব্যালেন্সের চেয়ে বেশি!' : ''}</span>` : '') +
+                    (cut && cb < -0.0005 ? `<br><span class="text-amber-600">আগের Excess ${fk(-cb)} kg আলাদা রেকর্ড হবে — নতুন ইস্যু থেকে কাটা যাবে না</span>` : '');
+            } else if (lotMoveMode === 'SHORT') {
+                const sh = cut ? getCutterLotShort(lot, cut) : 0;
+                info.innerHTML = `${cut ? `${escHtml(cut)}-এর কাছে ব্যালেন্স: ${fk(cb)}` : 'কাটার সিলেক্ট করুন'}${cut && sh > 0 ? ` | এ পর্যন্ত Short: ${fk(sh)}` : ''}` +
+                    (kg > 0 && cut ? `<br><span class="${bad ? red : 'text-rose-700'}">Short সেভের পর কাটারে: ${fk(cb - kg)}${bad ? ' — কাটারের ব্যালেন্সের চেয়ে বেশি!' : ''}</span>` : '');
+            } else {
+                info.innerHTML = `${cut ? `${escHtml(cut)}-এর কাছে ব্যালেন্স: ${fk(cb)}` : 'কাটার সিলেক্ট করুন'} | গোডাউন ব্যালেন্স: ${fk(gb)}` +
+                    (kg > 0 && cut ? `<br><span class="${bad ? red : 'text-green-700'}">রিটার্নের পর কাটারে: ${fk(cb - kg)} | গোডাউন: ${fk(gb + kg)}${bad ? ' — কাটারের ব্যালেন্সের চেয়ে বেশি!' : ''}</span>` : '');
+            }
+        }
+        function fillLotMoveAll() {
+            const a = lmAvail();
+            if (a > 0.0005) { document.getElementById('lmKg').value = a.toFixed(3); updateLotMoveInfo(); }
+        }
+        function saveLotMove(keepOpen) {
+            const lot = document.getElementById('lmLot').value;
+            const cut = String(document.getElementById('lmCutter').value || '').trim().toUpperCase();
+            const kg = r3(document.getElementById('lmKg').value);
+            if (!lot || !lotData[lot]) { alert('লট সিলেক্ট করুন।'); return; }
+            if (!cut) { alert('কাটার সিলেক্ট করুন।'); return; }
+            if (!(kg > 0)) { alert('ওজন (KG) দিন — ০ এর বেশি হতে হবে।'); return; }
+            const avail = lmAvail();
+            if (kg > avail + 0.0005) {
+                alert(lotMoveMode === 'ISSUE'
+                    ? `⚠️ গোডাউনে লট ${lot}-এর ব্যালেন্স মাত্র ${fk(avail)} kg — ${fk(kg)} kg ইস্যু করা যাবে না।`
+                    : (lotMoveMode === 'SHORT'
+                        ? `⚠️ ${cut}-এর কাছে লট ${lot}-এর ব্যালেন্স মাত্র ${fk(avail)} kg — ${fk(kg)} kg Short করা যাবে না।`
+                        : `⚠️ ${cut}-এর কাছে লট ${lot}-এর ব্যালেন্স মাত্র ${fk(avail)} kg — ${fk(kg)} kg রিটার্ন নেওয়া যাবে না।`));
+                return;
+            }
+            if (lotMoveMode === 'ISSUE') settleCutterExcess(lot, cut);
+            lotLedger.push({ id: lotUid(), ts: lotNowStr(), type: lotMoveMode, lot, cutter: cut, kg, tid: '', ref: '', note: '' });
+            saveLots();
+            const cur = getLot();
+            renderLotSelect(cur);
+            refreshLotDetailsIfOpen();
+            if (keepOpen) {
+                document.getElementById('lmKg').value = '';
+                if (lotMoveMode === 'SHORT') lmAutoFillShort();
+                updateLotMoveInfo();
+                const info = document.getElementById('lmInfo');
+                if (info) info.innerHTML = `<span class="text-green-700">✔ ${fk(kg)} kg ${lotMoveMode === 'ISSUE' ? 'ইস্যু' : (lotMoveMode === 'SHORT' ? 'Short' : 'রিটার্ন')} সেভ হয়েছে</span><br>` + info.innerHTML;
+                document.getElementById('lmKg').focus();
+            } else {
+                closeLotMoveModal();
+            }
+        }
+
+        // ---- New Lot / Merge modal ----
+        function lxLotOptions(sel) {
+            const keys = Object.keys(lotData).sort();
+            return '<option value="">-- LOT --</option>' + keys.map(k => `<option value="${escHtml(k)}"${k === sel ? ' selected' : ''}>${escHtml(k)} (${fk(getLotGodownBal(k))})</option>`).join('');
+        }
+        function lxAddRow(lot, kg) {
+            const wrap = document.getElementById('lxRows');
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-1 lx-row';
+            row.innerHTML = `<select class="lx-lot border border-gray-300 focus:outline-none p-1 rounded bg-white flex-1 min-w-0 text-xs font-semibold text-gray-800" onchange="lxOnLotChange(this)">${lxLotOptions(lot || '')}</select>
+                <input type="number" step="0.001" min="0" inputmode="decimal" placeholder="KG" value="${kg !== undefined ? kg : ''}" class="lx-kg border border-gray-300 focus:outline-none p-1 rounded bg-white w-20 text-center text-xs font-semibold text-gray-800" oninput="updateLotXferInfo()" onblur="if(this.value!=='') this.value=parseFloat(this.value).toFixed(3); updateLotXferInfo();" onkeydown="if(event.key==='Enter'){event.preventDefault();lxEnterNext(this);}">
+                <button type="button" onclick="lxFillRow(this)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold px-1.5 py-1 rounded text-[10px] transition">ALL</button>
+                <button type="button" onclick="this.closest('.lx-row').remove(); updateLotXferInfo();" class="bg-red-500 hover:bg-red-600 text-white font-bold px-1.5 py-1 rounded text-[10px] transition">✕</button>`;
+            wrap.appendChild(row);
+            makeLotPicker(row.querySelector('.lx-lot'));
+            updateLotXferInfo();
+            return row;
+        }
+        function lxEnterNext(inp) {
+            const row = inp.closest('.lx-row');
+            const next = row && row.nextElementSibling ? row.nextElementSibling.querySelector('.lx-kg') : null;
+            const t = document.getElementById('lxTarget');
+            if (next) next.focus(); else if (t) t.focus();
+        }
+        function lxOnLotChange(sel) {
+            const row = sel.closest('.lx-row');
+            const kg = row.querySelector('.lx-kg');
+            if (sel.value && kg && kg.value === '') { const b = getLotGodownBal(sel.value); if (b > 0) kg.value = b.toFixed(3); }
+            updateLotXferInfo();
+            if (kg) { kg.focus(); if (kg.select) kg.select(); }
+        }
+        function lxIssueAll() {
+            const total = r3(lxCollect().reduce((a, x) => a + (x.kg > 0 ? x.kg : 0), 0));
+            if (total > 0) { document.getElementById('lxIssueKg').value = total.toFixed(3); updateLotXferInfo(); }
+            document.getElementById('lxDetails').open = true;
+        }
+        function fillSimpleCutterSelect(id, want) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const set = new Set(cutterList); if (want) set.add(want);
+            el.innerHTML = '<option value="">-- কাটার (ঐচ্ছিক) --</option>' + Array.from(set).sort().map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
+            el.value = want || '';
+        }
+        function lxFillRow(btn) {
+            const row = btn.closest('.lx-row');
+            const lot = row.querySelector('.lx-lot').value;
+            if (!lot) return;
+            const b = getLotGodownBal(lot);
+            if (b > 0) row.querySelector('.lx-kg').value = b.toFixed(3);
+            updateLotXferInfo();
+        }
+        function lxFillAllLots() {
+            document.getElementById('lxRows').innerHTML = '';
+            Object.keys(lotData).sort().forEach(k => { const b = getLotGodownBal(k); if (b > 0.0005) lxAddRow(k, b.toFixed(3)); });
+            if (!document.querySelector('#lxRows .lx-row')) lxAddRow();
+            updateLotXferInfo();
+        }
+        function lxCollect() {
+            return Array.from(document.querySelectorAll('#lxRows .lx-row')).map(r => ({ lot: r.querySelector('.lx-lot').value, kg: r3(r.querySelector('.lx-kg').value), raw: r.querySelector('.lx-kg').value })).filter(x => x.lot || x.raw !== '');
+        }
+        function openLotXferModal(preLot) {
+            if (!Object.keys(lotData).length) { alert('আগে একটি লট যোগ করুন (LOT এর + বাটন)।'); return; }
+            document.getElementById('lxRows').innerHTML = '';
+            document.getElementById('lxTarget').value = '';
+            fillSimpleCutterSelect('lxCutter', '');
+            document.getElementById('lxIssueKg').value = '';
+            document.getElementById('lxDetails').open = false;
+            document.getElementById('lxLotList').innerHTML = Object.keys(lotData).sort().map(k => `<option value="${escHtml(k)}"></option>`).join('');
+            const want = String(preLot || getLot() || '').toUpperCase();
+            const r = lxAddRow(lotData[want] ? want : '');
+            const b = lotData[want] ? getLotGodownBal(want) : 0;
+            if (b > 0) r.querySelector('.lx-kg').value = b.toFixed(3);
+            updateLotXferInfo();
+            document.getElementById('lotXferModal').classList.remove('hidden');
+            setTimeout(() => { if (!lotData[want]) { lpOpen(r.querySelector('.lx-lot')); return; } const e = r.querySelector('.lx-kg'); if (e) { e.focus(); if (e.select) e.select(); } }, 0);
+        }
+        function closeLotXferModal() { document.getElementById('lotXferModal').classList.add('hidden'); }
+        function updateLotXferInfo() {
+            const info = document.getElementById('lxInfo');
+            if (!info) return;
+            const rows = lxCollect();
+            const total = rows.reduce((a, x) => a + (x.kg > 0 ? x.kg : 0), 0);
+            const tgt = String(document.getElementById('lxTarget').value || '').trim().toUpperCase();
+            const over = rows.filter(x => x.lot && lotData[x.lot] && x.kg > getLotGodownBal(x.lot) + 0.0005);
+            let h = `মোট নেওয়া হবে: <span class="text-purple-700">${fk(total)} kg</span> (${rows.filter(x => x.lot && x.kg > 0).length} লট)`;
+            if (tgt) h += `<br>${lotData[tgt] ? `বিদ্যমান লট <b>${escHtml(tgt)}</b>-এ যোগ হবে (এখন গোডাউন: ${fk(getLotGodownBal(tgt))} → ${fk(getLotGodownBal(tgt) + total)})` : `নতুন লট <b>${escHtml(tgt)}</b> তৈরি হবে (${fk(total)} kg)`}`;
+            if (over.length) h += `<br><span class="text-red-600">⚠️ ব্যালেন্সের চেয়ে বেশি: ${over.map(x => escHtml(x.lot)).join(', ')}</span>`;
+            const ic = (document.getElementById('lxCutter') || {}).value, ik = r3((document.getElementById('lxIssueKg') || {}).value);
+            if (ic && ik > 0) h += `<br><span class="${ik > total + (lotData[tgt] ? getLotGodownBal(tgt) : 0) + 0.0005 ? 'text-red-600' : 'text-sky-700'}">📤 ${escHtml(ic)}-কে ইস্যু: ${fk(ik)} kg</span>`;
+            info.innerHTML = h;
+        }
+        function saveLotXfer() {
+            const rows = lxCollect().filter(x => x.lot || x.kg > 0);
+            const tgt = String(document.getElementById('lxTarget').value || '').trim().toUpperCase();
+            if (!rows.length) { alert('কোন লট থেকে কত কেজি নেবেন তা দিন।'); return; }
+            const seen = new Set();
+            for (const x of rows) {
+                if (!x.lot || !lotData[x.lot]) { alert('প্রতিটি সারিতে লট সিলেক্ট করুন।'); return; }
+                if (seen.has(x.lot)) { alert(`লট ${x.lot} দুইবার সিলেক্ট করা হয়েছে — একবারই দিন।`); return; }
+                seen.add(x.lot);
+                if (!(x.kg > 0)) { alert(`লট ${x.lot}-এর কেজি দিন (০ এর বেশি)।`); return; }
+                const b = getLotGodownBal(x.lot);
+                if (x.kg > b + 0.0005) { alert(`⚠️ গোডাউনে লট ${x.lot}-এর ব্যালেন্স মাত্র ${fk(b)} kg — ${fk(x.kg)} kg নেওয়া যাবে না।`); return; }
+            }
+            if (!tgt) { alert('নতুন (বা টার্গেট) লট নম্বর দিন।'); return; }
+            if (seen.has(tgt)) { alert('টার্গেট লট আর সোর্স লট একই হতে পারবে না।'); return; }
+            const existed = !!lotData[tgt];
+            const total = r3(rows.reduce((a, x) => a + x.kg, 0));
+            if (existed && !confirm(`লট ${tgt} আগে থেকেই আছে — ${fk(total)} kg তাতে যোগ করবেন?`)) return;
+            const ic = String(document.getElementById('lxCutter').value || '').trim().toUpperCase();
+            const ik = r3(document.getElementById('lxIssueKg').value);
+            if (ic && ik > 0) {
+                const avail = r3(total + (existed ? getLotGodownBal(tgt) : 0));
+                if (ik > avail + 0.0005) { alert(`⚠️ কাটারে ইস্যু ${fk(ik)} kg — কিন্তু লট ${tgt}-এ মাত্র ${fk(avail)} kg আছে।`); return; }
+            } else if (ik > 0 && !ic) { alert('ইস্যুর জন্য CUTTER সিলেক্ট করুন (অথবা ISSUE KG ফাঁকা রাখুন)।'); return; }
+            const tid = lotUid(), ts = lotNowStr();
+            if (!existed) lotData[tgt] = { lotNo: tgt, weight: 0, origin: { tid, ts, from: rows.map(x => ({ lot: x.lot, kg: x.kg })) } };
+            rows.forEach(x => {
+                lotLedger.push({ id: lotUid(), ts, type: 'OUT', lot: x.lot, cutter: '', kg: x.kg, tid, ref: tgt, note: '' });
+                lotLedger.push({ id: lotUid(), ts, type: 'IN', lot: tgt, cutter: '', kg: x.kg, tid, ref: x.lot, note: '' });
+            });
+            if (ic && ik > 0) { settleCutterExcess(tgt, ic); lotLedger.push({ id: lotUid(), ts, type: 'ISSUE', lot: tgt, cutter: ic, kg: ik, tid: '', ref: '', note: '' }); }
+            saveLots();
+            closeLotXferModal();
+            renderLotSelect(tgt);
+            onLotChange();
+            refreshLotDetailsIfOpen();
+        }
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape') return;
+            ['lotMoveModal', 'lotXferModal', 'lotEditModal'].forEach(id => { const m = document.getElementById(id); if (m && !m.classList.contains('hidden')) m.classList.add('hidden'); });
+        });
+
+        // ---- Lot: which fabric lot this cutting belongs to (only Lot No + Weight) ----
+        let lotData = {};
+        function loadLots() {
+            try {
+                const o = JSON.parse(localStorage.getItem('challan_lotData') || '{}');
+                lotData = {};
+                if (o && typeof o === 'object' && !Array.isArray(o)) {
+                    Object.keys(o).forEach(k => {
+                        const no = String(k).trim().toUpperCase();
+                        if (!no) return;
+                        lotData[no] = normLotRec(no, o[k]);
+                    });
+                }
+            } catch (_) { lotData = {}; }
+            let sel = '';
+            try { sel = localStorage.getItem('challan_lot_selected') || ''; } catch (_) {}
+            loadLotLedger();
+            renderLotSelect(sel);
+        }
+        function saveLots() {
+            try { localStorage.setItem('challan_lotData', JSON.stringify(lotData)); } catch (_) {}
+            try { localStorage.setItem('challan_lotLedger', JSON.stringify(lotLedger)); } catch (_) {}
+        }
+        function renderLotSelect(selected) {
+            const el = document.getElementById('lotSelect');
+            if (!el) return;
+            const want = String(selected || '').trim().toUpperCase();
+            const keys = Object.keys(lotData).sort();
+            const snap = lotSnap();
+            const active = keys.filter(k => k === want || !(snap[k] && snap[k].closed));
+            const closed = keys.filter(k => k !== want && snap[k] && snap[k].closed);
+            // A saved challan may point to a lot that was deleted from the list: keep it selectable (not re-added to lotData).
+            if (want && !lotData[want]) active.push(want);
+            const opt = c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`;
+            el.innerHTML = '<option value="">-- SELECT LOT --</option>' + active.map(opt).join('') +
+                (closed.length ? `<optgroup label="✓ CLOSED (ব্যালেন্স ০)">${closed.map(opt).join('')}</optgroup>` : '');
+            el.value = want;
+            lpRefresh(el);
+            refreshLotInfo();
+        }
+        function getLot() {
+            const el = document.getElementById('lotSelect');
+            return el ? String(el.value || '').trim().toUpperCase() : '';
+        }
+        function onLotChange() {
+            try { localStorage.setItem('challan_lot_selected', getLot()); } catch (_) {}
+            refreshLotInfo();
+        }
+        function getLotUsed(lotNo) {
+            let used = 0;
+            if (Array.isArray(historyData)) {
+                historyData.forEach(h => {
+                    if (h && String(h.lotNo || '').trim().toUpperCase() === lotNo) used += parseFloat(h.totalWeight) || 0;
+                });
+            }
+            return used;
+        }
+        function refreshLotInfo(light) {
+            if (!light) { try { renderCutterPending(); } catch (_) {} }
+            const bar = document.getElementById('lotInfoBar');
+            if (!bar) return;
+            const no = getLot();
+            if (!no) { bar.classList.add('hidden'); bar.innerHTML = ''; return; }
+            const used = getLotUsed(no);
+            if (!lotData[no]) {
+                bar.innerHTML = `Lot not in list | Used: ${used.toFixed(3)}`;
+            } else {
+                const tot = getLotGodownTotal(no), gb = getLotGodownBal(no), cut = getCutter();
+                const neg = v => (v < -0.0005 ? 'text-red-600' : '');
+                let h = `<div>Godown: ${fk(tot)} | Bal: <span class="${neg(gb)}">${fk(gb)}</span>${lotIsClosed(no) ? ' <span class="text-green-700">✓ CLOSED</span>' : ''}</div>`;
+                if (cut) {
+                    const cb = getCutterLotBal(no, cut);
+                    let l2 = `${escHtml(cut)}: <span class="${neg(cb)}">${fk(cb)}</span> | Used: ${fk(used)}`;
+                    const wEl = document.getElementById('totalWeightDisplay');
+                    const w = wEl ? (parseFloat(wEl.innerText) || 0) : 0;
+                    if (w > 0) {
+                        const avail = getSubmitAvail(no, cut);
+                        if (w > avail + 0.0005) {
+                            const ex = r3(w - avail), basis = getCutterIssueBasis(no, cut);
+                            const okEx = ex <= r3(basis * EXCESS_LIMIT_PCT / 100) + 0.0005;
+                            l2 += ` | <span class="${okEx ? 'text-amber-600' : 'text-red-600'}">এই চালান ${fk(w)} → Excess +${fk(ex)}${basis > 0 ? ' (' + (ex / basis * 100).toFixed(2) + '%)' : ''}${okEx ? '' : ' ⚠️'}</span>`;
+                        } else {
+                            l2 += ` | <span class="text-green-700">এই চালান ${fk(w)} → ${fk(avail - w)}</span>`;
+                        }
+                    }
+                    h += `<div>${l2}</div>`;
+                } else {
+                    h += `<div>Cutters Bal: ${fk(getLotCutterBalTotal(no))} | Used: ${fk(used)}</div>`;
+                }
+                bar.innerHTML = h;
+            }
+            bar.classList.remove('hidden');
+        }
+        let lotEditOld = null;
+        function openLotEditModal(old) {
+            lotEditOld = old || null;
+            document.getElementById('lotEditTitle').innerText = old ? 'Edit / Rename Lot' : 'Add Lot';
+            document.getElementById('lotNoInput').value = old || '';
+            document.getElementById('lotWeightInput').value = old && lotData[old] ? lotData[old].weight.toFixed(3) : '';
+            fillSimpleCutterSelect('leCutter', '');
+            document.getElementById('leKg').value = '';
+            document.getElementById('leDetails').open = false;
+            document.getElementById('lotEditModal').classList.remove('hidden');
+            setTimeout(() => { const e = document.getElementById('lotNoInput'); if (e) e.focus(); }, 0);
+        }
+        function leAvail() {
+            const w = r3(document.getElementById('lotWeightInput').value);
+            const old = lotEditOld;
+            if (!old || !lotData[old]) return w;
+            return r3(w + lotLedgerSum(old, 'IN') - lotLedgerSum(old, 'OUT') - getLotIssued(old) + getLotReturned(old));
+        }
+        function leFillAll() {
+            const a = leAvail();
+            if (a > 0.0005) document.getElementById('leKg').value = a.toFixed(3);
+            document.getElementById('leDetails').open = true;
+        }
+        function closeLotEditModal() {
+            document.getElementById('lotEditModal').classList.add('hidden');
+        }
+        function addLot() { openLotEditModal(null); }
+        function editLot() {
+            const old = getLot();
+            if (!old) { alert('Age list theke ekta lot select korun.'); return; }
+            openLotEditModal(old);
+        }
+        function saveLotFromModal() {
+            const no = String(document.getElementById('lotNoInput').value || '').trim().toUpperCase();
+            const wRaw = String(document.getElementById('lotWeightInput').value || '').trim();
+            if (!no) { alert('Lot No dewa dorkar.'); return; }
+            const wNum = wRaw === '' ? 0 : parseFloat(wRaw);
+            if (isNaN(wNum) || wNum < 0) { alert('Lot Weight thik number hote hobe.'); return; }
+            const weight = Number(wNum.toFixed(3));
+            const old = lotEditOld;
+            const curSel = getLot();
+            if ((!old || no !== old) && lotData[no]) { alert('Ei Lot No agei ache.'); return; }
+            const oldRec = old ? lotData[old] : null;
+            const leC = String(document.getElementById('leCutter').value || '').trim().toUpperCase();
+            const leK = r3(document.getElementById('leKg').value);
+            if (leK > 0) {
+                if (!leC) { alert('ইস্যুর জন্য CUTTER সিলেক্ট করুন (অথবা ISSUE KG ফাঁকা রাখুন)।'); return; }
+                const av = r3(weight + (old ? lotLedgerSum(old, 'IN') - lotLedgerSum(old, 'OUT') - getLotIssued(old) + getLotReturned(old) : 0));
+                if (leK > av + 0.0005) { alert(`⚠️ ইস্যু ${fk(leK)} kg — কিন্তু গোডাউনে লটের ব্যালেন্স মাত্র ${fk(av)} kg।`); return; }
+            }
+            if (old && weight !== oldRec.weight) {
+                const newBal = r3(weight + lotLedgerSum(old, 'IN') - lotLedgerSum(old, 'OUT') - getLotIssued(old) + getLotReturned(old));
+                if (newBal < -0.0005 && !confirm(`এই ওজনে গোডাউনের ব্যালেন্স ${fk(newBal)} kg (মাইনাস) হয়ে যাবে। তবুও সেভ করবেন?`)) return;
+            }
+            if (old && no !== old) {
+                lotLedger.forEach(e => { if (e.lot === old) e.lot = no; if (e.ref === old) e.ref = no; });
+                Object.keys(lotData).forEach(k => { const o = lotData[k].origin; if (o && Array.isArray(o.from)) o.from.forEach(f => { if (f.lot === old) f.lot = no; }); });
+                delete lotData[old];
+                if (Array.isArray(historyData)) {
+                    historyData.forEach(h => {
+                        if (h && String(h.lotNo || '').toUpperCase() === old) h.lotNo = no;
+                        if (h && h.view && String(h.view.lotNo || '').toUpperCase() === old) h.view.lotNo = no;
+                    });
+                    saveHistoryToStorage();
+                    renderHistory();
+                }
+            }
+            lotData[no] = Object.assign({}, oldRec || {}, { lotNo: no, weight });
+            if (leC && leK > 0) { settleCutterExcess(no, leC); lotLedger.push({ id: lotUid(), ts: lotNowStr(), type: 'ISSUE', lot: no, cutter: leC, kg: leK, tid: '', ref: '', note: '' }); }
+            saveLots();
+            closeLotEditModal();
+            renderLotSelect((!old || curSel === old) ? no : curSel);
+            onLotChange();
+            refreshLotDetailsIfOpen();
+        }
+        function deleteLot() {
+            const old = getLot();
+            if (!old) { alert('Age list theke ekta lot select korun.'); return; }
+            deleteLotByName(old);
+        }
+        function deleteLotByName(old) {
+            if (!confirm(old + ' ke list theke muche felbo? (Purono history te Lot No thakbe.)')) return;
+            const curSel = getLot();
+            delete lotData[old];
+            lotLedger = lotLedger.filter(e => e.lot !== old);
+            saveLots();
+            renderLotSelect(curSel === old ? '' : curSel);
+            onLotChange();
+            refreshLotDetailsIfOpen();
+        }
+        function refreshLotDetailsIfOpen() {
+            const m = document.getElementById('lotDetailsModal');
+            if (!m || m.classList.contains('hidden')) return;
+            renderLotDetailsTable();
+            const box = document.getElementById('lotSummaryBox');
+            if (lotSummaryCurrent && lotData[lotSummaryCurrent]) viewLotSummary(lotSummaryCurrent);
+            else if (box) box.innerHTML = '';
+        }
+        let lotSummaryCurrent = '';
+
+        // ---- Lot Details & Summary ----
+        function openLotDetailsModal() {
+            const si = document.getElementById('lotSearchInput');
+            if (si) si.value = '';
+            lotSummaryCurrent = '';
+            renderLotDetailsTable();
+            const box = document.getElementById('lotSummaryBox');
+            if (box) box.innerHTML = '';
+            document.getElementById('lotDetailsModal').classList.remove('hidden');
+        }
+        function closeLotDetailsModal() {
+            document.getElementById('lotDetailsModal').classList.add('hidden');
+        }
+        function renderLotDetailsTable() {
+            const wrap = document.getElementById('lotDetailsTable');
+            if (!wrap) return;
+            const allKeys = Object.keys(lotData).sort();
+            const q = String((document.getElementById('lotSearchInput') || {}).value || '').trim().toUpperCase();
+            const hideClosedEl = document.getElementById('lotHideClosed');
+            const hideClosed = !!(hideClosedEl && hideClosedEl.checked) && !q;
+            let keys = q ? allKeys.filter(no => no.includes(q) || getLotGodownTotal(no).toFixed(3).includes(q)) : allKeys;
+            const snap = lotSnap();
+            try { renderLotCutterPending(); } catch (_) {}
+            const closedCount = keys.filter(no => snap[no].closed).length;
+            if (hideClosed) keys = keys.filter(no => !snap[no].closed);
+            if (!allKeys.length) {
+                try { renderLotCutterPending(); } catch (_) {}
+                wrap.innerHTML = '<div class="text-center text-xs text-gray-400 py-4 italic bg-gray-50 rounded border border-dashed border-gray-200">No lots added yet.</div>';
+                return;
+            }
+            if (!keys.length) {
+                wrap.innerHTML = `<div class="text-center text-xs text-gray-400 py-4 italic bg-gray-50 rounded border border-dashed border-gray-200">${hideClosed && closedCount ? `সব লট Closed (${closedCount}টি লুকানো আছে)।` : 'No lot found for this search.'}</div>`;
+                return;
+            }
+            const th = 'px-2 py-1.5 border border-gray-300 text-center';
+            const td = 'px-2 py-1.5 border border-gray-300 text-center';
+            const rows = keys.map(no => {
+                const o = snap[no];
+                const tot = o.tot, iss = o.iss, ret = o.ret, used = o.used, gb = o.gb, cb = o.cb, cnt = o.cnt, closed = o.closed;
+                return `<tr class="hover:bg-gray-50 border-b border-gray-200 ${closed ? 'opacity-60' : ''}">
+                    <td class="${td} font-bold text-gray-800">${escHtml(no)}</td>
+                    <td class="${td}">${fk(tot)}</td>
+                    <td class="${td}">${fk(iss)}</td>
+                    <td class="${td}">${fk(ret)}</td>
+                    <td class="${td}">${fk(used)}</td>
+                    <td class="${td} font-bold ${gb < -0.0005 ? 'text-red-600' : 'text-green-700'}">${fk(gb)}</td>
+                    <td class="${td} font-bold ${cb < -0.0005 ? 'text-red-600' : 'text-blue-700'}">${fk(cb)}</td>
+                    <td class="${td} ${o.xs > 0.0005 ? 'font-bold text-amber-600' : 'text-gray-400'}">${o.xs > 0.0005 ? '+' + fk(o.xs) : fk(0)}</td>
+                    <td class="${td} ${o.sht > 0.0005 ? 'font-bold text-rose-600' : 'text-gray-400'}">${fk(o.sht)}</td>
+                    <td class="${td}">${closed ? '<span class="text-green-700 font-bold">✓ Closed</span>' : 'Active'}</td>
+                    <td class="${td}">${cnt}</td>
+                    <td class="${td}"><button type="button" data-lot="${escHtml(no)}" onclick="viewLotSummary(this.dataset.lot)" class="text-blue-600 hover:text-blue-800 font-bold">View</button></td>
+                    <td class="${td}"><button type="button" data-lot="${escHtml(no)}" onclick="openLotEditModal(this.dataset.lot)" class="text-amber-600 hover:text-amber-800 font-bold">Edit</button></td>
+                    <td class="${td}"><button type="button" data-lot="${escHtml(no)}" onclick="deleteLotByName(this.dataset.lot)" class="text-red-600 hover:text-red-800 font-bold">Delete</button></td>
+                </tr>`;
+            }).join('');
+            wrap.innerHTML = `<div class="overflow-x-auto border border-gray-200 rounded"><table class="w-full border-collapse text-[11px]">
+                <thead class="bg-gray-100 font-bold text-gray-700"><tr>
+                    <th class="${th}">Lot No</th><th class="${th}">Godown Wt</th><th class="${th}">Issued</th><th class="${th}">Returned</th><th class="${th}">Used (Challan)</th><th class="${th}">Godown Bal</th><th class="${th}">Cutter Bal</th><th class="${th}">Excess</th><th class="${th}">Short</th><th class="${th}">Status</th><th class="${th}">Challans</th><th class="${th}">View</th><th class="${th}">Edit</th><th class="${th}">Delete</th>
+                </tr></thead><tbody>${rows}</tbody></table></div>${hideClosed && closedCount ? `<div class="text-[10px] text-gray-400 mt-1">${closedCount}টি Closed লট লুকানো আছে (সার্চ করলে দেখাবে)</div>` : ''}`;
+        }
+        function buildLotLedgerSection(no) {
+            const tot = getLotGodownTotal(no), iss = getLotIssued(no), ret = getLotReturned(no), used = getLotUsed(no);
+            const gb = getLotGodownBal(no), cb = getLotCutterBalTotal(no), xs = getLotExcessTotal(no), sht = getLotShortTotal(no);
+            const chip = (l, v, cls) => `<div class="bg-white border border-gray-200 rounded px-2 py-1 text-center"><span class="block text-[10px] font-medium text-gray-400">${l}</span><span class="font-bold ${cls || 'text-gray-800'}">${v}</span></div>`;
+            const td = 'px-2 py-1 border border-gray-300 text-center';
+            const cuts = getLotCutterKeys(no);
+            const cutRows = cuts.map(c => {
+                const i = lotLedgerSum(no, 'ISSUE', c), r = lotLedgerSum(no, 'RETURN', c), u = getLotUsedByCutter(no, c), b = getCutterLotBal(no, c), x = getCutterLotExcess(no, c), sh = getCutterLotShort(no, c);
+                return `<tr class="border-b border-gray-200">
+                    <td class="${td} font-bold">${escHtml(cutterLabel(c))}</td><td class="${td}">${fk(i)}</td><td class="${td}">${fk(r)}</td><td class="${td}">${fk(u)}</td>
+                    <td class="${td} ${x > 0.0005 ? 'font-bold text-amber-600' : 'text-gray-400'}">${x > 0.0005 ? '+' + fk(x) : fk(0)}</td>
+                    <td class="${td} ${sh > 0.0005 ? 'font-bold text-rose-600' : 'text-gray-400'}">${fk(sh)}</td>
+                    <td class="${td} font-bold ${b < -0.0005 ? 'text-red-600' : 'text-blue-700'}">${fk(b)}</td>
+                    <td class="${td}"><button type="button" data-lot="${escHtml(no)}" data-cut="${escHtml(c)}" onclick="openLotMoveModal('ISSUE', this.dataset.lot, this.dataset.cut)" class="text-sky-600 font-bold">Issue</button> · <button type="button" data-lot="${escHtml(no)}" data-cut="${escHtml(c)}" onclick="openLotMoveModal('RETURN', this.dataset.lot, this.dataset.cut)" class="text-orange-600 font-bold">Return</button> · <button type="button" data-lot="${escHtml(no)}" data-cut="${escHtml(c)}" onclick="openLotMoveModal('SHORT', this.dataset.lot, this.dataset.cut)" class="text-rose-600 font-bold">Short</button></td>
+                </tr>`;
+            }).join('');
+            const typeLabel = { ISSUE: '📤 Issue → Cutter', RETURN: '↩ Return ← Cutter', EXCESS: '➕ Excess (Cutter)', SHORT: '✂ Short (Cutter)', OUT: '🔀 Transfer Out', IN: '🔀 Transfer In' };
+            const moves = lotLedger.filter(e => e.lot === no).slice().reverse().map(e => `<tr class="border-b border-gray-200">
+                    <td class="${td}">${escHtml(e.ts)}</td>
+                    <td class="${td}">${typeLabel[e.type] || e.type}</td>
+                    <td class="${td}">${escHtml(['ISSUE', 'RETURN', 'EXCESS', 'SHORT'].includes(e.type) ? cutterLabel(e.cutter) : (e.type === 'OUT' ? '→ ' : '← ') + (e.ref || ''))}${e.note ? `<span class="block text-[9px] text-gray-400">${escHtml(e.note)}</span>` : ''}</td>
+                    <td class="${td} font-bold">${fk(e.kg)}</td>
+                    <td class="${td}"><button type="button" data-id="${escHtml(e.id)}" onclick="deleteLotLedgerEntry(this.dataset.id)" class="text-red-500 font-bold" title="${e.tid ? 'Undo transfer' : 'Delete'}">✕</button></td>
+                </tr>`).join('');
+            return `<div class="flex flex-wrap gap-1.5">
+                    <button type="button" data-lot="${escHtml(no)}" onclick="openLotMoveModal('ISSUE', this.dataset.lot)" class="bg-sky-500 hover:bg-sky-600 text-white font-bold px-2 py-1 rounded text-[11px]">📤 Issue</button>
+                    <button type="button" data-lot="${escHtml(no)}" onclick="openLotMoveModal('RETURN', this.dataset.lot)" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-2 py-1 rounded text-[11px]">↩ Return</button>
+                    <button type="button" data-lot="${escHtml(no)}" onclick="openLotMoveModal('SHORT', this.dataset.lot)" class="bg-rose-500 hover:bg-rose-600 text-white font-bold px-2 py-1 rounded text-[11px]" title="Mark as Short">✂ Short</button>
+                    <button type="button" data-lot="${escHtml(no)}" onclick="openLotXferModal(this.dataset.lot)" class="bg-purple-500 hover:bg-purple-600 text-white font-bold px-2 py-1 rounded text-[11px]">🔀 New Lot / Merge</button>
+                </div>
+                ${lotData[no] && lotData[no].origin && Array.isArray(lotData[no].origin.from) ? `<div class="text-[11px] text-purple-700 font-semibold">তৈরি হয়েছে: ${lotData[no].origin.from.map(f => escHtml(f.lot) + ' (' + fk(f.kg) + ')').join(' + ')}</div>` : ''}
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    ${chip('Godown Total', fk(tot))}
+                    ${chip('Issued to Cutters', fk(iss), 'text-sky-700')}
+                    ${chip('Returned', fk(ret), 'text-orange-600')}
+                    ${chip('Used (Challan)', fk(used), 'text-purple-600')}
+                    ${chip('Godown Balance', fk(gb), gb < -0.0005 ? 'text-red-600' : 'text-green-700')}
+                    ${chip('Cutter Balance', fk(cb), cb < -0.0005 ? 'text-red-600' : 'text-blue-700')}
+                    ${chip('Excess (Cutter)', xs > 0.0005 ? '+' + fk(xs) : fk(0), xs > 0.0005 ? 'text-amber-600' : 'text-gray-400')}
+                    ${chip('Short (Cutter)', fk(sht), sht > 0.0005 ? 'text-rose-600' : 'text-gray-400')}
+                </div>
+                <div class="font-bold text-xs text-gray-700">Cutter-wise Balance</div>
+                ${cuts.length ? `<div class="overflow-x-auto border border-gray-200 rounded bg-white"><table class="w-full border-collapse text-[11px]"><thead class="bg-gray-100 font-bold text-gray-700"><tr>
+                    <th class="${td}">Cutter</th><th class="${td}">Issued</th><th class="${td}">Returned</th><th class="${td}">Used</th><th class="${td}">Excess</th><th class="${td}">Short</th><th class="${td}">Balance</th><th class="${td}">Action</th>
+                </tr></thead><tbody>${cutRows}</tbody></table></div>` : '<div class="text-center text-xs text-gray-400 py-2 italic">এখনো কোনো কাটারে ইস্যু হয়নি।</div>'}
+                <div class="font-bold text-xs text-gray-700">Movements (${lotLedger.filter(e => e.lot === no).length})</div>
+                ${moves ? `<div class="overflow-x-auto border border-gray-200 rounded bg-white max-h-48 overflow-y-auto"><table class="w-full border-collapse text-[11px]"><thead class="bg-gray-100 font-bold text-gray-700"><tr>
+                    <th class="${td}">Date</th><th class="${td}">Type</th><th class="${td}">Cutter / Ref</th><th class="${td}">Kg</th><th class="${td}"></th>
+                </tr></thead><tbody>${moves}</tbody></table></div>` : '<div class="text-center text-xs text-gray-400 py-2 italic">কোনো মুভমেন্ট নেই।</div>'}`;
+        }
+        function viewLotSummary(lotNo) {
+            const box = document.getElementById('lotSummaryBox');
+            if (!box) return;
+            const no = String(lotNo || '').trim().toUpperCase();
+            lotSummaryCurrent = no;
+            const list = [];
+            historyData.forEach((h, i) => { if (h && String(h.lotNo || '').trim().toUpperCase() === no) list.push({ h, i }); });
+            let slips = 0, pics = 0, body = 0, wst = 0, wt = 0;
+            list.forEach(({ h }) => {
+                slips += parseFloat(h.totalSlips) || 0;
+                pics += parseFloat(h.totalPics) || 0;
+                body += parseFloat(h.totalBodyWt) || 0;
+                wst += parseFloat(h.totalWastage) || 0;
+                wt += parseFloat(h.totalWeight) || 0;
+            });
+            const bCons = pics > 0 ? body / pics : 0;
+            const tCons = pics > 0 ? wt / pics : 0;
+            const chip = (l, v, cls) => `<div class="bg-white border border-gray-200 rounded px-2 py-1 text-center"><span class="block text-[10px] font-medium text-gray-400">${l}</span><span class="font-bold ${cls || 'text-gray-800'}">${v}</span></div>`;
+            const td = 'px-2 py-1 border border-gray-300 text-center';
+            const th = 'px-2 py-1 border border-gray-300 text-center';
+            const rows = list.map(({ h, i }) => {
+                let range = String(h.slipNoRange || '');
+                if (!range && Array.isArray(h.items)) {
+                    const nums = [];
+                    h.items.forEach(r => String(r.slipno ?? '').split('-').map(x => parseInt(String(x).trim())).filter(x => !isNaN(x)).forEach(n => nums.push(n)));
+                    if (nums.length) { const mn = Math.min(...nums), mx = Math.max(...nums); range = mn === mx ? `${mn}` : `${mn}-${mx}`; }
+                }
+                return `<tr class="hover:bg-gray-50 border-b border-gray-200">
+                    <td class="${td}">${escHtml(h.timestamp)}</td>
+                    <td class="${td}">${escHtml(h.quality)}</td>
+                    <td class="${td}">${escHtml(range || '-')}</td>
+                    <td class="${td}">${escHtml(h.totalPics)}</td>
+                    <td class="${td}">${escHtml(h.totalWeight)}</td>
+                    <td class="${td}"><button type="button" onclick="openShowModal(${i})" class="text-emerald-600 hover:text-emerald-800 font-bold">Show</button></td>
+                </tr>`;
+            }).join('');
+            box.innerHTML = `<div class="border border-indigo-200 bg-indigo-50/40 rounded-lg p-3 space-y-3">
+                <div class="font-bold text-sm text-indigo-800">LOT: ${escHtml(no)} — Summary</div>
+                ${lotData[no] ? buildLotLedgerSection(no) : ''}
+                <div class="font-bold text-xs text-gray-700">Challan Totals</div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    ${chip('Total Slips', slips.toFixed(0))}
+                    ${chip('Total Pics', pics.toFixed(0), 'text-blue-600')}
+                    ${chip('Total Body Wt', body.toFixed(3))}
+                    ${chip('Total Wastage', wst.toFixed(3))}
+                    ${chip('Total Weight', wt.toFixed(3), 'text-purple-600')}
+                    ${chip('Overall B.cons', bCons.toFixed(5), 'text-blue-600')}
+                    ${chip('Overall T.cons', tCons.toFixed(5), 'text-green-600')}
+                </div>
+                <div class="font-bold text-xs text-gray-700">Challan List (${list.length})</div>
+                ${list.length ? `<div class="overflow-x-auto border border-gray-200 rounded bg-white"><table class="w-full border-collapse text-[11px]">
+                    <thead class="bg-gray-100 font-bold text-gray-700"><tr>
+                        <th class="${th}">Date</th><th class="${th}">Quality</th><th class="${th}">Slip Range</th><th class="${th}">Pics</th><th class="${th}">Total Wt</th><th class="${th}">Show</th>
+                    </tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="text-center text-xs text-gray-400 py-3 italic">No challans under this lot yet.</div>'}
+            </div>`;
+            box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
         // History can contain data from older versions of the app. Normalize every
         // record before rendering so one damaged record can never hide the whole list.
         function normalizeHistoryEntry(entry) {
@@ -1085,6 +2222,7 @@
             normalized.timestamp = String(entry.timestamp ?? '');
             normalized.qualityRemarks = String(entry.qualityRemarks ?? '').toUpperCase();
             normalized.cutter = String(entry.cutter ?? '').trim().toUpperCase();
+            normalized.lotNo = String(entry.lotNo ?? '').trim().toUpperCase();
             normalized.items = Array.isArray(entry.items) ? entry.items.filter(x => x && typeof x === 'object' && !Array.isArray(x)) : [];
             normalized.tConsParts = (entry.tConsParts && typeof entry.tConsParts === 'object' && !Array.isArray(entry.tConsParts))
                 ? { ...entry.tConsParts }
@@ -1255,6 +2393,7 @@
             try { const cw = JSON.parse(localStorage.getItem('challan_colWst') || '{}'); Object.keys(cw).forEach(k => { const e = CM_SLOTS[k] && document.getElementById(CM_SLOTS[k].win); if (e) e.value = cw[k]; }); } catch (_) {}
             historyData = loadHistoryFromStorage();
             loadCutters();
+            loadLots();
 
             loadConsumption();
             renderHistory();
@@ -3540,6 +4679,19 @@
                             historyData = Array.isArray(importedObj.historyData) ? importedObj.historyData.map(normalizeHistoryEntry).filter(Boolean) : [];
                             saveHistoryToStorage();
                         }
+                        if (importedObj.lotData && typeof importedObj.lotData === 'object' && !Array.isArray(importedObj.lotData)) {
+                            lotData = {};
+                            Object.keys(importedObj.lotData).forEach(k => {
+                                const no = String(k).trim().toUpperCase();
+                                if (!no) return;
+                                lotData[no] = normLotRec(no, importedObj.lotData[k]);
+                            });
+                            if (Array.isArray(importedObj.lotLedger)) lotLedger = importedObj.lotLedger.map(normLedgerEntry).filter(Boolean);
+                            else { lotLedger = []; migrateLegacyLotLedger(); }
+                            saveLots();
+                            renderLotSelect(importedObj.selectedLot || '');
+                            onLotChange();
+                        }
 
                         const tbody = document.getElementById('itemRows');
                         tbody.innerHTML = "";
@@ -3704,6 +4856,9 @@
                 try { localStorage.clear(); } catch (e) { console.warn('Storage clear failed.', e); }
                 cutterList = [];
                 renderCutterSelect('');
+                lotData = {};
+                lotLedger = [];
+                renderLotSelect('');
                 saveZoom();
             }
         }
@@ -3852,6 +5007,7 @@
                 return;
             }
             
+            if (!confirmLotBalanceForSubmit(totalWeight)) return;
             const timeOptions = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
             const timestamp = new Date().toLocaleString('en-US', timeOptions);
             
@@ -3913,6 +5069,7 @@
                 foldingGm: isTextileActive ? "0.00000" : (qualityFoldingGmData[quality] || "0.00000"),
                 qualityRemarks: String(qualityRemarksData[quality] || "").toUpperCase(),
                 cutter: getCutter(),
+                lotNo: getLot(),
                 totalSlips: document.getElementById('totalSlipsDisplay') ? document.getElementById('totalSlipsDisplay').innerText : "0",
                 slipNoRange: slipNoRange,
                 totalPics: totalMainPics,
@@ -3976,6 +5133,7 @@
             }
             renderHistory();
             calculateTotals();
+            try { renderLotSelect(getLot()); refreshLotDetailsIfOpen(); } catch (_) {}
         }
 
         // Puts a saved entry into the table and global inputs (no edit-mode side effects).
@@ -4032,6 +5190,8 @@
             document.getElementById('qualityRemarksInput').value = item.qualityRemarks || "";
             renderCutterSelect(item.cutter || '');
             onCutterChange();
+            renderLotSelect(item.lotNo || '');
+            onLotChange();
             
             qualityTextileStdConsData[item.quality] = item.textileStdCons || "";
             qualityTextileTotalMetersData[item.quality] = item.textileTotalMeters || "";
@@ -4129,6 +5289,7 @@
                 saveHistoryToStorage();
                 renderHistory();
                 calculateTotals();
+                try { renderLotSelect(getLot()); refreshLotDetailsIfOpen(); } catch (_) {}
             }
         }
 
@@ -4138,6 +5299,7 @@
             container.innerHTML = "";
             
             const searchVal = document.getElementById('historySearchInput') ? document.getElementById('historySearchInput').value.trim().toUpperCase() : "";
+            refreshLotInfo();
 
             if (historyData.length === 0) {
                 container.innerHTML = `<div class="text-center text-xs text-gray-400 py-4 italic bg-gray-50 rounded border border-dashed border-gray-200">No history snapshots generated yet.</div>`;
@@ -4170,7 +5332,7 @@
                 if (searchVal) {
                     const qualityMatch = String(item.quality ?? '').toUpperCase().includes(searchVal);
                     const timeMatch = String(item.timestamp ?? '').toUpperCase().includes(searchVal);
-                    const remarksMatch = String(item.qualityRemarks ?? '').toUpperCase().includes(searchVal) || String(item.cutter ?? '').toUpperCase().includes(searchVal);
+                    const remarksMatch = String(item.qualityRemarks ?? '').toUpperCase().includes(searchVal) || String(item.cutter ?? '').toUpperCase().includes(searchVal) || String(item.lotNo ?? '').toUpperCase().includes(searchVal);
                     const slipRangeMatch = String(currentSlipRange ?? '').toUpperCase().includes(searchVal);
                     const sizeMatch = safeItems.some(row => String(row.size ?? '').toUpperCase().includes(searchVal) || String(row.slipno ?? '').toUpperCase().includes(searchVal) || String(row.color ?? '').toUpperCase().includes(searchVal));
                     if (!qualityMatch && !timeMatch && !remarksMatch && !sizeMatch && !slipRangeMatch) {
@@ -4252,6 +5414,7 @@
                 }
 
                 const cutterBadge = item.cutter ? `<span class="inline-flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded px-1.5 py-0.5 text-[10px] font-bold mt-1 w-fit">CUTTER: ${escHtml(item.cutter)}</span>` : '';
+                const lotBadge = item.lotNo ? `<span class="inline-flex items-center gap-1 bg-teal-50 border border-teal-200 text-teal-700 rounded px-1.5 py-0.5 text-[10px] font-bold mt-1 w-fit">LOT: ${escHtml(item.lotNo)}</span>` : '';
                 let remarksInfoStr = item.qualityRemarks ? `<div class="text-[11px] text-amber-700 italic mt-0.5 font-bold">Note: ${item.qualityRemarks}</div>` : '';
 
                 logCard.innerHTML = `
@@ -4259,6 +5422,7 @@
                         <span class="font-bold text-gray-800 text-sm truncate">${historyQuality}</span>
                         <span class="text-[10px] text-gray-400 font-medium">${String(item.timestamp ?? '')}</span>
                         ${cutterBadge}
+                        ${lotBadge}
                         ${remarksInfoStr}
                         <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-500 mt-1 font-semibold">
                             ${!isHistoryTextile ? `<span>Std Cons: <span class="text-gray-700">${item.stdCons}</span></span><span>Std GSM: <span class="text-gray-700">${item.stdGsm}</span></span><span>Fab GSM: <span class="text-gray-700">${item.fabricGsm}</span></span>${foldingInfoStr}${wastageInfoStr}${adjInfoStr}${colInfoStr}` : `${textileInfoStr}${totalWstShown > 0 ? `<span>Wastage: <span class="text-gray-700">${totalWstShown.toFixed(3)}kg</span></span>` : ''}${adjInfoStr}`}
@@ -4607,6 +5771,8 @@
                     exportedAt: new Date().toISOString(),
                     quality: entry.quality,
                     settings: getQualitySettingsSnapshot(entry.quality),
+                    lotData: (entry.lotNo && lotData[String(entry.lotNo).toUpperCase()]) ? { [String(entry.lotNo).toUpperCase()]: { lotNo: String(entry.lotNo).toUpperCase(), weight: getLotGodownTotal(String(entry.lotNo).toUpperCase()) } } : {},
+                    selectedLot: entry.lotNo || '',
                     entry: entry
                 };
                 const json = JSON.stringify(payload).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
@@ -4670,6 +5836,7 @@
                 foldingGm: isTextile ? "0.00000" : (qualityFoldingGmData[quality] || "0.00000"),
                 qualityRemarks: String(qualityRemarksData[quality] || "").toUpperCase(),
                 cutter: getCutter(),
+                lotNo: getLot(),
                 totalSlips: txt('totalSlipsDisplay') || "0",
                 slipNoRange,
                 totalPics: txt('totalPicsDisplay'),
@@ -4738,7 +5905,21 @@
                 qualityAdded = true;
             }
 
+            // Lot: entry.lotNo is kept by normalizeHistoryEntry; add the lot (with its weight) if this device doesn't have it yet.
+            let lotJustAdded = false;
+            if (entry.lotNo && !lotData[entry.lotNo] && payload && payload.lotData && typeof payload.lotData === 'object') {
+                const src = payload.lotData[entry.lotNo];
+                if (src && src.weight !== undefined) {
+                    const w = parseFloat(src.weight);
+                    lotData[entry.lotNo] = { lotNo: entry.lotNo, weight: Number((isNaN(w) ? 0 : w).toFixed(3)) };
+                    lotJustAdded = true;
+                    saveLots();
+                    renderLotSelect(getLot());
+                }
+            }
+
             historyData.push(entry);
+            if (lotJustAdded) { try { autoCoverLotShortfall(entry.lotNo); renderLotSelect(getLot()); } catch (_) {} }
             const newIndex = historyData.length - 1;
             ensureEntryView(newIndex);
             saveHistoryToStorage();
@@ -4851,7 +6032,7 @@
 
             const remarksInput = document.getElementById('qualityRemarksInput');
             const remarks = String(qualityRemarksData[q] || (remarksInput ? remarksInput.value : '') || '').trim();
-            return { version: 1, quality: q, remarks, cutter: getCutter(), isTextile, isCheck, metrics, weights, ths, rows, foot, colors: computeColorSummary(), globals: g };
+            return { version: 1, quality: q, remarks, cutter: getCutter(), lotNo: getLot(), isTextile, isCheck, metrics, weights, ths, rows, foot, colors: computeColorSummary(), globals: g };
         }
 
         // The finished challan page used by BOTH downloads.
@@ -4884,7 +6065,7 @@
     <div class="container">
         <div class="header">
             <div class="title">CUTTING CHALLAN REPORT</div>
-            <div class="sub-header">QUALITY: <span>${escHtml(view.quality)}</span> | REMARKS: <span>${escHtml(view.remarks || '-')}</span>${(view.cutter || (entry && entry.cutter)) ? ` | CUTTER: <span>${escHtml(view.cutter || entry.cutter)}</span>` : ''}</div>
+            <div class="sub-header">QUALITY: <span>${escHtml(view.quality)}</span> | REMARKS: <span>${escHtml(view.remarks || '-')}</span>${(view.cutter || (entry && entry.cutter)) ? ` | CUTTER: <span>${escHtml(view.cutter || entry.cutter)}</span>` : ''}${(view.lotNo || (entry && entry.lotNo)) ? ` | LOT NO: <span>${escHtml(view.lotNo || entry.lotNo)}</span>` : ''}</div>
         </div>
         <div class="info-card">
             <div class="metrics-row">${metricsHtml}</div>
@@ -4970,6 +6151,7 @@ ${buildEmbeddedEntryTag(entry)}
                     <span>Saved Date: <b class="text-gray-700">${escHtml(item.timestamp)}</b></span>
                     ${(item.qualityRemarks || view.remarks) ? `<span class="text-amber-700 font-bold">Remarks: ${escHtml(item.qualityRemarks || view.remarks)}</span>` : ''}
                     ${(item.cutter || view.cutter) ? `<span class="text-indigo-700 font-bold">Cutter: ${escHtml(item.cutter || view.cutter)}</span>` : ''}
+                    ${(item.lotNo || view.lotNo) ? `<span class="text-teal-700 font-bold">LOT NO: ${escHtml(item.lotNo || view.lotNo)}</span>` : ''}
                 </div>
                 <div class="flex flex-wrap gap-3 text-[11px] font-semibold text-gray-600">${view.metrics.map(m => chip(m, m.accent ? 'text-blue-700' : '')).join('')}</div>
                 <div class="flex flex-wrap gap-2 text-[10px] text-gray-500 pt-1 border-t border-gray-200">${view.weights.map(w => chip(w, w.accent ? 'text-blue-700' : '')).join('')}</div>
@@ -5149,6 +6331,9 @@ ${buildEmbeddedEntryTag(entry)}
                     selectedQuality: quality,
                     cutterList,
                     selectedCutter: getCutter(),
+                    lotData,
+                    lotLedger,
+                    selectedLot: getLot(),
                     fabricGsm: document.getElementById('fabricGsmInput')?.value || '',
                     slot4Total: val('slot4TotalInput'),
                     slot5Total: val('slot5TotalInput'),
@@ -5180,6 +6365,27 @@ ${buildEmbeddedEntryTag(entry)}
         // Re-open the existing Show modal with a safe fallback. This preserves the
         // original detailed preview and prevents one legacy/broken record from making
         // the Show button appear dead.
+
+        // Searchable picker for the main LOT field
+        makeLotPicker(document.getElementById('lotSelect'));
+        // Enter = Save in the Add / Edit Lot modal
+        ['lotNoInput', 'lotWeightInput', 'leKg'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('keydown', ev => {
+                if (ev.key !== 'Enter') return;
+                ev.preventDefault();
+                if (id === 'lotNoInput') { const w = document.getElementById('lotWeightInput'); if (w) { w.focus(); w.select(); } } else if (id === 'lotWeightInput') { const k = document.getElementById('leKg'); if (k) k.focus(); } else saveLotFromModal();
+            });
+        });
+        // Keep the Lot info bar (balance after this challan) live while typing.
+        (function () {
+            const _ct = calculateTotals;
+            calculateTotals = function () {
+                const r = _ct.apply(this, arguments);
+                try { refreshLotInfo(true); } catch (_) {}
+                return r;
+            };
+        })();
 
     </script>
 </body>
